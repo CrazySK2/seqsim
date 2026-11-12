@@ -1,5 +1,5 @@
 // 파일을 고쳐 다시 올릴 때는 VERSION 숫자를 올려 주세요.
-const VERSION="seqsim-2026-11-12-9";
+const VERSION="seqsim-2026-11-12-14";
 const FILES=["./","./index.html","./simple.html","./manifest.json","./icons/icon-180.png","./icons/icon-192.png","./icons/icon-512.png"];
 self.addEventListener("install",e=>{e.waitUntil(caches.open(VERSION).then(c=>c.addAll(FILES)));self.skipWaiting()});
 self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==VERSION).map(k=>caches.delete(k)))));self.clients.claim()});

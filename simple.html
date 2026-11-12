@@ -383,9 +383,13 @@ table.nett td.chain{font-family:var(--mono);font-size:12px;line-height:1.7}
 .ddm .btn{border:0;box-shadow:none;background:transparent;width:100%;justify-content:flex-start;padding:9px 12px;font-size:13.5px;font-weight:500}
 .ddm .btn:hover{background:var(--sel);color:var(--selfg)}
 .fpalh{display:none}
+.fgrip{display:none}
 .fchart{display:none}
-@media (min-width:900px){
-  body{padding:0;overflow:hidden;display:block;height:100vh;background-image:radial-gradient(color-mix(in srgb,var(--muted) 30%,transparent) 1.1px,transparent 1.2px);background-size:22px 22px;background-attachment:fixed}
+@media (min-width:700px){
+  body{padding:0;overflow:hidden;display:block;height:100vh}
+  /* 시퀀스도 화면: 도면 뒤 바탕을 도면과 같은 색(흰색)으로 통일 — 도면 종이와 바탕 사이 경계가 보이지 않게 (2026-11-12 사용자 요청) */
+  body:not(.pvmode){background:var(--sheet)}
+  .sheetwrap{background:var(--sheet)!important}
   .fcard{position:fixed;z-index:30;background:var(--panel);border:1px solid color-mix(in srgb,var(--line) 70%,transparent);border-radius:var(--r);box-shadow:var(--fshadow);display:flex;align-items:center;gap:6px;padding:6px}
   header{display:block}
   header .btn{border-color:transparent;background:transparent;box-shadow:none;height:36px;padding:0 12px;font-size:13.5px;font-weight:600;color:var(--fg)}
@@ -414,7 +418,7 @@ table.nett td.chain{font-family:var(--mono);font-size:12px;line-height:1.7}
   .sheetbox{position:absolute;inset:0}
   .sheetwrap{position:absolute;inset:0;border:0;border-radius:0;box-shadow:none;background:transparent;min-height:0;padding:136px 24px 90px 236px}
   body.palname .sheetwrap{padding-left:300px}
-  #cv{box-shadow:0 1px 3px rgba(16,24,40,.08),0 8px 30px rgba(16,24,40,.06);border-radius:4px}
+  #cv{box-shadow:none;border-radius:0}
   body:has(#fstack>:not([hidden])) .sheetwrap{padding-right:420px}
   /* 부품함 */
   .fpal{position:fixed;z-index:25;left:16px;top:80px;bottom:76px;width:204px;background:var(--panel);border:1px solid color-mix(in srgb,var(--line) 70%,transparent);border-radius:var(--r);box-shadow:var(--fshadow);display:flex;flex-direction:column;overflow:hidden}
@@ -434,10 +438,16 @@ table.nett td.chain{font-family:var(--mono);font-size:12px;line-height:1.7}
   .fstack>*{box-shadow:var(--fshadow);border-radius:var(--r)!important}
   .fstack .qzbar{border-width:1.5px}
   .fstack .qzspec{max-height:none}
+  .fgrip{display:flex;flex-basis:100%;justify-content:center;margin:-4px 0 -2px;cursor:grab;padding:2px 0 4px}
+  .fgrip span{width:44px;height:5px;border-radius:99px;background:color-mix(in srgb,var(--muted) 45%,transparent)}
+  .fstack .qzhead{cursor:grab}
+  .fstack.dragging,.fstack.dragging .fgrip,.fstack.dragging .qzhead{cursor:grabbing;user-select:none}
+  .fstack.dragging>*{box-shadow:0 14px 40px rgba(16,24,40,.22)}
+  body.fsmoved:has(#fstack>:not([hidden])) .sheetwrap{padding-right:24px}
   /* 확대·축소, 안내 문구, 타임차트 */
   .zbar{position:fixed;right:16px;bottom:16px;top:auto;z-index:30;border-radius:12px;box-shadow:var(--fshadow);padding:3px}
   .zbar button{height:32px}
-  .hint{position:fixed;z-index:29;left:50%;bottom:20px;transform:translateX(-50%);max-width:min(760px,calc(100vw - 560px));background:color-mix(in srgb,var(--fg) 88%,transparent);color:var(--panel);
+  .hint{position:fixed;z-index:29;left:50%;bottom:20px;transform:translateX(-50%);max-width:min(760px,calc(100vw - 340px));background:color-mix(in srgb,var(--fg) 88%,transparent);color:var(--panel);
     padding:8px 16px;border-radius:999px;font-size:12.5px;line-height:1.45;text-align:center;min-height:0;box-shadow:var(--fshadow)}
   .hint:empty{display:none}
   .hint.warn{background:var(--live);color:#fff}
@@ -465,6 +475,23 @@ table.nett td.chain{font-family:var(--mono);font-size:12px;line-height:1.7}
   .wrcap .btn{height:28px;border-radius:8px}
   .lypages{background:color-mix(in srgb,var(--panel2) 70%,transparent)}
 }
+
+/* 중간 폭(700~1180px, 예: Claude 옆 창): 떠 있는 카드를 더 작게 — 제목 숨김, 오른쪽 메뉴는 아이콘만 */
+@media (min-width:700px) and (max-width:1180px){
+  .fbrand h1{display:none}
+  .fright .btn>span{display:none}
+  .fright .btn{padding:0 9px}
+  .vsw button{padding:0 10px}
+  .ftool{top:76px}
+}
+@media (min-width:700px) and (max-width:900px){
+  .vsw button>span{font-size:12.5px}
+  .ftool .btn:not(.primary):not(.ficon)>span{display:none}
+  .fpal{width:172px}.palette{grid-template-columns:repeat(3,1fr);max-height:none}
+  header h1{width:auto}
+  .sheetwrap{padding-left:200px}
+  .fstack{width:min(360px,calc(100vw - 32px))}
+}
 </style>
 
 <header>
@@ -476,19 +503,19 @@ table.nett td.chain{font-family:var(--mono);font-size:12px;line-height:1.7}
     <i class="fsep seqonly" aria-hidden="true"></i>
     <button class="btn ficon" id="btnUndo" title="되돌리기 (Ctrl+Z)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg><span>되돌리기</span></button>
     <i class="fsep seqonly" aria-hidden="true"></i>
-    <button class="btn" id="btnDesc"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m5 12 4 4 10-10"/></svg><span>동작사항 확인</span></button>
+    <button class="btn" id="btnDesc" title="동작사항 확인"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m5 12 4 4 10-10"/></svg><span>동작사항 확인</span></button>
     <span class="clock" id="clock"></span>
     <span class="mode" id="modeTag">편집 모드</span>
   </div>
   <div class="fcard fright">
-    <button class="btn seqonly" id="btnQuiz" title="시퀀스도의 빈칸을 동작사항에 맞게 채우고 채점합니다"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="3" stroke-dasharray="3 2.4"/><path d="M9 12h6"/></svg><span>빈칸 문제</span></button>
-    <div class="dd seqonly" id="ddFile"><button class="btn" type="button" aria-haspopup="true" aria-expanded="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/></svg><span>파일</span><b class="caret">▾</b></button>
+    <button class="btn seqonly" id="btnQuiz" title="빈칸 문제 — 시퀀스도의 빈칸을 동작사항에 맞게 채우고 채점합니다"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="3" stroke-dasharray="3 2.4"/><path d="M9 12h6"/></svg><span>빈칸 문제</span></button>
+    <div class="dd seqonly" id="ddFile"><button class="btn" type="button" title="파일 (새 도면·예제·불러오기·저장)" aria-haspopup="true" aria-expanded="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/></svg><span>파일</span><b class="caret">▾</b></button>
       <div class="ddm" hidden>
         <button class="btn" id="btnNew">새 도면</button>
         <button class="btn" id="btnFile">파일·예제</button>
         <button class="btn" id="btnImport">도면 불러오기</button>
         <button class="btn" id="btnExport" title="도면을 JPG 이미지나 PDF로 저장합니다">도면 저장 (JPG·PDF)</button></div></div>
-    <div class="dd seqonly" id="ddMake"><button class="btn" type="button" aria-haspopup="true" aria-expanded="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.6L19 9.5l-5.2 1.9L12 17l-1.8-5.6L5 9.5l5.2-1.9zM19 15l.9 2.6L22 18.5l-2.1.9L19 22l-.9-2.6-2.1-.9 2.1-.9z"/></svg><span>도면 만들기</span><b class="caret">▾</b></button>
+    <div class="dd seqonly" id="ddMake"><button class="btn" type="button" title="도면 만들기 (회로 틀·동작사항→도면·수정 요청)" aria-haspopup="true" aria-expanded="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.6L19 9.5l-5.2 1.9L12 17l-1.8-5.6L5 9.5l5.2-1.9zM19 15l.9 2.6L22 18.5l-2.1.9L19 22l-.9-2.6-2.1-.9 2.1-.9z"/></svg><span>도면 만들기</span><b class="caret">▾</b></button>
       <div class="ddm" hidden>
         <button class="btn" id="btnTpl" title="회로를 한 줄씩 적어 도면을 자동으로 그립니다(AI 없이 동작)">회로 틀로 만들기</button>
         <button class="btn" id="btnDesign" title="동작사항을 적으면 시퀀스도를 만들어 줍니다">동작사항→도면</button>
@@ -500,7 +527,7 @@ table.nett td.chain{font-family:var(--mono);font-size:12px;line-height:1.7}
 <div class="work">
   <div class="fpal"><div class="fpalh"><b>부품</b><button type="button" class="btn" id="palMode" title="부품 이름을 함께 보이거나 아이콘만 보이기">이름 보기</button></div><nav class="palette" id="palette" aria-label="부품함"></nav></div>
   <div style="display:flex;flex-direction:column;gap:6px;min-width:0;min-height:0">
-    <div class="fstack" id="fstack"><div class="qzbar" id="qzbar" hidden><div class="qzhead"><b id="qzTitle"></b><span class="qzmsg" id="qzMsg"></span></div>
+    <div class="fstack" id="fstack"><div class="qzbar" id="qzbar" hidden><div class="fgrip" title="끌어서 옮기기 (두 번 누르면 원래 자리)" aria-hidden="true"><span></span></div><div class="qzhead"><b id="qzTitle"></b><span class="qzmsg" id="qzMsg"></span></div>
       <div class="dbtns"><button class="btn" id="qzSpecT">동작사항 접기</button><button class="btn primary" id="qzGrade">채점</button><button class="btn" id="qzAns">정답 보기</button><button class="btn" id="qzRe">처음부터</button><button class="btn" id="qzEnd">문제 끝내기</button></div>
       <div class="qzspec" id="qzSpec"></div></div>
     <div class="dbar" id="dbar" hidden><div class="dtext"><span id="dbarText"></span><span class="hint warn" id="dbarWarn"></span></div>
@@ -708,7 +735,7 @@ class Sim{
       const g={COIL:new Set(),TIMER:new Set(),FR:new Set(),CNT:new Set(),CRST:new Set(),FLS:new Set()};
       for(const k of on){const v=cells.get(k);if(g[v.k])g[v.k].add(v.tag)}
       const same=eq(g.COIL,this.coil)&&eq(g.TIMER,this.tcoil)&&eq(g.FR,this.frcoil)&&eq(g.CNT,this.ccoil)&&eq(g.CRST,this.crst)&&eq(g.FLS,this.flscoil);
-      for(const t of g.FR)if(!this.frcoil.has(t)){this.frphase[t]=0;this.frout[t]=true}
+      for(const t of g.FR)if(!this.frcoil.has(t)){this.frphase[t]=0;this.frout[t]=false}
       this.coil=g.COIL;this.tcoil=g.TIMER;this.frcoil=g.FR;this.ccoil=g.CNT;this.crst=g.CRST;
       // FLS: 전원이 있을 때 수위가 E1에 닿으면 동작, E2 아래로 내려가면 복귀, 그 사이는 그대로 유지
       const fo=JSON.stringify(this.flsOn);
@@ -721,7 +748,7 @@ class Sim{
     for(const t in this.tacc)if(!this.tcoil.has(t))this.tacc[t]=0;
     for(const t of this.tcoil)this.tacc[t]=(this.tacc[t]||0)+dt;
     for(const t in this.frphase)if(!this.frcoil.has(t)){this.frphase[t]=0;this.frout[t]=false}
-    for(const t of this.frcoil){const ph=(this.frphase[t]||0)+dt;this.frphase[t]=ph;const p=Math.max(this.fp[t]??0.5,0.05);this.frout[t]=(ph%(2*p))<p}
+    for(const t of this.frcoil){const ph=(this.frphase[t]||0)+dt;this.frphase[t]=ph;const p=Math.max(this.fp[t]??0.5,0.05);this.frout[t]=(ph%(2*p))>=p-1e-9}   // 플리커: 여자 후 설정시간이 지나야 접점이 처음 동작(a 닫힘·b 열림), 그 뒤 설정시간마다 반전 (2026-11-12 사용자 지적)
     this.solve();let ch=false;
     for(const t of this.ccoil)if(!this.cprev.has(t)&&!this.crst.has(t)){this.count[t]=(this.count[t]||0)+1;ch=true}
     for(const t of this.crst)if(this.count[t]){this.count[t]=0;ch=true}
@@ -807,7 +834,8 @@ function outVal(s,o){switch(o.k){case"COIL":return s.coil.has(o.t);case"TIMER":r
 function snapOut(s,OUT){const c=cloneSim(s),frMax=Math.max(0,...Object.values(c.fp)),win=c.frcoil.size?2*frMax+0.3:0;
   const init=new Map(),flips=new Map();for(const[key,o]of OUT){init.set(key,outVal(c,o));flips.set(key,0)}
   let prev=new Map(init);for(let t=0;t<win;t+=0.05){c.step(0.05);for(const[key,o]of OUT){const v=outVal(c,o);if(v!==prev.get(key)){flips.set(key,flips.get(key)+1);prev.set(key,v)}}}
-  const r=new Map();for(const key of OUT.keys())r.set(key,flips.get(key)>=2?"blink":init.get(key)?"on":"off");r.phase=init;return r}
+  const r=new Map();for(const key of OUT.keys())r.set(key,flips.get(key)>=2?"blink":init.get(key)?"on":"off");
+  init.fr=[...s.frcoil].sort().map(t=>[t,s.fp[t]??0.5]);r.phase=init;return r}   // 동작 중인 플리커(문장에 설정시간을 넣으려고)
 const sig=m=>[...m].map(([k,v])=>k+"="+v).join("|");
 function diffOut(a,b){const d=[];for(const[k,v]of b)if(a.get(k)!==v)d.push({key:k,from:a.get(k),to:v});return d}
 // 문장 조립: 같은 동사끼리 묶고 "~되고, ~되며 … ~된다."로 이어 붙임
@@ -828,7 +856,14 @@ function clauses(diff,OUT,opts={}){const g={flson:[],flsoff:[],hold:[],on:[],bli
     names.forEach(n=>{const i=n.lastIndexOf(" "),pre=i>0?n.slice(0,i):"";out.push(pre&&pre===lastPre?n.slice(i+1):n);lastPre=pre});
     out[out.length-1]=jo(out[out.length-1],prt);parts.push([out.join(", "),verb])};
   add(g.flson,"flson");add(g.flsoff,"flsoff","은");add(g.hold,"hold");add(g.on,"on");
-  if(altPair){const nm=altPair.map(k=>{const o=OUT.get(k);return outName(o.k,o.t)});parts.push([nm.slice(0,-1).map(n=>jo(n,"과")).concat(jo(nm[nm.length-1],"이")).join(" "),"alt"])}
+  // 플리커: 여자 후 설정시간이 지나야 접점이 처음 바뀜 → "b쪽이 먼저 점등되고, FR의 설정시간(t초) 간격으로 … 교대로 점멸" (2026-11-12 사용자 지적)
+  const fr=opts.phase&&opts.phase.fr||[],frTxt=!fr.length?"":fr.length===1?`플리커 릴레이 ${fr[0][0]}의 설정시간(${fr[0][1]}초) 간격으로 `:`플리커 릴레이 ${fr.map(([t,p])=>`${t}(${p}초)`).join("·")}의 설정시간 간격으로 `;
+  if(altPair){const nm=altPair.map(k=>{const o=OUT.get(k);return outName(o.k,o.t)}),first=altPair.filter(k=>opts.phase.get(k)).map(k=>{const o=OUT.get(k);return outName(o.k,o.t)});
+    const pair=nm.slice(0,-1).map(n=>jo(n,"과")).concat(jo(nm[nm.length-1],"이")).join(" ");
+    parts.push([(fr.length&&first.length?`${first.map((n,i)=>i===first.length-1?jo(n,"이"):n).join(", ")} 먼저 ${first.every(n=>/^램프/.test(n))?"점등되고":"동작하고"}, `:"")+frTxt+pair,"alt"])}
+  if(g.blink.length&&fr.length){const keys=diff.filter(d=>d.to==="blink").map(d=>d.key),onNow=keys.some(k=>opts.phase&&opts.phase.get(k));
+    const nm=g.blink.slice(0,-1).concat(jo(g.blink[g.blink.length-1],"이"));const lamps=g.blink.every(n=>/^램프/.test(n));
+    parts.push([onNow?frTxt+nm.join(", "):(fr.length===1?`플리커 릴레이 ${fr[0][0]}의 설정시간(${fr[0][1]}초)이 지나면 `:"플리커 릴레이의 설정시간이 지나면 ")+nm.join(", ")+(lamps?" 점등되고,":" 동작하고,")+" 그 뒤 설정시간 간격으로","blink"]);g.blink=[]}
   add(g.blink,"blink");add(g.lon,"lon");add(g.bon,"bon");add(g.cnt,"cnt");add(g.off,"off");add(g.loff,"loff","은");add(g.boff,"boff","은");add(g.cntoff,"cntoff","은");
   return parts}
 function sentence(head,parts,tail){if(!parts.length)return head+(tail||" 회로의 상태는 변하지 않는다.");
@@ -962,7 +997,7 @@ const store={get(k="seqsim.v2"){try{return localStorage.getItem(k)}catch(e){retu
 
 function setCircuit(c,label){qzLeave();kcur=null;if(mode==="run")toggleMode();circ=c;sim=new Sim(circ);sim.solve();name=label||"";chart.clear();undo=[];resize();draw();drawChart();save()}
 function snapshot(){undo.push(JSON.stringify(circ.toJSON()));if(undo.length>60)undo.shift()}
-function changed(){circ.tidy();qzGuard();sim=new Sim(circ);resize();draw();save()}
+function changed(){circ.tidy();qzGuard();hover=null;sim=new Sim(circ);resize();draw();save()}   // hover: 회로선 삽입 등을 한 뒤 강조가 남지 않게
 function save(){store.set(JSON.stringify({name,circ:circ.toJSON()}))}
 
 // ───────────── 부품함 ─────────────
@@ -1299,7 +1334,12 @@ function dragDialog(dlg){if(!dlg)return;const h=dlg.querySelector("h2");if(h){h.
       dx=nx;dy=ny;dlg.style.transform=`translate(${dx}px,${dy}px)`};
     const up=()=>{window.removeEventListener("pointermove",mv);window.removeEventListener("pointerup",up);window.removeEventListener("pointercancel",up);dlg.classList.remove("moving")};
     window.addEventListener("pointermove",mv);window.addEventListener("pointerup",up);window.addEventListener("pointercancel",up)})}
-function askCell(kind,tag,p,canDel,name="",title=LABEL[kind]){const pr=PRESET[kind],esc=x=>String(x).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
+// 새로 놓는 타이머·플리커·카운터의 기본 설정값 = 마지막으로 바꾼 값 (2026-11-12 사용자 요청: 기본 설정시간 바꾸기)
+const PRESET_LAST=(()=>{try{return JSON.parse(localStorage.getItem("seqsim.presetDef")||"{}")||{}}catch(e){return{}}})();
+function presetLastSet(k,p){if(!PRESET[k]||!(p>0))return;PRESET_LAST[k]=p;try{localStorage.setItem("seqsim.presetDef",JSON.stringify(PRESET_LAST))}catch(e){}}
+// 접점을 더블클릭해도 그 기기(타이머·플리커·카운터)의 설정값을 고칠 수 있게: 같은 문자기호의 코일 종류
+function presetKindOf(v){if(PRESET[v.k])return v.k;const c=[...circ.cells.values()].find(u=>u.tag===v.tag&&PRESET[u.k]);return c?c.k:null}
+function askCell(kind,tag,p,canDel,name="",title=LABEL[kind],pkind=kind){const pr=PRESET[pkind],esc=x=>String(x).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
   if(pr&&(p==null||isNaN(+p)))p=pr[1];
   // 폼 제출(submit)은 미리보기 환경에서 막힐 수 있어 버튼·Enter 키로 직접 처리
   return modal(`<div id="f" style="display:contents"><h2>${title}</h2>
@@ -1331,7 +1371,7 @@ function nextTag(tool){const pre=AUTO_NUM[tool],re=new RegExp("^"+pre+"(\\d+)$",
 function place(tool,map,key,noSnap){if(GENERIC[tool]){pickGeneric(tool,map,key,k=>place(k,map,key,noSnap));return}const kind=realKind(tool),g=GROUP[tool]||kind,t0=AUTO_NUM[tool]?nextTag(tool):lastTag[g]||DEF[tool];
   if(AUTO_NUM[tool]&&LINKED.has(kind)){lastTag[kind==="TIMER"?"timer":"relay"]=t0;if(tool==="MC")lastTag.mc=t0;if(tool==="COIL")lastTag.x=t0}
   if(!noSnap)snapshot();const v={k:kind,tag:t0};
-  if(PRESET[kind])v.p=circ.presetOf(kind,t0)??PRESET[kind][1];
+  if(PRESET[kind])v.p=circ.presetOf(kind,t0)??PRESET_LAST[kind]??PRESET[kind][1];
   map.set(key,v);changed();
   if(!timerWarn(v)&&!contactHint())setHint(`${LABEL[tool]} '${t0}'을(를) 놓았습니다. 이름을 바꾸려면 도면에서 그 기호를 ${matchMedia("(pointer:coarse)").matches?"길게 누르세요":"더블클릭하세요"}.`)}
 // 타이머에는 순시 b접점이 없음: 타이머 문자기호를 단 일반 b접점이면 알려 줌
@@ -1339,7 +1379,7 @@ const timerTags=()=>new Set([...circ.cells.values()].filter(u=>u.k==="TIMER").ma
 function timerWarn(v){if(v&&v.k==="B"&&timerTags().has(v.tag)){setHint(`타이머 ${v.tag}에는 순시 b접점이 없습니다. 한시 b접점(타이머 한시 b)을 쓰거나 다른 기기의 b접점으로 바꾸세요.`,true);return true}return false}
 const cellTitle=v=>v.k==="COIL"?(v.tag==="EOCR"?"EOCR":/^MC/i.test(v.tag)?"전자접촉기 MC":"릴레이 X"):(v.k==="A"||v.k==="B")&&[...circ.cells.values()].some(u=>u.k==="FLS"&&u.tag===v.tag)?`FLS ${v.k==="A"?"a":"b"}접점`:v.k==="A"&&timerTags().has(v.tag)?"타이머 순시 a접점":v.k==="B"&&timerTags().has(v.tag)?"b접점 (타이머에는 순시 b접점이 없습니다)":LABEL[v.k];
 async function editCell(map,key){const v=map.get(key);if(!v)return;if(v.k==="WIRE"){snapshot();map.delete(key);changed();return}
-  const r=await askCell(v.k,v.tag,v.p,true,v.n||"",cellTitle(v));if(!r)return;snapshot();
+  const pk=presetKindOf(v),r=await askCell(v.k,v.tag,pk===v.k?v.p:pk?circ.presetOf(pk,v.tag):v.p,true,v.n||"",cellTitle(v),pk||v.k);if(!r)return;snapshot();
   if(r.del){map.delete(key);changed();return}
   const old=v.tag, oldN=v.n||"", all=[...circ.cells.values(),...circ.bus.values(),...circ.hparts.values()];
   if(LINKED.has(v.k)){
@@ -1349,7 +1389,7 @@ async function editCell(map,key){const v=map.get(key);if(!v)return;if(v.k==="WIR
       u.tag=r.tag}
   }else if(r.all&&old!==r.tag)for(const u of all)if(u.tag===old)u.tag=r.tag;
   v.tag=r.tag;if(r.name)v.n=r.name;else delete v.n;lastTag[v.k==="COIL"?(/^MC/i.test(r.tag)?"mc":"relay"):GROUP[v.k]||v.k]=r.tag;if(v.k==="COIL"&&/^X/i.test(r.tag))lastTag.x=r.tag;
-  if(PRESET[v.k]){v.p=r.p;syncPreset(v.k,r.tag,r.p)}changed();timerWarn(v)||contactHint()}
+  if(pk&&r.p!=null){if(PRESET[v.k])v.p=r.p;syncPreset(pk,r.tag,r.p);presetLastSet(pk,r.p)}changed();timerWarn(v)||contactHint()}
 function syncPreset(kind,tag,p){for(const v of circ.cells.values())if(v.k===kind&&v.tag===tag)v.p=p}
 
 function fileDialog(){const json=JSON.stringify(circ.toJSON()),hasOld=!!store.get("seqsim.v1");
@@ -1389,7 +1429,7 @@ const PAL_DESC={SELECT:"기호를 고르고 끌어 옮기거나, 더블클릭(�
   ROWINS:"누른 회로선 왼쪽에 빈 회로선을 넣습니다",ROWDEL:"누른 회로선을 지웁니다",POSINS:"누른 단 위에 빈 단을 넣습니다",POSDEL:"누른 단을 지웁니다",
   PB_A:"누르고 있는 동안만 닫히는 푸시버튼(기동)",PB_B:"누르고 있는 동안만 열리는 푸시버튼(정지)",SW_A:"누를 때마다 ON/OFF가 바뀌는 스위치 a",SW_B:"누를 때마다 ON/OFF가 바뀌는 스위치 b",
   LS_A:"리밋 스위치 a — 감지하면 닫힘",LS_B:"리밋 스위치 b — 감지하면 열림",A:"릴레이·MC의 a접점 (코일이 여자되면 닫힘)",B:"릴레이·MC의 b접점 (코일이 여자되면 열림)",
-  TA:"타이머 한시 a — 설정 시간 뒤 닫힘",TB:"타이머 한시 b — 설정 시간 뒤 열림",TIA:"타이머 순시 a — 타이머가 여자되면 바로 닫힘",FA:"플리커 a — 주기적으로 열고 닫힘",FB:"플리커 b — 플리커 a와 반대로 동작",
+  TA:"타이머 한시 a — 설정 시간 뒤 닫힘",TB:"타이머 한시 b — 설정 시간 뒤 열림",TIA:"타이머 순시 a — 타이머가 여자되면 바로 닫힘",FA:"플리커 a — FR이 여자되고 설정시간이 지나면 닫히고, 그 뒤 설정시간마다 열고 닫힘",FB:"플리커 b — 처음엔 닫혀 있다가 설정시간이 지나면 열림(플리커 a와 반대)",
   FLSA:"FLS a — 수위가 E1에 닿으면 닫히고 E2 아래로 내려가면 열림",THR_A:"EOCR a — 트립하면 닫힘(경보 램프용)",THR_B:"EOCR b — 트립하면 열림(전체 차단)",
   COIL:"릴레이 X 코일 (놓을 때마다 X1·X2… 번호 증가)",MC:"전자접촉기 MC 코일 (MC1·MC2…)",EOCR:"EOCR (전자식 과전류 계전기)",TIMER:"타이머 T (설정 시간은 더블클릭해 바꿈, T1·T2…)",
   FR:"플리커 릴레이 FR (점멸 주기 설정)",LAMP:"램프 (RL·GL·YL처럼 이름 첫 글자가 색)",BZ:"부저",FLS:"플로트리스 스위치 — 전극 E1·E2·E3 단자대가 자동으로 그려짐",
@@ -1404,7 +1444,7 @@ function helpDialog(){
   const K_=k=>`<kbd>${k}</kbd>`;
   const S=[
   ["start","빠른 시작",`
-    <p class="hnote" style="margin:0 0 10px"><b>화면 구성</b> — 도면이 화면 전체를 쓰고 도구는 떠 있는 카드로 놓여 있습니다(PC 화면). 왼쪽 위: 탭(시퀀스도·제어반 결선·배치도) / 가운데 위: ▶ 동작 시작·초기화·되돌리기·동작사항 확인 / 오른쪽 위: 빈칸 문제·<b>파일 ▾</b>(새 도면·파일·예제·도면 불러오기·도면 저장)·<b>도면 만들기 ▾</b>(회로 틀로 만들기·동작사항→도면·도면 수정 요청)·사용법 / 왼쪽: 부품함('이름 보기'로 이름까지 표시, 아이콘에 마우스를 올리면 이름) / 왼쪽 아래: 타임차트(동작 시작하면 자동으로 열림) / 오른쪽 아래: 확대·축소. 좁은 화면(태블릿·휴대폰)에서는 예전처럼 위에서 아래로 차례로 놓입니다.</p>
+    <p class="hnote" style="margin:0 0 10px"><b>화면 구성</b> — 도면이 화면 전체를 쓰고 도구는 떠 있는 카드로 놓여 있습니다(화면 폭 700px 이상 — PC·태블릿 가로·Claude 옆 창. 폭이 좁으면 제목은 숨기고 오른쪽 메뉴는 아이콘만, 마우스를 올리면 이름). 왼쪽 위: 탭(시퀀스도·제어반 결선·배치도) / 가운데 위: ▶ 동작 시작·초기화·되돌리기·동작사항 확인 / 오른쪽 위: 빈칸 문제·<b>파일 ▾</b>(새 도면·파일·예제·도면 불러오기·도면 저장)·<b>도면 만들기 ▾</b>(회로 틀로 만들기·동작사항→도면·도면 수정 요청)·사용법 / 왼쪽: 부품함('이름 보기'로 이름까지 표시, 아이콘에 마우스를 올리면 이름) / 왼쪽 아래: 타임차트(동작 시작하면 자동으로 열림) / 오른쪽 아래: 확대·축소. 폭 700px보다 좁은 화면(휴대폰 세로)에서는 위에서 아래로 차례로 놓입니다.</p>
     <ol class="hsteps">
       <li><b>부품 놓기</b> 왼쪽 부품함에서 접점·입력·부하를 끌어 도면 칸에 놓습니다. 부하(코일·램프)는 맨 아래 단, 접점은 그 위 칸에 둡니다.</li>
       <li><b>배선하기</b> '배선' 도구로 세로선과 가로선을 잇습니다. 마우스가 가리키는 방향에 따라 세로·가로가 자동으로 정해집니다.</li>
@@ -1469,7 +1509,8 @@ ${SIMPLE?`<tr><td>도면칸 확장</td><td>'도면칸 확장'을 고르고 회�
   ["parts","기기별 규칙",`
     <table class="htab"><tr><th>기기</th><th>규칙</th></tr>
       <tr><td>릴레이 X·플리커 FR</td><td>접점은 c접점(공통 단자 + a + b) 단위로 셉니다. 같은 기기의 a·b접점은 한쪽 단자가 배선으로 같은 점에 이어져 있어야 c접점 하나로 쓸 수 있습니다. 허용 개수를 넘으면 접점 이름이 빨갛게 표시됩니다</td></tr>
-      <tr><td>타이머 T</td><td>한시 a·한시 b(▷ 표시, 설정 시간 뒤 동작)와 순시 a접점. 순시 b접점은 없습니다</td></tr>
+      <tr><td>타이머 T</td><td>한시 a·한시 b(▷ 표시, 설정 시간 뒤 동작)와 순시 a접점. 순시 b접점은 없습니다. 설정시간은 타이머 코일이나 그 접점을 더블클릭해 바꾸고(같은 타이머 모두 함께 바뀜), 새로 놓는 타이머는 마지막으로 정한 시간으로 놓입니다</td></tr>
+      <tr><td>플리커 FR</td><td>FR이 여자되면 처음에는 b접점이 닫혀 있고, <b>설정시간이 지나면</b> a접점이 닫히고 b접점이 열립니다. 그 뒤 설정시간마다 바뀝니다(공개문제 동작사항 '설정시간 간격으로 교대 점멸'). 설정시간은 FR 코일이나 접점을 더블클릭해 바꿉니다</td></tr>
       <tr><td>전자접촉기 MC</td><td>a·b접점을 따로 셉니다(기본 a 2개·b 2개)</td></tr>
       <tr><td>EOCR</td><td>출력에 EOCR, 접점에 EOCR a·b접점. 동작 모드에서 EOCR 접점을 누르면 트립/복귀</td></tr>
       <tr><td>플로트리스 FLS</td><td>전극 E1(상한)·E2(하한)·E3(공통, 접지)이 도면 아래 단자대(TB)에 자동으로 그려집니다. 수위가 E1에 닿으면 동작, E2 아래로 내려갈 때까지 유지</td></tr>
@@ -1496,9 +1537,10 @@ ${SIMPLE?`<tr><td>도면칸 확장</td><td>'도면칸 확장'을 고르고 회�
     <p style="margin:0 0 8px">위쪽 <b>빈칸 문제</b>를 누르면 전기공사산업기사 2과제처럼 시퀀스도 일부가 <b>점선 상자(빈칸)</b>로 비어 있는 문제를 풉니다. 동작사항을 읽고 빈칸 안을 채운 뒤 <b>채점</b>을 누릅니다.</p>
     <table class="htab"><tr><th>하고 싶은 일</th><th>방법</th></tr>
       <tr><td>문제 고르기</td><td>기능사형·산업기사형 예제(★ 쉬움 ~ ★★★ 어려움), 내가 만든 문제, 문제 파일(.json) 중에서 고릅니다</td></tr>
-      <tr><td>빈칸 채우기</td><td>평소처럼 부품함의 접점·코일·배선을 놓습니다. <b>빈칸 밖은 고칠 수 없고</b>, 고치려 하면 바로 되돌려집니다. '▶ 동작 시작'으로 직접 시험해 봐도 됩니다</td></tr>
+      <tr><td>빈칸 채우기</td><td>평소처럼 부품함의 접점·코일·배선을 놓습니다. <b>빈칸 밖은 고칠 수 없고</b>, 고치려 하면 바로 되돌려집니다. 자리가 모자라면 빈칸 안(또는 빈칸 오른쪽·아래 바로 옆)에서 '회로선 삽입'·'단 삽입'(간단형은 '도면칸 확장')을 쓰면 <b>빈칸이 그만큼 넓어지고</b>, 빈칸 안에서 삭제하면 줄어듭니다(되돌리기도 됨). '▶ 동작 시작'으로 직접 시험해 봐도 됩니다</td></tr>
       <tr><td>채점 기준</td><td>① <b>주어진 기구만</b> 썼는가(정답 도면에 있는 기구 이름·종류만, 코일은 기구 수만큼) ② <b>기구가 가진 접점 수 안</b>인가(릴레이 c접점 2개, 타이머 한시 c접점 1개·순시 a 1개 등 '접점 허용 개수' 설정 기준, PB·LS는 a·b 하나씩) ③ <b>동작이 정답과 같은가</b> — 입력을 여러 순서·시간으로 조작해 보며 코일·램프·부저 상태를 정답과 비교합니다. 셋 다 맞으면 정답이고, 모양이 정답 도면과 달라도 됩니다</td></tr>
       <tr><td>틀렸을 때</td><td>차이가 난 조작 순서(예: 전원 투입 → PB1 누름 → 3.4초 기다림)와 그때 정답·내 회로의 상태를 알려 줍니다. '정답 보기'로 정답 도면을 보고 '정답으로 채우기'도 할 수 있습니다</td></tr>
+      <tr><td>설명 카드 옮기기</td><td>오른쪽 동작사항 카드가 도면을 가리면 카드 맨 위 손잡이(━)나 제목을 끌어 원하는 곳으로 옮깁니다. 옮긴 자리는 기억되고, 손잡이를 두 번 누르면 원래 자리로 돌아갑니다. '동작사항 접기'로 줄일 수도 있습니다</td></tr>
       <tr><td>처음부터 · 끝내기</td><td>'처음부터'는 빈칸을 다시 비웁니다. '문제 끝내기'를 누르면 지금 도면이 그대로 남아 자유롭게 고칠 수 있습니다. 새로 고침해도 풀던 문제는 이어집니다</td></tr>
       <tr><td>문제 만들기</td><td>완성된 도면을 띄운 뒤 '빈칸 문제 → 지금 도면으로 문제 만들기'. 도면에서 비울 부분을 끌어 사각형으로 고르고(여러 곳 가능), 동작사항(자동으로 만든 문장, 고쳐 쓸 수 있음)과 제목을 정합니다. '내 문제로 저장'은 이 기기에, '파일로 저장'은 .json 파일로 저장해 훈련생에게 나눠 줄 수 있습니다</td></tr>
       <tr><td>시험지 인쇄</td><td>문제를 띄운 상태에서 '도면 저장'을 하면 빈칸 상자가 그려진 문제 도면이 저장됩니다</td></tr>
@@ -2381,7 +2423,7 @@ cv.addEventListener("contextmenu",e=>{e.preventDefault();if(mode!=="edit")return
   if(h.bus!=null&&circ.bus.has(h.bus)){snapshot();circ.bus.delete(h.bus);changed();return}
   if(!h.cell)return;const key=K(h.cell.l,h.cell.p);if(circ.cells.has(key)){snapshot();circ.cells.delete(key);changed()}});
 window.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="z"&&!$("modalRoot").firstChild&&!(window.seqHidden&&seqHidden())){e.preventDefault();doUndo()}});
-function doUndo(){if(mode!=="edit"||!undo.length||(window.seqHidden&&seqHidden()))return;circ=Circuit.from(JSON.parse(undo.pop()));if(QZ.on)QZ.good=JSON.stringify(circ.toJSON());sim=new Sim(circ);resize();draw();save()}
+function doUndo(){if(mode!=="edit"||!undo.length||(window.seqHidden&&seqHidden()))return;const qzBefore=QZ.on?JSON.stringify(circ.toJSON()):null;circ=Circuit.from(JSON.parse(undo.pop()));if(QZ.on)qzAfterUndo(qzBefore);sim=new Sim(circ);resize();draw();save()}
 
 // ───────────── 부하를 끌어 접점 놓기 ─────────────
 // 도면의 부하(릴레이·MC·타이머·플리커·카운터·FLS)를 끌어 빈 칸이나 R 모선 위에 놓으면 접점 종류를 골라 같은 문자기호의 접점을 넣음
@@ -2661,6 +2703,20 @@ $("chartTgl").onclick=()=>uiChart(!document.body.classList.contains("chartopen")
 let UI_PALNAME=false;try{UI_PALNAME=localStorage.getItem("seqsim.palname")==="1"}catch(e){}
 function uiPal(){document.body.classList.toggle("palname",UI_PALNAME);$("palMode").textContent=UI_PALNAME?"아이콘만":"이름 보기";try{localStorage.setItem("seqsim.palname",UI_PALNAME?"1":"0")}catch(e){}}
 $("palMode").onclick=()=>{UI_PALNAME=!UI_PALNAME;uiPal()};uiPal();
+// 오른쪽 안내 카드(빈칸 문제 동작사항 등)를 마우스로 끌어 옮김 — 위치 기억, 두 번 누르면 원래 자리 (2026-11-12 사용자 요청)
+(function(){const fs=$("fstack");if(!fs)return;const wide=()=>matchMedia("(min-width:700px)").matches;
+  const put=(x,y)=>{const w=fs.offsetWidth,h=Math.min(fs.offsetHeight,120);x=Math.max(8-w+80,Math.min(innerWidth-80,x));y=Math.max(8,Math.min(innerHeight-h,y));
+    fs.style.left=x+"px";fs.style.top=y+"px";fs.style.right="auto";fs.style.maxHeight=Math.max(160,innerHeight-y-16)+"px";document.body.classList.add("fsmoved")};
+  const reset=()=>{fs.style.left="";fs.style.top="";fs.style.right="";fs.style.maxHeight="";document.body.classList.remove("fsmoved");try{localStorage.removeItem("seqsim.fspos")}catch(e){}};
+  try{const s=JSON.parse(localStorage.getItem("seqsim.fspos")||"null");if(s&&wide())put(s.x,s.y)}catch(e){}
+  fs.addEventListener("pointerdown",e=>{const g=e.target.closest(".fgrip,.qzhead");if(!g||!wide()||e.button!==0||e.target.closest("button,a,input"))return;e.preventDefault();
+    const r=fs.getBoundingClientRect(),dx=e.clientX-r.left,dy=e.clientY-r.top;fs.classList.add("dragging");
+    const mv=ev=>put(ev.clientX-dx,ev.clientY-dy);
+    const up=()=>{fs.classList.remove("dragging");removeEventListener("pointermove",mv);removeEventListener("pointerup",up);
+      if(document.body.classList.contains("fsmoved"))try{localStorage.setItem("seqsim.fspos",JSON.stringify({x:parseFloat(fs.style.left),y:parseFloat(fs.style.top)}))}catch(e){}};
+    addEventListener("pointermove",mv);addEventListener("pointerup",up)});
+  fs.addEventListener("dblclick",e=>{if(e.target.closest(".fgrip,.qzhead"))reset()});
+  addEventListener("resize",()=>{if(!wide())reset();else if(document.body.classList.contains("fsmoved"))put(parseFloat(fs.style.left),parseFloat(fs.style.top))})})();
 $("btnReset").onclick=()=>{sim.reset();sim.solve();simTime=0;chart.clear();draw();drawChart()};
 $("btnUndo").onclick=doUndo;$("btnExport").onclick=exportDialog;$("btnFile").onclick=fileDialog;$("btnNew").onclick=newDrawingDialog;$("btnDesc").onclick=descDialog;$("btnDesign").onclick=designDialog;$("btnRevise").onclick=reviseDialog;$("btnImport").onclick=()=>{if(mode==="run")toggleMode();importDialog()};$("btnHelp").onclick=helpDialog;$("btnTpl").onclick=()=>{if(mode==="run")toggleMode();tplDialog()};
 // 배포용(OFFLINE): Claude가 필요한 버튼은 숨김
@@ -2682,7 +2738,7 @@ new MutationObserver(()=>{draw();drawChart()}).observe(document.documentElement,
 // ───────────── 빈칸 문제 (미완성 제어회로 완성하기) ─────────────
 // 사용자 요청(2026-11-12): 전기공사산업기사 2과제처럼 시퀀스도 일부를 비우고 동작사항을 주어 채우게 함.
 // 채점: 동작이 정답과 같으면 정답. 단, 주어진 기구(정답 도면에 쓰인 기구)와 그 기구가 가진 접점 수 안에서만.
-const QZ={on:false,prob:null,ans:null,good:null,outKey:"",loading:false,showSpec:true};
+const QZ={on:false,prob:null,ans:null,good:null,outKey:"",loading:false,showSpec:true,blanks:[]};
 const qzStore={get(){try{return JSON.parse(localStorage.getItem("seqsim.quiz")||"null")}catch(e){return null}},set(v){try{v?localStorage.setItem("seqsim.quiz",JSON.stringify(v)):localStorage.removeItem("seqsim.quiz")}catch(e){}}};
 const qzMine={get(){try{return JSON.parse(localStorage.getItem("seqsim.quizMine")||"[]")||[]}catch(e){return[]}},set(v){try{localStorage.setItem("seqsim.quizMine",JSON.stringify(v.slice(-40)))}catch(e){}}};
 // 빈칸 안인가: 칸(c), 가로선(v: 회로선 l과 l+1 사이 경계 b), 모선 구간(s)
@@ -2698,14 +2754,27 @@ function qzMask(ans,B){const C=Circuit.from(ans.toJSON());
   for(const k of[...C.vlinks]){const[l,b]=P(k);if(qzInside(B,"v",l,b)){C.vlinks.delete(k);C.hparts.delete(k)}}
   for(const s of[...C.bus.keys()])if(qzInside(B,"s",s))C.bus.delete(s);return C}
 // 빈칸 밖을 고치면 바로 되돌림 (changed()에서 부름)
-function qzGuard(){if(!QZ.on)return;const B=QZ.prob.blanks;
-  if(qzOutKey(circ,B)!==QZ.outKey){circ=Circuit.from(JSON.parse(QZ.good));if(undo.length&&undo[undo.length-1]===QZ.good)undo.pop();
+// 빈칸 안에서 회로선·단을 넣거나 빼면(도면칸 확장) 빈칸을 그만큼 넓히거나 줄여서 받아 줌 (2026-11-12 사용자 요청: 옆으로 확장)
+function qzGridOp(B){const prev=Circuit.from(JSON.parse(QZ.good)),cur=JSON.stringify(circ.toJSON()),tries=[];
+  const sh=(a,b,i,d)=>B.map(r=>{const o={...r};if(i<r[a]){o[a]+=d;o[b]+=d}else if(i<=r[b]+(d>0?1:0))o[b]+=d;return o});
+  if(circ.rows===prev.rows+1)for(let i=0;i<=prev.rows;i++){if(B.some(r=>i>=r.l0&&i<=r.l1+1))tries.push(["insertRow",i,sh("l0","l1",i,1)])}
+  if(circ.rows===prev.rows-1)for(let i=0;i<prev.rows;i++){if(B.some(r=>i>=r.l0&&i<=r.l1&&r.l1>r.l0))tries.push(["deleteRow",i,sh("l0","l1",i,-1)])}
+  if(circ.cols===prev.cols+1)for(let j=0;j<=prev.cols;j++){if(B.some(r=>j>=r.p0&&j<=r.p1+1))tries.push(["insertPos",j,sh("p0","p1",j,1)])}
+  if(circ.cols===prev.cols-1)for(let j=0;j<prev.cols;j++){if(B.some(r=>j>=r.p0&&j<=r.p1&&r.p1>r.p0))tries.push(["deletePos",j,sh("p0","p1",j,-1)])}
+  for(const[op,i,nb]of tries){const c=Circuit.from(prev.toJSON());c[op](i);c.tidy();if(JSON.stringify(c.toJSON())===cur)return nb}
+  return null}
+// 되돌리기로 도면칸 확장을 되돌리면 빈칸 크기도 되돌림
+function qzAfterUndo(before){if(qzOutKey(circ,QZ.blanks)!==QZ.outKey){QZ.good=before;const nb=qzGridOp(QZ.blanks);if(nb){QZ.blanks=nb;QZ.outKey=qzOutKey(circ,nb)}}
+  QZ.good=JSON.stringify(circ.toJSON());qzSave()}
+function qzGuard(){if(!QZ.on)return;const B=QZ.blanks;
+  if(qzOutKey(circ,B)!==QZ.outKey){const nb=qzGridOp(B);
+    if(nb){QZ.blanks=nb;QZ.outKey=qzOutKey(circ,nb);QZ.good=JSON.stringify(circ.toJSON());qzSave();return}circ=Circuit.from(JSON.parse(QZ.good));if(undo.length&&undo[undo.length-1]===QZ.good)undo.pop();
     setTimeout(()=>setHint("빈칸 문제 중에는 점선 상자(빈칸) 안에서만 그리거나 고칠 수 있습니다. 다른 도면을 쓰려면 '문제 끝내기'를 누르세요.",true),0);return}
   QZ.good=JSON.stringify(circ.toJSON());qzMsg("");qzSave()}
 function qzLeave(){if(QZ.on&&!QZ.loading)qzEnd()}
-function qzSave(){if(!QZ.on){qzStore.set(null);return}qzStore.set({prob:QZ.prob.file||{id:QZ.prob.id}})}
+function qzSave(){if(!QZ.on){qzStore.set(null);return}qzStore.set({prob:QZ.prob.file||{id:QZ.prob.id},blanks:QZ.blanks})}
 // 빈칸 상자 그리기 (화면·저장 그림 모두)
-function qzDraw(){if(!QZ.on)return;const B=QZ.prob.blanks;
+function qzDraw(){if(!QZ.on)return;const B=QZ.blanks;
   B.forEach((r,i)=>{const x0=lineX(r.l0)-LW*0.42,x1=lineX(r.l1)+LW*0.42,y0=r.p0===0?Y0-30:bY(r.p0)+3,y1=bY(r.p1+1)-3;
     ctx.save();if(!EXPORTING){ctx.fillStyle="rgba(120,140,255,.07)";ctx.fillRect(x0,y0,x1-x0,y1-y0)}
     ctx.strokeStyle=EXPORTING?"#000":T.selfg;ctx.lineWidth=1.6;ctx.setLineDash([7,4]);ctx.strokeRect(x0,y0,x1-x0,y1-y0);ctx.setLineDash([]);
@@ -2727,8 +2796,9 @@ function qzParts(C){const seen=new Map();const add=(t,n)=>{if(t&&!seen.has(t))se
 function qzStart(p,keepCirc){const ans=p.build?p.build():Circuit.from(p.answer);p.blanks=p.blanks.slice().sort((a,b)=>a.l0-b.l0||a.p0-b.p0);
   QZ.prob=p;QZ.ans=ans;QZ.spec=qzSpecLines(p,ans);QZ.loading=true;
   try{if(!keepCirc)setCircuit(qzMask(ans,p.blanks),"빈칸 문제: "+p.title)}finally{QZ.loading=false}
-  QZ.on=true;QZ.outKey=qzOutKey(qzMask(ans,p.blanks),p.blanks);QZ.good=JSON.stringify(circ.toJSON());
-  if(keepCirc&&qzOutKey(circ,p.blanks)!==QZ.outKey){QZ.on=false;return false}
+  QZ.on=true;QZ.blanks=p.blanks.map(r=>({...r}));QZ.outKey=qzOutKey(qzMask(ans,p.blanks),p.blanks);QZ.good=JSON.stringify(circ.toJSON());
+  if(keepCirc){const sb=keepCirc.blanks;if(Array.isArray(sb)&&sb.length===p.blanks.length&&qzOutKey(circ,sb)!==QZ.outKey){QZ.blanks=sb.map(r=>({...r}));QZ.outKey=qzOutKey(circ,QZ.blanks)}
+    if(qzOutKey(circ,QZ.blanks)!==QZ.outKey){QZ.on=false;return false}}
   if(typeof setView==="function")setView("seq");qzBar();qzMsg(keepCirc?"풀던 문제를 이어서 합니다.":"빈칸을 채운 뒤 '채점'을 누르세요. '▶ 동작 시작'으로 직접 시험해 봐도 됩니다.");qzSave();draw();
   $("sheetwrap").scrollLeft=0;return true}
 function qzEnd(){QZ.on=false;QZ.prob=null;QZ.ans=null;qzStore.set(null);qzBar();draw();setHint("빈칸 문제를 끝냈습니다. 지금 도면은 그대로 남아 있어 자유롭게 고칠 수 있습니다.")}
@@ -2823,7 +2893,7 @@ function qzShowAnswer(){if(!QZ.on)return;if(mode==="run")toggleMode();const url=
     <div style="overflow:auto;max-height:58vh;border:1px solid var(--line);border-radius:6px;background:#fff"><img src="${url}" alt="정답 도면" style="display:block;max-width:none"></div>
     <div class="row"><button type="button" class="btn" id="qaFill">정답으로 채우기</button><button type="button" class="btn primary" id="qaOk">닫기</button></div>`,(ov,close)=>{ov.firstChild.classList.add("xwide");
     ov.querySelector("#qaOk").onclick=()=>close();
-    ov.querySelector("#qaFill").onclick=()=>{close();snapshot();circ=Circuit.from(QZ.ans.toJSON());QZ.good=JSON.stringify(circ.toJSON());changed();qzMsg("정답으로 채웠습니다. '처음부터'로 다시 풀 수 있습니다.")}})}
+    ov.querySelector("#qaFill").onclick=()=>{close();snapshot();circ=Circuit.from(QZ.ans.toJSON());QZ.blanks=QZ.prob.blanks.map(r=>({...r}));QZ.outKey=qzOutKey(circ,QZ.blanks);QZ.good=JSON.stringify(circ.toJSON());changed();qzMsg("정답으로 채웠습니다. '처음부터'로 다시 풀 수 있습니다.")}})}
 
 // 문제 고르기 창
 function qzDialog(){if(mode==="run")toggleMode();const mine=qzMine.get();
@@ -2885,11 +2955,11 @@ function qzMaker(){if(mode==="run")toggleMode();if(QZ.on){setHint("빈칸 문제
     ov.querySelector("#qmGo").onclick=()=>{const f=make();if(!f)return;close();qzStart({...f,id:"file:"+f.title,file:f})}})}
 $("btnQuiz").onclick=qzDialog;
 $("qzGrade").onclick=qzGrade;$("qzAns").onclick=qzShowAnswer;$("qzEnd").onclick=qzEnd;
-$("qzRe").onclick=()=>{if(!QZ.on)return;if(mode==="run")toggleMode();const p=QZ.prob;snapshot();circ=qzMask(QZ.ans,p.blanks);QZ.good=JSON.stringify(circ.toJSON());changed();qzMsg("빈칸을 비웠습니다. 처음부터 풀어 보세요.")};
+$("qzRe").onclick=()=>{if(!QZ.on)return;if(mode==="run")toggleMode();const p=QZ.prob;snapshot();circ=qzMask(QZ.ans,p.blanks);QZ.blanks=p.blanks.map(r=>({...r}));QZ.outKey=qzOutKey(circ,QZ.blanks);QZ.good=JSON.stringify(circ.toJSON());changed();qzMsg("빈칸을 비웠습니다. 처음부터 풀어 보세요.")};
 $("qzSpecT").onclick=()=>{QZ.showSpec=!QZ.showSpec;qzBar()};
 // 새로 고침 뒤: 풀던 문제 이어서
 function qzResume(){const s=qzStore.get();if(!s||!s.prob)return;const p=s.prob.id?qzFind(s.prob.id):qzFromFile(s.prob);
-  if(!p||!qzStart(p,true)){qzStore.set(null);QZ.on=false;qzBar()}}
+  if(!p||!qzStart(p,{blanks:s.blanks})){qzStore.set(null);QZ.on=false;qzBar()}}
 // ── 빈칸 문제 예제 ── (정답 도면 + 빈칸 범위. 동작사항은 정답 도면을 실제로 조작해 자동으로 만듦)
 // 빈칸 {l0,l1: 회로선 범위, p0,p1: 칸 범위} — 그 안의 접점·코일·세로선·가로선이 지워짐
 // 공통: 0번 회로선 EOCR 전원, 1번 회로선 EOCR a접점 → YL, 모선에 EOCR b · PB0
@@ -3010,8 +3080,8 @@ const QZ_PROBS=[
     put(4,0,"PB_A","PB2");put(4,1,"LS_B","LS2");wire(4,2,3);put(4,Z,"COIL","X2");put(5,0,"A","X2");link([4,1],[4,3],[5,3]);put(6,3,"WIRE");put(6,Z,"TIMER","T",3);
     put(7,0,"PB_A","PB3");wire(7,1,3);put(7,Z,"COIL","X3");put(8,0,"A","X3");link([7,1],[7,3],[8,3],[9,3]);put(9,3,"WIRE");put(9,Z,"FR","FR",1);put(10,3,"WIRE");put(10,Z,"LAMP","WL");
     put(11,0,"B","X3");put(11,1,"A","X1");wire(11,2,3);put(11,Z,"COIL","MC1");
-    put(12,0,"A","X3");put(12,1,"FA","FR");link([11,2],[12,1]);
-    put(13,1,"FB","FR");wire(13,2,3);put(13,Z,"COIL","MC2");
+    put(12,0,"A","X3");put(12,1,"FB","FR");link([11,2],[12,1]);
+    put(13,1,"FA","FR");wire(13,2,3);put(13,Z,"COIL","MC2");
     put(14,0,"B","X3");put(14,1,"TA","T");link([13,2]);
     put(15,0,"A","MC1");wire(15,1,3);put(15,Z,"LAMP","RL1");put(16,0,"A","MC2");wire(16,1,3);put(16,Z,"LAMP","RL2");
     put(17,0,"B","X1");put(17,1,"B","X2");wire(17,2,3);put(17,Z,"LAMP","GL")})},
@@ -3036,8 +3106,8 @@ const QZ_PROBS=[
     put(6,0,"SW_A","SS");put(6,1,"LS_B","LS2");put(6,2,"PB_A","PB2");wire(6,3,Z-1);put(6,Z,"COIL","X2");put(7,2,"A","X2");link([6,2],[6,3]);
     put(8,0,"A","X1");wire(8,1,Z-1);put(8,Z,"FR","FR",1);put(9,0,"A","X2");link([8,1],[9,1],[10,1],[11,1],[12,1]);
     wire(10,1,Z-1);put(10,Z,"COIL","X3");
-    put(11,1,"FA","FR");wire(11,2,Z-1);put(11,Z,"COIL","MC1");link([11,Z]);put(12,Z,"LAMP","RL1");
-    put(13,1,"FB","FR");wire(13,2,Z-1);put(13,Z,"COIL","MC2");link([13,Z]);put(14,Z,"LAMP","RL2");
+    put(11,1,"FB","FR");wire(11,2,Z-1);put(11,Z,"COIL","MC1");link([11,Z]);put(12,Z,"LAMP","RL1");
+    put(13,1,"FA","FR");wire(13,2,Z-1);put(13,Z,"COIL","MC2");link([13,Z]);put(14,Z,"LAMP","RL2");
     put(15,0,"B","X3");wire(15,1,Z-1);put(15,Z,"LAMP","WL")})}
 ];
 // ==QZ_END==
