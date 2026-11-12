@@ -98,12 +98,32 @@ html,body{touch-action:manipulation}   /* 두 번 탭해도 화면이 확대되�
 .pick button:hover,.pick button:focus-visible{background:var(--sel);color:var(--selfg);outline:none}
 .pick kbd{font:600 10.5px var(--mono);color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 4px}
 .pick .pick-x{justify-content:space-between;color:var(--muted);font-weight:500;border-top:1px solid var(--line);border-radius:0 0 6px 6px;margin-top:2px}
+.sheetbox{position:relative;display:flex;flex-direction:column;flex:1;min-height:0}
+.sheetbox>.sheetwrap{flex:1}
+.zbar{position:absolute;right:20px;top:8px;z-index:5;display:flex;align-items:center;gap:2px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:2px;box-shadow:var(--shadow);opacity:.92}
+.zbar button{min-width:30px;height:28px;border:0;background:transparent;border-radius:6px;font:inherit;font-weight:700;color:var(--fg);cursor:pointer;padding:0 6px}
+.zbar button:hover{background:var(--panel2)}
+.zbar .zpct{min-width:50px;font-size:12px;font-variant-numeric:tabular-nums}
+.sheetwrap.panning,.sheetwrap.panning #cv{cursor:grabbing!important}
 .sheetwrap{background:var(--sheet);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);overflow:auto;min-height:280px;position:relative}
 #cv{display:block;touch-action:none}
 .hint{font-size:12px;color:var(--muted);min-height:18px}
 .hint.warn{color:var(--live);font-weight:600}
 .bgbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--muted)}
 .bgbar strong{color:var(--fg)}
+.qzbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;background:var(--panel);border:2px dashed var(--selfg);border-radius:8px;padding:8px 10px;font-size:13px;color:var(--fg)}
+.qzbar .qzhead{flex:1;min-width:220px;display:flex;flex-direction:column;gap:2px}
+.qzbar .qzmsg{font-size:12.5px;color:var(--muted)}.qzbar .qzmsg.ok{color:#1f9d55;font-weight:700}.qzbar .qzmsg.bad{color:var(--live);font-weight:700}
+.qzbar .btn{padding:4px 10px;font-size:12.5px}
+.qzspec{flex-basis:100%;max-height:min(30vh,260px);overflow:auto;border-top:1px solid var(--line);padding-top:6px;font-size:13px;line-height:1.65}
+.qzspec .ql{margin:0 0 3px}.qzspec .ql.sub{padding-left:1.4em}
+.qzlist{display:flex;flex-direction:column;gap:6px;max-height:52vh;overflow:auto}
+.qzitem{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:8px;padding:7px 10px;background:var(--panel2)}
+.qzitem .qi{flex:1;min-width:0}.qzitem .qi b{display:block;font-size:13.5px}.qzitem .qi span{font-size:12px;color:var(--muted)}
+.qzlv{font-size:11px;font-weight:700;border-radius:999px;padding:1px 8px;background:var(--sel);color:var(--selfg);white-space:nowrap}
+.qzres li{margin:2px 0}.qzres .ok{color:#1f9d55;font-weight:700}.qzres .bad{color:var(--live);font-weight:700}
+.qzmk{position:relative;border:1px solid var(--line);border-radius:6px;overflow:auto;max-height:52vh;background:#fff}
+.qzmk img{display:block;max-width:none}.qzmk svg{position:absolute;left:0;top:0;cursor:crosshair;touch-action:none}
 .dbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;background:var(--sel);border:1px solid var(--selfg);border-radius:8px;padding:8px 10px;font-size:13px;color:var(--fg)}
 .dbar .dtext{flex:1;min-width:220px;display:flex;flex-direction:column;gap:2px}
 .dbar .dbtns{display:flex;flex-wrap:wrap;gap:6px}
@@ -347,31 +367,142 @@ table.nett td.chain{font-family:var(--mono);font-size:12px;line-height:1.7}
   .wr .wrgrip::after{left:50%;top:6px;transform:translateX(-50%);width:52px;height:4px}
   .wr .pvhint{grid-column:1/-1}}
 @media (max-width:760px){.wr{grid-template-columns:1fr}.wr .wrscroll{min-height:320px}}
+
+/* ═════════ 새 화면 틀 — 시안 C: 도면 꽉 차게 + 떠 있는 도구 (2026-11-12) ═════════ */
+:root{--acc:#3b6cf6;--acc2:#6a8dff;--r:14px;--fshadow:0 6px 24px rgba(16,24,40,.09),0 1px 2px rgba(16,24,40,.06)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--fshadow:0 6px 24px rgba(0,0,0,.45),0 1px 2px rgba(0,0,0,.4)}}
+:root[data-theme="dark"]{--fshadow:0 6px 24px rgba(0,0,0,.45),0 1px 2px rgba(0,0,0,.4)}
+.btn{display:inline-flex;align-items:center;gap:6px;border-radius:10px}
+.btn svg{flex:none}
+.flogo{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,var(--acc),var(--acc2));display:grid;place-items:center;flex:none}
+.vsw button{display:inline-flex;align-items:center;gap:6px}
+.caret{font-size:10px;opacity:.55;font-weight:400}
+.fsep{width:1px;height:22px;background:var(--line);display:inline-block;margin:0 2px}
+.dd{position:relative;display:inline-flex}
+.ddm{position:absolute;top:calc(100% + 8px);right:0;min-width:210px;z-index:60;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--fshadow);padding:6px;display:flex;flex-direction:column;gap:2px}
+.ddm .btn{border:0;box-shadow:none;background:transparent;width:100%;justify-content:flex-start;padding:9px 12px;font-size:13.5px;font-weight:500}
+.ddm .btn:hover{background:var(--sel);color:var(--selfg)}
+.fpalh{display:none}
+.fchart{display:none}
+@media (min-width:900px){
+  body{padding:0;overflow:hidden;display:block;height:100vh;background-image:radial-gradient(color-mix(in srgb,var(--muted) 30%,transparent) 1.1px,transparent 1.2px);background-size:22px 22px;background-attachment:fixed}
+  .fcard{position:fixed;z-index:30;background:var(--panel);border:1px solid color-mix(in srgb,var(--line) 70%,transparent);border-radius:var(--r);box-shadow:var(--fshadow);display:flex;align-items:center;gap:6px;padding:6px}
+  header{display:block}
+  header .btn{border-color:transparent;background:transparent;box-shadow:none;height:36px;padding:0 12px;font-size:13.5px;font-weight:600;color:var(--fg)}
+  header .btn:hover{background:var(--panel2)}
+  header .btn:disabled{opacity:.35}
+  header .btn.primary{background:var(--run);border-color:var(--run);color:#fff;min-width:0;padding:0 16px;box-shadow:0 2px 8px color-mix(in srgb,var(--run) 35%,transparent)}
+  header .btn.primary:hover{filter:brightness(1.05);background:var(--run)}
+  header .btn.primary.running{background:var(--stop);border-color:var(--stop);box-shadow:0 2px 8px color-mix(in srgb,var(--stop) 35%,transparent)}
+  .fbrand{left:16px;top:14px;padding:6px 6px 6px 8px;gap:10px}
+  .fbrand h1{font-size:15px;margin:0 4px 0 0;white-space:nowrap}
+  .fbrand h1 small{display:block;margin:1px 0 0;font-size:10.5px}
+  .vsw{border:0;background:var(--panel2);border-radius:11px;padding:3px;gap:2px;margin:0}
+  .vsw button{height:34px;padding:0 14px;border-radius:8px;font-size:13.5px;color:var(--muted)}
+  .vsw button.on{background:var(--panel);color:var(--fg);box-shadow:0 1px 3px rgba(16,24,40,.14)}
+  .fright{right:16px;top:14px}
+  .ftool{left:50%;transform:translateX(-50%);top:80px}
+  .ftool .clock{min-width:0;padding:0 4px}
+  .ftool .clock:empty{display:none}
+  .ftool .mode{display:none}
+  .ftool .btn.ficon span{display:none}
+  .ftool .btn.ficon{width:36px;padding:0;justify-content:center}
+  body.pvmode .fright{top:14px}
+  /* 도면 칸: 화면 전체 */
+  .work{position:fixed;inset:0;display:block;z-index:1}
+  .work>div:not(.fpal){position:absolute;inset:0;display:block!important}
+  .sheetbox{position:absolute;inset:0}
+  .sheetwrap{position:absolute;inset:0;border:0;border-radius:0;box-shadow:none;background:transparent;min-height:0;padding:136px 24px 90px 236px}
+  body.palname .sheetwrap{padding-left:300px}
+  #cv{box-shadow:0 1px 3px rgba(16,24,40,.08),0 8px 30px rgba(16,24,40,.06);border-radius:4px}
+  body:has(#fstack>:not([hidden])) .sheetwrap{padding-right:420px}
+  /* 부품함 */
+  .fpal{position:fixed;z-index:25;left:16px;top:80px;bottom:76px;width:204px;background:var(--panel);border:1px solid color-mix(in srgb,var(--line) 70%,transparent);border-radius:var(--r);box-shadow:var(--fshadow);display:flex;flex-direction:column;overflow:hidden}
+  body.palname .fpal{width:268px}
+  .fpalh{display:flex;align-items:center;justify-content:space-between;padding:10px 10px 6px 14px;font-size:12.5px;color:var(--muted)}
+  .fpalh .btn{height:26px;padding:0 9px;font-size:11.5px;border-radius:7px;background:var(--panel2);border-color:transparent;box-shadow:none;color:var(--muted)}
+  .palette{background:transparent;border:0;box-shadow:none;border-radius:0;padding:2px 10px 12px;grid-template-columns:repeat(4,1fr);gap:5px;flex:1;min-height:0}
+  .palette h3{margin:10px 2px 2px;font-size:11px}
+  .palette .tool{height:38px;justify-content:center;padding:0;border-radius:9px;background:var(--panel2);border:1px solid transparent}
+  .palette .tool span{display:none}
+  .palette .tool[aria-pressed="true"]{background:var(--sel);border-color:color-mix(in srgb,var(--selfg) 45%,transparent)}
+  body.palname .palette{grid-template-columns:1fr 1fr}
+  body.palname .palette .tool{justify-content:flex-start;padding:0 9px;font-size:12.5px}
+  body.palname .palette .tool span{display:inline;overflow:hidden;text-overflow:ellipsis}
+  /* 오른쪽 위 안내 막대들(빈칸 문제·AI 도면 안내·원본 배경) */
+  .fstack{position:fixed;z-index:26;right:16px;top:80px;width:390px;max-height:calc(100vh - 170px);overflow:auto;display:flex;flex-direction:column;gap:10px}
+  .fstack>*{box-shadow:var(--fshadow);border-radius:var(--r)!important}
+  .fstack .qzbar{border-width:1.5px}
+  .fstack .qzspec{max-height:none}
+  /* 확대·축소, 안내 문구, 타임차트 */
+  .zbar{position:fixed;right:16px;bottom:16px;top:auto;z-index:30;border-radius:12px;box-shadow:var(--fshadow);padding:3px}
+  .zbar button{height:32px}
+  .hint{position:fixed;z-index:29;left:50%;bottom:20px;transform:translateX(-50%);max-width:min(760px,calc(100vw - 560px));background:color-mix(in srgb,var(--fg) 88%,transparent);color:var(--panel);
+    padding:8px 16px;border-radius:999px;font-size:12.5px;line-height:1.45;text-align:center;min-height:0;box-shadow:var(--fshadow)}
+  .hint:empty{display:none}
+  .hint.warn{background:var(--live);color:#fff}
+  .fchart{display:flex;left:16px;bottom:16px;top:auto;padding:0 14px;height:42px;font:600 13px var(--sans);color:var(--fg);cursor:pointer;gap:8px}
+  .chartbox{position:fixed;z-index:28;left:16px;right:16px;bottom:68px;height:220px;display:none;border-radius:var(--r);box-shadow:var(--fshadow);overflow:hidden}
+  body.chartopen .chartbox{display:flex}
+  body.chartopen .hint{bottom:300px}
+  body.chartopen .fpal{bottom:300px}
+  .chartscroll{max-height:none;flex:1}
+  body.pvmode .chartbox,body.pvmode .fchart{display:none!important}
+  /* 제어반 결선·배치도 화면 */
+  .pv,.ly{position:fixed;left:16px;right:16px;top:76px;bottom:16px;z-index:5}
+  .pv .btn,.ly .btn{border-radius:9px}
+  body.chartopen .sheetwrap{padding-bottom:310px}
+  /* 결선·배치도 칸도 같은 카드 모양 */
+  .pv .pvbar.wrtop{background:var(--panel);border:1px solid color-mix(in srgb,var(--line) 70%,transparent);border-radius:var(--r);box-shadow:var(--fshadow);padding:6px 8px;gap:4px}
+  .pv .pvbar.wrtop .btn{border-color:transparent;background:transparent;box-shadow:none;height:34px;padding:0 11px;font-weight:600}
+  .pv .pvbar.wrtop .btn:hover{background:var(--panel2)}
+  .pv .pvbar.wrtop .btn.primary{background:var(--acc);border-color:var(--acc);color:#fff}
+  .wrseg{border:0;background:var(--panel2);border-radius:10px;padding:3px;gap:2px}
+  .wrseg button{border-radius:7px;background:transparent;height:30px;font-weight:600;color:var(--muted)}
+  .wrseg button[aria-pressed="true"],.wrseg button.on{background:var(--panel);color:var(--fg);box-shadow:0 1px 3px rgba(16,24,40,.14)}
+  .wrpane,.pvside,.lypages{border-radius:var(--r);box-shadow:var(--fshadow);border-color:color-mix(in srgb,var(--line) 70%,transparent)}
+  .wrcap{padding:8px 10px;font-size:13px}
+  .wrcap .btn{height:28px;border-radius:8px}
+  .lypages{background:color-mix(in srgb,var(--panel2) 70%,transparent)}
+}
 </style>
 
 <header>
-  <h1>시퀀스 작도·시뮬레이터<small>KS 세로형 v2.1</small></h1>
-  <div class="vsw" role="tablist" aria-label="화면"><button type="button" class="on" id="vSeq" role="tab" aria-selected="true">시퀀스도</button><button type="button" id="vPanel" role="tab" aria-selected="false">제어반 결선</button><button type="button" id="vLay" role="tab" aria-selected="false">배치도</button></div>
-  <button class="btn primary" id="btnMode">▶ 동작 시작</button>
-  <button class="btn" id="btnReset" disabled>⟲ 초기화</button>
-  <button class="btn" id="btnUndo">되돌리기</button>
-  <button class="btn" id="btnNew">새 도면</button>
-  <button class="btn" id="btnFile">파일·예제</button>
-  <button class="btn" id="btnImport">도면 불러오기</button>
-  <button class="btn" id="btnDesc">동작사항 확인</button>
-  <button class="btn" id="btnTpl" title="회로를 한 줄씩 적어 도면을 자동으로 그립니다(AI 없이 동작)">회로 틀로 만들기</button>
-  <button class="btn" id="btnDesign" title="동작사항을 적으면 시퀀스도를 만들어 줍니다">동작사항→도면</button>
-  <button class="btn" id="btnRevise" title="지금 도면에 추가 요구사항을 적어 고칩니다">도면 수정 요청</button>
-  <button class="btn" id="btnExport" title="도면을 JPG 이미지나 PDF로 저장합니다">도면 저장</button>
-  <button class="btn" id="btnHelp">사용법</button>
-  <span class="spacer"></span>
-  <span class="clock" id="clock"></span>
-  <span class="mode" id="modeTag">편집 모드</span>
+  <div class="fcard fbrand"><span class="flogo" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round"><path d="M5 5h14M5 19h14M9 5v5M9 14v5M15 5v14"/><path d="M6.5 10h5"/></svg></span><h1>시퀀스 작도·시뮬레이터<small>KS 세로형 v2.1</small></h1>
+    <div class="vsw" role="tablist" aria-label="화면"><button type="button" class="on" id="vSeq" role="tab" aria-selected="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M4 4h16M4 20h16M8 4v4M8 12v8M16 4v16"/><path d="M6 8h4M6 12h4"/></svg><span>시퀀스도</span></button><button type="button" id="vPanel" role="tab" aria-selected="false"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="4" width="7" height="6" rx="1"/><rect x="14" y="14" width="7" height="6" rx="1"/><path d="M6.5 10v6h7.5"/></svg><span>제어반 결선</span></button><button type="button" id="vLay" role="tab" aria-selected="false"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 9v12"/></svg><span>배치도</span></button></div></div>
+  <div class="fcard ftool" id="fTool">
+    <button class="btn primary" id="btnMode">▶ 동작 시작</button>
+    <button class="btn ficon" id="btnReset" disabled title="동작 시험을 처음 상태로"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg><span>초기화</span></button>
+    <i class="fsep seqonly" aria-hidden="true"></i>
+    <button class="btn ficon" id="btnUndo" title="되돌리기 (Ctrl+Z)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg><span>되돌리기</span></button>
+    <i class="fsep seqonly" aria-hidden="true"></i>
+    <button class="btn" id="btnDesc"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m5 12 4 4 10-10"/></svg><span>동작사항 확인</span></button>
+    <span class="clock" id="clock"></span>
+    <span class="mode" id="modeTag">편집 모드</span>
+  </div>
+  <div class="fcard fright">
+    <button class="btn seqonly" id="btnQuiz" title="시퀀스도의 빈칸을 동작사항에 맞게 채우고 채점합니다"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="3" stroke-dasharray="3 2.4"/><path d="M9 12h6"/></svg><span>빈칸 문제</span></button>
+    <div class="dd seqonly" id="ddFile"><button class="btn" type="button" aria-haspopup="true" aria-expanded="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/></svg><span>파일</span><b class="caret">▾</b></button>
+      <div class="ddm" hidden>
+        <button class="btn" id="btnNew">새 도면</button>
+        <button class="btn" id="btnFile">파일·예제</button>
+        <button class="btn" id="btnImport">도면 불러오기</button>
+        <button class="btn" id="btnExport" title="도면을 JPG 이미지나 PDF로 저장합니다">도면 저장 (JPG·PDF)</button></div></div>
+    <div class="dd seqonly" id="ddMake"><button class="btn" type="button" aria-haspopup="true" aria-expanded="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.6L19 9.5l-5.2 1.9L12 17l-1.8-5.6L5 9.5l5.2-1.9zM19 15l.9 2.6L22 18.5l-2.1.9L19 22l-.9-2.6-2.1-.9 2.1-.9z"/></svg><span>도면 만들기</span><b class="caret">▾</b></button>
+      <div class="ddm" hidden>
+        <button class="btn" id="btnTpl" title="회로를 한 줄씩 적어 도면을 자동으로 그립니다(AI 없이 동작)">회로 틀로 만들기</button>
+        <button class="btn" id="btnDesign" title="동작사항을 적으면 시퀀스도를 만들어 줍니다">동작사항→도면</button>
+        <button class="btn" id="btnRevise" title="지금 도면에 추가 요구사항을 적어 고칩니다">도면 수정 요청</button></div></div>
+    <button class="btn" id="btnHelp" title="사용법"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14"/><circle cx="12" cy="17.3" r=".6" fill="currentColor"/></svg><span>사용법</span></button>
+  </div>
 </header>
 
 <div class="work">
-  <nav class="palette" id="palette" aria-label="부품함"></nav>
+  <div class="fpal"><div class="fpalh"><b>부품</b><button type="button" class="btn" id="palMode" title="부품 이름을 함께 보이거나 아이콘만 보이기">이름 보기</button></div><nav class="palette" id="palette" aria-label="부품함"></nav></div>
   <div style="display:flex;flex-direction:column;gap:6px;min-width:0;min-height:0">
+    <div class="fstack" id="fstack"><div class="qzbar" id="qzbar" hidden><div class="qzhead"><b id="qzTitle"></b><span class="qzmsg" id="qzMsg"></span></div>
+      <div class="dbtns"><button class="btn" id="qzSpecT">동작사항 접기</button><button class="btn primary" id="qzGrade">채점</button><button class="btn" id="qzAns">정답 보기</button><button class="btn" id="qzRe">처음부터</button><button class="btn" id="qzEnd">문제 끝내기</button></div>
+      <div class="qzspec" id="qzSpec"></div></div>
     <div class="dbar" id="dbar" hidden><div class="dtext"><span id="dbarText"></span><span class="hint warn" id="dbarWarn"></span></div>
       <div class="dbtns"><button class="btn primary" id="dbarRev" style="min-width:0">도면 수정 요청</button><button class="btn" id="dbarPlay">▶ 동작 시험</button>
       <button class="btn" id="dbarCmp">동작사항 비교</button><button class="btn" id="dbarX" aria-label="안내 닫기" title="안내 닫기">✕</button></div></div>
@@ -382,12 +513,14 @@ table.nett td.chain{font-family:var(--mono);font-size:12px;line-height:1.7}
       <label>크기 <input type="range" id="bgSc" min="30" max="250" value="100"></label>
       <label>좌우 <input type="range" id="bgX" min="-400" max="400" value="0"></label>
       <label>상하 <input type="range" id="bgY" min="-300" max="300" value="0"></label>
-      <button class="btn" id="bgFit">맞추기</button><button class="btn" id="bgDel">배경 지우기</button></div>
-    <div class="sheetwrap" id="sheetwrap" style="flex:1"><canvas id="cv"></canvas></div>
+      <button class="btn" id="bgFit">맞추기</button><button class="btn" id="bgDel">배경 지우기</button></div></div>
+    <div class="sheetbox"><div class="sheetwrap" id="sheetwrap"><canvas id="cv"></canvas></div>
+      <div class="zbar" id="zbar" role="group" aria-label="도면 확대·축소"><button id="zOut" title="축소 (Ctrl+휠)" aria-label="축소">－</button><button class="zpct" id="zPct" title="100%로">100%</button><button id="zIn" title="확대 (Ctrl+휠)" aria-label="확대">＋</button><button id="zFit" title="도면 전체가 보이게">맞춤</button></div></div>
     <div class="hint" id="hint"></div>
   </div>
 </div>
 
+<button class="fcard fchart seqonly" id="chartTgl" type="button" aria-expanded="false"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17h4v-6h4v6h4V7h4v10h2"/></svg><span>타임차트</span><b class="caret">▴</b></button>
 <section class="chartbox">
   <div class="cap">타임차트 · 최근 20초<span class="spacer"></span>
     <button class="btn" id="btnPause">일시정지</button><button class="btn" id="btnClear">지우기</button></div>
@@ -448,7 +581,11 @@ const SIMPLE=false;    // 간단 부품함 버전: 입력·접점을 a·b 하나
 // node(l,b): l번 회로선의 b번째 경계. b=0 은 상단 R모선, b=cols 는 하단 T모선
 const LW=48, PH=60, Y0=66, TICK=40;
 // 도면 왼쪽 전원부·주회로(기본으로 표시): MAINW만큼 회로선이 오른쪽으로 밀림
-const MAINW=420, MAIN_H=Y0+352;
+const MAINW=300, MAIN_H=Y0+352;
+// 주회로 자리. 2026-11-12 사용자 요청: 세로선 사이 간격(가로 방향)을 30% 줄임 — mainX. 위아래 자리(mainY)는 원래대로.
+function mainX(){const a=66,d=20,b=a+119;return{a,b,L:[a,a+d,a+2*d],PE:a+63,L2:[b,b+d,b+2*d],PE2:b+63}}
+function mainY(){const T0=Y0-24,s=o=>T0+o,yE0=s(124);
+  return{T0,yM:s(56),y1:s(92),y2:s(110),yE0,yE1:yE0+24,yP:s(162),br:[s(204),s(190),s(176)],yC:s(238),yT:s(290)}}
 let MAIN_ON=(()=>{try{return localStorage.getItem("seqsim.main")!=="0"}catch(e){return true}})();
 let X0=(MAIN_ON?MAINW:0)+34;
 function setMain(on){MAIN_ON=!!on;X0=(MAIN_ON?MAINW:0)+34;try{localStorage.setItem("seqsim.main",on?"1":"0")}catch(e){}resize();draw()}
@@ -482,7 +619,7 @@ Object.entries({XA:"X1",XB:"X1",MCA:"MC1",MCB:"MC1",PB_A:"PB1",PB_B:"PB0",SW_A:"
 Object.values(GENERIC).flat().forEach(([k,n])=>{if(!(k in LABEL))LABEL[k]=n});
 const GROUP={XA:"x",XB:"x",MCA:"mc",MCB:"mc",EOCR:"eocr",MC:"mc",FLS:"fls",FLSA:"fls",FLSB:"fls",TIA:"timer",A:"relay",B:"relay",COIL:"relay",TA:"timer",TB:"timer",TIMER:"timer",FA:"fr",FB:"fr",FR:"fr",CNT:"cnt",CRST:"cnt",THR_A:"thr",THR_B:"thr",SW_A:"sw",SW_B:"sw",LS_A:"ls",LS_B:"ls"};
 const PRESET={TIMER:["설정 시간 (초)",3,0.1],FR:["점멸 시간 (초, ON·OFF 각각)",0.5,0.1],CNT:["설정 횟수",3,1]};
-const HINT={SELECT:"부품을 더블클릭하면 문자기호·표시 이름·설정값을 바꿉니다. 접점은 끌어서 다른 칸으로 옮기고, 릴레이·MC·타이머·플리커·FLS 같은 부하는 끌어 빈 칸에 놓으면 그 접점을 바로 넣을 수 있습니다.",
+const HINT={SELECT:"부품을 더블클릭하면 문자기호·표시 이름·설정값을 바꿉니다. 접점은 끌어서 다른 칸으로 옮기고, 릴레이·MC·타이머·플리커·FLS 같은 부하는 끌어 빈 칸에 놓으면 그 접점을 바로 넣을 수 있습니다. 빈 곳을 끌면 도면이 움직입니다.",
  ERASE:"누르면 하나씩 지우고, 누른 채 끌어 사각형으로 범위를 잡으면 그 안의 부품·선을 한꺼번에 지웁니다. 오른쪽 클릭으로도 지울 수 있습니다.",
  WIRE:"마우스가 회로선(세로)을 가리키면 세로선, 두 회로선 사이 단 경계(가로)를 가리키면 가로선이 표시됩니다. 빈 칸에서 누르거나 끌어서 그리고, 이미 있는 가로선을 누르면 선택됩니다(Delete로 지우기). 기호를 그냥 누르면 세로선으로 덮어쓰고, 끌면 접점을 옮기거나 부하의 접점을 만듭니다.",
  VLINK:"두 회로선 사이의 칸 경계를 누르면 가로 연결선이 생기고, 다시 누르면 지워집니다.",
@@ -823,9 +960,9 @@ let simTime=0, lastT=performance.now(), chartPaused=false, undo=[], name="";
 const chart={ev:new Map(),kind:new Map(),order:[],now:0,clear(){this.ev.clear();this.kind.clear();this.order=[];this.now=0}};
 const store={get(k="seqsim.v2"){try{return localStorage.getItem(k)}catch(e){return null}},set(v){try{localStorage.setItem("seqsim.v2",v)}catch(e){}}};
 
-function setCircuit(c,label){kcur=null;if(mode==="run")toggleMode();circ=c;sim=new Sim(circ);sim.solve();name=label||"";chart.clear();undo=[];resize();draw();drawChart();save()}
+function setCircuit(c,label){qzLeave();kcur=null;if(mode==="run")toggleMode();circ=c;sim=new Sim(circ);sim.solve();name=label||"";chart.clear();undo=[];resize();draw();drawChart();save()}
 function snapshot(){undo.push(JSON.stringify(circ.toJSON()));if(undo.length>60)undo.shift()}
-function changed(){circ.tidy();sim=new Sim(circ);resize();draw();save()}
+function changed(){circ.tidy();qzGuard();sim=new Sim(circ);resize();draw();save()}
 function save(){store.set(JSON.stringify({name,circ:circ.toJSON()}))}
 
 // ───────────── 부품함 ─────────────
@@ -945,8 +1082,18 @@ let T={};
 function tokens(){const s=getComputedStyle(document.documentElement);
   ["sheet","grid","wire","live","coil","tag","muted","fg","chart","chartgrid","chartfg","selfg"].forEach(n=>T[n]=s.getPropertyValue("--"+n).trim())}
 const lineX=l=>X0+l*LW, bY=b=>Y0+b*PH;
+// 도면 확대·축소 (화면에만 적용, 저장·인쇄 크기는 그대로)
+var ZM=1;try{const z=parseFloat(localStorage.getItem("seqsim.zoom"));if(z>=0.3&&z<=3)ZM=z}catch(e){}
+function sheetSize(){return{w:lineX(circ.rows-1)+86,h:Math.max(bY(circ.cols)+40+(hasFLS()?FLS_EXTRA:0),MAIN_ON?MAIN_H:0)}}
+function setZoom(z,cx,cy){z=Math.max(0.3,Math.min(3,+z.toFixed(2)));const w=$("sheetwrap"),wr=w.getBoundingClientRect();
+  if(cx==null){cx=wr.left+w.clientWidth/2;cy=wr.top+w.clientHeight/2}
+  const c0=cv.getBoundingClientRect(),px=(cx-c0.left)/ZM,py=(cy-c0.top)/ZM;
+  ZM=z;try{localStorage.setItem("seqsim.zoom",String(z))}catch(e){}resize();draw();
+  const c1=cv.getBoundingClientRect();w.scrollLeft+=c1.left+px*ZM-cx;w.scrollTop+=c1.top+py*ZM-cy;zoomUI()}
+function zoomFit(){const w=$("sheetwrap"),s=sheetSize();setZoom(Math.min((w.clientWidth-8)/s.w,(w.clientHeight-8)/s.h));w.scrollLeft=0;w.scrollTop=0}
+function zoomUI(){const el=$("zPct");if(el)el.textContent=Math.round(ZM*100)+"%"}
 function resize(){const dpr=window.devicePixelRatio||1, w=lineX(circ.rows-1)+86, h=Math.max(bY(circ.cols)+40+(hasFLS()?FLS_EXTRA:0),MAIN_ON?MAIN_H:0);
-  cv.width=w*dpr;cv.height=h*dpr;cv.style.width=w+"px";cv.style.height=h+"px";ctx.setTransform(dpr,0,0,dpr,0,0)}
+  cv.width=Math.round(w*dpr*ZM);cv.height=Math.round(h*dpr*ZM);cv.style.width=w*ZM+"px";cv.style.height=h*ZM+"px";ctx.setTransform(dpr*ZM,0,0,dpr*ZM,0,0)}
 function seg(a,b,col,w=1.6,dash){ctx.beginPath();ctx.strokeStyle=col;ctx.lineWidth=w;ctx.setLineDash(dash||[]);ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.stroke();ctx.setLineDash([])}
 function poly(pts,col,w=1.6){ctx.beginPath();ctx.strokeStyle=col;ctx.lineWidth=w;pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.stroke()}
 function ring(p,r,stroke,fill,w=1.4){ctx.beginPath();ctx.arc(p[0],p[1],r,0,7);ctx.fillStyle=fill;ctx.fill();ctx.strokeStyle=stroke;ctx.lineWidth=w;ctx.stroke()}
@@ -1054,12 +1201,12 @@ function draw(){tokens();if(EXPORTING)Object.assign(T,PRINT_T);const run=mode===
     if(b===0||b===C.cols){n++;if(l<C.rows-1)n++}       // 모선: 왼쪽은 항상, 오른쪽은 마지막 회로선 전까지
     else{if(l>0&&C.vlinks.has(K(l-1,b)))n++;if(C.vlinks.has(K(l,b)))n++}
     if(n>=3)dot(lineX(l),bY(b),b<C.cols&&live(K(l,b))?T.live:T.wire)}
-  drawMain(run);
+  drawMain(run);qzDraw();
   if(!EXPORTING){drawCursor();drawEraseBox()}}
 // ───────────── 전원부·주회로 (도면 왼쪽, 기본 표시) ─────────────
 // TB1(3P3W AC 220V) → MCCB → EOCR → MC1·MC2 주접점 → TB2·TB3 → 전동기 M1·M2, 퓨즈 2개를 거쳐 R·T 모선으로
 function drawMain(run){if(!MAIN_ON)return;const W=T.wire,F='700 11px "Noto Sans KR","Noto Sans CJK KR",sans-serif',FS='600 9.5px "Noto Sans KR","Noto Sans CJK KR",sans-serif',FM='700 10px "JetBrains Mono",monospace';
-  const a=66,b=a+170,L=[a,a+28,a+56],PE=a+90,L2=[b,b+28,b+56],PE2=b+90,T0=Y0-24,xV=MAINW-22,xL=lineX(0),yB=bY(circ.cols);
+  const{a,b,L,PE,L2,PE2}=mainX(),xV=MAINW-22,xL=lineX(0),yB=bY(circ.cols),MY=mainY(),T0=MY.T0;
   const live=run&&!sim.short,dash=(p,q)=>seg(p,q,W,1,[4,3]);
   const tag1=[...circ.cells.values()].some(v=>v.k==="COIL"&&v.tag==="MC1")?"MC1":"MC";
   const on1=run&&!sim.short&&sim.coil.has(tag1),on2=run&&!sim.short&&sim.coil.has("MC2");
@@ -1069,32 +1216,32 @@ function drawMain(run){if(!MAIN_ON)return;const W=T.wire,F='700 11px "Noto Sans 
   txt("TB1",a-18,T0-8,T.tag,F,"right");txt("3P3W AC 220V",PE+18,T0-8,T.tag,F,"left");
   ["갈","흑","회","녹황"].forEach((c,i)=>txt(c,[...L,PE][i]+(i<3?8:12),T0+18,T.muted,FS,"left"));
   // MCCB
-  const yM=T0+56;L.forEach(x=>{seg([x,T0+3],[x,yM-12],W,1.4);ring([x,yM-12],2.4,W,T.sheet,1.1);
+  const yM=MY.yM;L.forEach(x=>{seg([x,T0+3],[x,yM-12],W,1.4);ring([x,yM-12],2.4,W,T.sheet,1.1);
     ctx.beginPath();ctx.strokeStyle=W;ctx.lineWidth=1.5;ctx.moveTo(x,yM-10);ctx.quadraticCurveTo(x+13,yM,x,yM+12);ctx.stroke();ring([x,yM+12],2.4,W,T.sheet,1.1)});
-  dash([a-4,yM],[a+64,yM]);txt("MCCB",a-18,yM,T.tag,F,"right");
+  dash([a-4,yM],[L[2]+8,yM]);txt("MCCB",a-18,yM,T.tag,F,"right");
   // 퓨즈 → R·T 모선
-  const y1=T0+92,y2=T0+110,fx=MAINW-74;
+  const y1=MY.y1,y2=MY.y2,fx=MAINW-74;
   const fuse=y=>{ctx.strokeStyle=W;ctx.lineWidth=1.3;ctx.strokeRect(fx,y-5,28,10);seg([fx+4,y+5],[fx+24,y-5],W,1.1)};
   const rc=live?T.live:W;
   seg([a,y1],[fx,y1],W,1.4);fuse(y1);seg([fx+28,y1],[xV,y1],rc,1.6);seg([xV,y1],[xV,Y0],rc,1.6);seg([xV,Y0],[xL,Y0],rc,2);dot(a,y1,W);
-  seg([a+56,y2],[fx,y2],W,1.4);fuse(y2);seg([fx+28,y2],[xV,y2],W,1.6);seg([xV,y2],[xV,yB],W,1.6);seg([xV,yB],[xL,yB],W,2);dot(a+56,y2,W);
+  seg([L[2],y2],[fx,y2],W,1.4);fuse(y2);seg([fx+28,y2],[xV,y2],W,1.6);seg([xV,y2],[xV,yB],W,1.6);seg([xV,yB],[xL,yB],W,2);dot(L[2],y2,W);
   txt("FUSE",fx+14,y1-14,T.tag,F);txt("갈",fx-28,y1-8,T.muted,FS);txt("회",fx-28,y2-8,T.muted,FS);
   // EOCR
-  const yE0=T0+124,yE1=T0+148;L.forEach(x=>{seg([x,yM+14],[x,yE0],W,1.4)});
-  ctx.fillStyle=T.sheet;ctx.fillRect(a-14,yE0,74,yE1-yE0);ctx.strokeStyle=W;ctx.lineWidth=1.4;ctx.strokeRect(a-14,yE0,74,yE1-yE0);txt("EOCR",a+23,(yE0+yE1)/2+.5,T.tag,'800 12px "Noto Sans KR","Noto Sans CJK KR",sans-serif');
+  const yE0=MY.yE0,yE1=MY.yE1;L.forEach(x=>{seg([x,yM+14],[x,yE0],W,1.4)});
+  ctx.fillStyle=T.sheet;ctx.fillRect(a-14,yE0,L[2]-a+28,yE1-yE0);ctx.strokeStyle=W;ctx.lineWidth=1.4;ctx.strokeRect(a-14,yE0,L[2]-a+28,yE1-yE0);txt("EOCR",L[1],(yE0+yE1)/2+.5,T.tag,'800 12px "Noto Sans KR","Noto Sans CJK KR",sans-serif');
   // MC2로 가는 분기 (녹황·회·흑·갈)
-  const yC=T0+238,yP=T0+162,br=[[PE,PE2,yP,"녹황"],[L[2],L2[2],T0+176,"회"],[L[1],L2[1],T0+190,"흑"],[L[0],L2[0],T0+204,"갈"]];
+  const yC=MY.yC,yP=MY.yP,br=[[PE,PE2,yP,"녹황"],[L[2],L2[2],MY.br[2],"회"],[L[1],L2[1],MY.br[1],"흑"],[L[0],L2[0],MY.br[0],"갈"]];
   for(const[x0,x1,y,c]of br){seg([x0,y],[x1,y],W,1.3);if(c!=="녹황")seg([x1,y],[x1,yC-12],W,1.3);dot(x0,y,W);txt(c,x1-30,y-7,T.muted,FS)}
   // 위 PE 선, 주회로 세로선
-  seg([PE,T0+3],[PE,T0+290],W,1.3);seg([PE2,yP],[PE2,T0+290],W,1.3);
+  seg([PE,T0+3],[PE,MY.yT],W,1.3);seg([PE2,yP],[PE2,MY.yT],W,1.3);
   L.forEach(x=>seg([x,yE1],[x,yC-12],W,1.4));
   // MC 주접점
   const mc=(xs,on,lab)=>{xs.forEach(x=>{ring([x,yC-12],2.2,W,T.sheet,1.1);
-      if(on)seg([x,yC+12],[x,yC-10],T.coil,2.6);else seg([x,yC+12],[x-10,yC-7],W,1.5);seg([x,yC+12],[x,T0+290],W,1.4)});
+      if(on)seg([x,yC+12],[x,yC-10],T.coil,2.6);else seg([x,yC+12],[x-10,yC-7],W,1.5);seg([x,yC+12],[x,MY.yT],W,1.4)});
     dash([xs[0]-9,yC+1],[xs[2]+2,yC+1]);txt(lab,xs[0]-18,yC,on?T.coil:T.tag,F,"right")};
   mc(L,on1,tag1);mc(L2,on2,"MC2");
   // TB2·TB3, 전동기, 접지
-  const yT=T0+290;
+  const yT=MY.yT;
   const tb=(xs,pe,n,lab,on,mname)=>{ctx.strokeStyle=W;ctx.lineWidth=1.2;ctx.strokeRect(xs[0]-12,yT-22,pe-xs[0]+24,30);
     [...xs,pe].forEach((x,i)=>{txt(["U","V","W"][i]?["U","V","W"][i]+n:"PE",x,yT-12,T.tag,FM);ring([x,yT],3,W,T.sheet,1.2)});txt(lab,xs[0]-18,yT-6,T.tag,F,"right");
     const cx=xs[1],cy=yT+48,r=21;xs.forEach((x,i)=>{const dx=(i-1)*13;seg([x,yT+3],[x,yT+16],W,1.3);seg([x,yT+16],[cx+dx,cy-Math.sqrt(r*r-dx*dx)],W,1.3)});
@@ -1257,12 +1404,14 @@ function helpDialog(){
   const K_=k=>`<kbd>${k}</kbd>`;
   const S=[
   ["start","빠른 시작",`
+    <p class="hnote" style="margin:0 0 10px"><b>화면 구성</b> — 도면이 화면 전체를 쓰고 도구는 떠 있는 카드로 놓여 있습니다(PC 화면). 왼쪽 위: 탭(시퀀스도·제어반 결선·배치도) / 가운데 위: ▶ 동작 시작·초기화·되돌리기·동작사항 확인 / 오른쪽 위: 빈칸 문제·<b>파일 ▾</b>(새 도면·파일·예제·도면 불러오기·도면 저장)·<b>도면 만들기 ▾</b>(회로 틀로 만들기·동작사항→도면·도면 수정 요청)·사용법 / 왼쪽: 부품함('이름 보기'로 이름까지 표시, 아이콘에 마우스를 올리면 이름) / 왼쪽 아래: 타임차트(동작 시작하면 자동으로 열림) / 오른쪽 아래: 확대·축소. 좁은 화면(태블릿·휴대폰)에서는 예전처럼 위에서 아래로 차례로 놓입니다.</p>
     <ol class="hsteps">
       <li><b>부품 놓기</b> 왼쪽 부품함에서 접점·입력·부하를 끌어 도면 칸에 놓습니다. 부하(코일·램프)는 맨 아래 단, 접점은 그 위 칸에 둡니다.</li>
       <li><b>배선하기</b> '배선' 도구로 세로선과 가로선을 잇습니다. 마우스가 가리키는 방향에 따라 세로·가로가 자동으로 정해집니다.</li>
       <li><b>이름 정하기</b> 기호를 <b>더블클릭</b>해 문자기호(X1, MC1, T1…)와 설정값을 바꿉니다.</li>
-      <li><b>동작 시험</b> 위쪽 <b>▶ 동작 시작</b>을 누르고 PB·스위치를 눌러 봅니다. 아래 타임차트에 ON/OFF가 기록됩니다.</li>
-      <li><b>정리·저장</b> '동작사항 확인'으로 공개문제 형식의 동작 사항을 만들고, '도면 저장'으로 JPG·PDF를 받습니다.</li>
+      <li><b>동작 시험</b> 위쪽 <b>▶ 동작 시작</b>을 누르고 PB·스위치를 눌러 봅니다. 아래 타임차트가 열려 ON/OFF가 기록됩니다(왼쪽 아래 '타임차트'로 접고 펼침).</li>
+      <li><b>정리·저장</b> '동작사항 확인'으로 공개문제 형식의 동작 사항을 만들고, '파일 ▾ → 도면 저장'으로 JPG·PDF를 받습니다.</li>
+      <li><b>빈칸 문제</b> 위쪽 '빈칸 문제'에서 시퀀스도 일부가 비어 있는 문제를 골라 동작사항대로 채우고 채점합니다. 지금 도면으로 문제를 만들어 훈련생에게 나눠 줄 수도 있습니다.</li>
       <li><b>배치도</b> 위쪽 '배치도'로 바꾸면 이 시퀀스도의 기구로 시험지 형식의 배관 및 기구 배치도·제어판 내부 기구 배치도·범례를 그려 PDF·JPG로 저장합니다.</li>
       <li><b>제어반 결선</b> 위쪽 '제어반 결선'으로 바꾸면 왼쪽 시퀀스도에서 한 점을 누를 때 같은 전위가 강조되고, 오른쪽 제어판 내부에서 그 단자들을 차례로 눌러 전선을 잇습니다. 채점·결선표·결선도 저장도 됩니다.</li>
     </ol>
@@ -1270,7 +1419,7 @@ function helpDialog(){
   ["palette","부품함 (자동)",paletteHelp()],
   ["draw","도면 구성",`
     <ul class="help">
-      <li>도면 왼쪽에는 <b>전원부·주회로</b>가 기본으로 그려집니다. TB1(3P3W AC 220V) → MCCB → EOCR → MC1·MC2 주접점 → TB2·TB3 → 전동기 M1·M2이고, MCCB 다음 퓨즈 2개를 거쳐 R·T 모선으로 이어집니다. 동작 시험 중 MC1·MC2가 여자되면 주접점이 닫히고 전동기가 주황색으로 표시됩니다. 끄려면 '파일·예제'에서 체크를 해제합니다.</li>
+      <li>도면 왼쪽에는 <b>전원부·주회로</b>가 기본으로 그려집니다. TB1(3P3W AC 220V) → MCCB → EOCR → MC1·MC2 주접점 → TB2·TB3 → 전동기 M1·M2이고, MCCB 다음 퓨즈 2개를 거쳐 R·T 모선으로 이어집니다. 동작 시험 중 MC1·MC2가 여자되면 주접점이 닫히고 전동기가 주황색으로 표시됩니다. 끄려면 '파일 ▾ → 파일·예제'에서 체크를 해제합니다.</li>
       <li>위쪽 가로선이 <b>R 모선</b>, 아래쪽 가로선이 <b>T 모선</b>입니다. 회로는 위에서 아래로 내려가는 세로 <b>회로선</b>(1, 2, 3…)으로 그리고, 회로선을 위아래로 나눈 한 칸이 <b>단</b>입니다.</li>
       <li>EOCR·PB0처럼 모든 회로에 공통인 접점은 <b>R 모선 위</b>(회로선 사이)에 직접 놓을 수 있습니다. 모선 왼쪽 끝에는 빈 칸을 두지 않고 1번 회로선부터 시작합니다(모선에 R·T 글자는 적지 않습니다). 모든 회로선 앞에 모선 접점을 두려면 1번 회로선을 비워 두고 1·2번 사이에 놓으세요(예전 도면은 불러올 때 이렇게 자동으로 옮겨집니다).</li>
       <li>접점은 <b>가로선 위</b>에도 놓을 수 있습니다. 가로 방향으로 그려지고, 이름은 선 아래에 표시됩니다.</li>
@@ -1305,7 +1454,9 @@ ${SIMPLE?`<tr><td>도면칸 확장</td><td>'도면칸 확장'을 고르고 회�
       <tr><td>지우개 + 끌기</td><td>사각형 범위 안의 부품·선을 한꺼번에 지우기</td></tr>
       <tr><td>팝업 제목줄 끌기</td><td>팝업창 옮기기</td></tr>
       <tr><td>(태블릿) 길게 누르기</td><td>이름·설정값 바꾸기 — 더블클릭 대신</td></tr>
-      <tr><td>(태블릿) 빈 곳 끌기</td><td>'선택·수정' 도구에서 도면 화면 이동</td></tr>
+      <tr><td>빈 곳 끌기</td><td>도면 화면 이동 — '선택·수정' 도구에서는 도면 안 빈 칸, 다른 도구에서는 도면 바깥 여백(주회로 쪽 등)·동작 시험 중에는 아무 빈 곳</td></tr>
+      <tr><td>가운데 단추(휠) 누른 채 끌기</td><td>어떤 도구든 도면 화면 이동</td></tr>
+      <tr><td>도면 오른쪽 위 －·＋·맞춤</td><td>도면 확대·축소. 가운데 % 숫자를 누르면 100%, '맞춤'은 도면 전체가 한 화면에. ${K_("Ctrl")}+마우스 휠로도 됨 (저장·인쇄 크기는 그대로)</td></tr>
     </table>
     <table class="htab"><tr><th>키보드</th><th>동작 (도면의 칸·가로선 자리를 클릭해 선택창을 둔 뒤)</th></tr>
       <tr><td>${K_("←")}${K_("→")}${K_("↑")}${K_("↓")}</td><td>선택창 이동. 위아래로 가면 칸 → 가로선 자리 → 칸 순서</td></tr>
@@ -1341,6 +1492,17 @@ ${SIMPLE?`<tr><td>도면칸 확장</td><td>'도면칸 확장'을 고르고 회�
       <tr><td>도면 수정 요청</td><td>만든 도면이 원하는 동작과 다르거나 접점 수가 넘을 때 추가 요구사항을 적어 고칩니다</td></tr>
       <tr><td>도면 불러오기</td><td>도면 이미지·PDF를 Claude가 읽어 지금 도면으로 바꿉니다. 원본이 뒤에 반투명하게 겹쳐 보여 비교하며 고칠 수 있고, '배경으로만 깔기'로 따라 그릴 수도 있습니다</td></tr>
     </table>`],
+  ["quiz","빈칸 문제",`
+    <p style="margin:0 0 8px">위쪽 <b>빈칸 문제</b>를 누르면 전기공사산업기사 2과제처럼 시퀀스도 일부가 <b>점선 상자(빈칸)</b>로 비어 있는 문제를 풉니다. 동작사항을 읽고 빈칸 안을 채운 뒤 <b>채점</b>을 누릅니다.</p>
+    <table class="htab"><tr><th>하고 싶은 일</th><th>방법</th></tr>
+      <tr><td>문제 고르기</td><td>기능사형·산업기사형 예제(★ 쉬움 ~ ★★★ 어려움), 내가 만든 문제, 문제 파일(.json) 중에서 고릅니다</td></tr>
+      <tr><td>빈칸 채우기</td><td>평소처럼 부품함의 접점·코일·배선을 놓습니다. <b>빈칸 밖은 고칠 수 없고</b>, 고치려 하면 바로 되돌려집니다. '▶ 동작 시작'으로 직접 시험해 봐도 됩니다</td></tr>
+      <tr><td>채점 기준</td><td>① <b>주어진 기구만</b> 썼는가(정답 도면에 있는 기구 이름·종류만, 코일은 기구 수만큼) ② <b>기구가 가진 접점 수 안</b>인가(릴레이 c접점 2개, 타이머 한시 c접점 1개·순시 a 1개 등 '접점 허용 개수' 설정 기준, PB·LS는 a·b 하나씩) ③ <b>동작이 정답과 같은가</b> — 입력을 여러 순서·시간으로 조작해 보며 코일·램프·부저 상태를 정답과 비교합니다. 셋 다 맞으면 정답이고, 모양이 정답 도면과 달라도 됩니다</td></tr>
+      <tr><td>틀렸을 때</td><td>차이가 난 조작 순서(예: 전원 투입 → PB1 누름 → 3.4초 기다림)와 그때 정답·내 회로의 상태를 알려 줍니다. '정답 보기'로 정답 도면을 보고 '정답으로 채우기'도 할 수 있습니다</td></tr>
+      <tr><td>처음부터 · 끝내기</td><td>'처음부터'는 빈칸을 다시 비웁니다. '문제 끝내기'를 누르면 지금 도면이 그대로 남아 자유롭게 고칠 수 있습니다. 새로 고침해도 풀던 문제는 이어집니다</td></tr>
+      <tr><td>문제 만들기</td><td>완성된 도면을 띄운 뒤 '빈칸 문제 → 지금 도면으로 문제 만들기'. 도면에서 비울 부분을 끌어 사각형으로 고르고(여러 곳 가능), 동작사항(자동으로 만든 문장, 고쳐 쓸 수 있음)과 제목을 정합니다. '내 문제로 저장'은 이 기기에, '파일로 저장'은 .json 파일로 저장해 훈련생에게 나눠 줄 수 있습니다</td></tr>
+      <tr><td>시험지 인쇄</td><td>문제를 띄운 상태에서 '도면 저장'을 하면 빈칸 상자가 그려진 문제 도면이 저장됩니다</td></tr>
+      <tr><td>이어서 연습</td><td>빈칸을 다 채우면 배치도·제어반 결선 탭이 그 도면으로 바로 따라옵니다</td></tr></table>`],
   ["layout","배치도",`
     <p style="margin:0 0 8px">위쪽 <b>배치도</b>로 바꾸면 지금 시퀀스도에 쓰인 기구로 시험지와 같은 형식의 도면 2쪽을 자동으로 그립니다. 왼쪽 <b>도면 종류</b>에서 <b>전기기능사</b> 또는 <b>전기공사산업기사</b>를 고릅니다. 시퀀스도를 고치면 배치도도 함께 바뀝니다.</p>
     <table class="htab"><tr><th>쪽</th><th>내용</th></tr>
@@ -1353,6 +1515,7 @@ ${SIMPLE?`<tr><td>도면칸 확장</td><td>'도면칸 확장'을 고르고 회�
       <tr><td>순서 바꾸기</td><td>2쪽의 기구를 끌어 다른 자리·다른 줄로 옮깁니다. 간격은 자동으로 다시 맞춰집니다</td></tr>
       <tr><td>컨트롤 박스</td><td>박스 4개(구멍 2개)에 PB는 둘씩, 셀렉터 스위치는 한 박스, 램프·부저는 둘씩 넣고 남는 구멍은 CAP(홀마개). 4개로 모자라면 3구 박스로 바꿉니다. 구멍을 끌어 다른 구멍에 놓으면 서로 바뀝니다</td></tr>
       <tr><td>J박스 위치</td><td>오른쪽형(기능사 2·10번)과 왼쪽형(기능사 1·9번) 중 고릅니다</td></tr>
+      <tr><td>아래 단자대 옮기기</td><td>1쪽 아래의 TB2·TB3·TB4를 끌어 다른 단자대 위에 놓으면 서로 자리를 바꿉니다(단자대끼리만, 컨트롤 박스 자리는 그대로). 제어반 결선의 TB6 번호(배관 순서)와 이어 둔 배선도 함께 따라 바뀝니다</td></tr>
       <tr><td>전기공사산업기사</td><td>제목줄이 '전기공사산업기사 / (2과제) 전기 설비의 배선 및 배관 공사'로 바뀝니다(직접 고친 제목은 그대로).<br>· <b>배관도</b>: 위쪽은 기능사처럼 J 방향에 따라 좌우가 바뀌고, 아래쪽은 언제나 왼쪽부터 <b>④ 금속관 → TB2</b>(왼쪽) · TB4 · TB3(오른쪽) · 위로 올라가 <b>오른쪽 가운데 상자</b>입니다.<br>· <b>상자</b>: 3구·2구를 섞어 씁니다. 셀렉터는 2구(남는 구멍 CAP), PB는 셋씩 3구, 표시 기구는 3개까지 한 상자, 넘으면 첫 상자 3개·나머지 상자 2개까지 나눠 담습니다.<br>· <b>제어판</b>: 1줄 MCCB·EOCR·F + 타이머·플리커·카운터·FLS, 2줄 릴레이 + MC (한 줄 5개).<br>· 단자대 번호 규칙·배선 연동은 기능사와 같습니다(아래 배관 왼쪽부터 TB2 1번·TB4 7번·TB3 11번·오른쪽 가운데 상자 17번부터). 배치는 도면 종류마다 따로 기억합니다</td></tr>
       <tr><td>TB4</td><td>리밋 스위치가 있으면 'LS1, LS2', 플로트레스가 있으면 '플로트레스' 단자대로 표시. 둘 다 없으면 뺍니다</td></tr>
       <tr><td>되돌리기</td><td>'자동 배치로'는 처음 규칙대로, '되돌리기'(${K_("Ctrl")}+${K_("Z")})는 직전 변경만 되돌립니다</td></tr>
@@ -1367,9 +1530,10 @@ ${SIMPLE?`<tr><td>도면칸 확장</td><td>'도면칸 확장'을 고르고 회�
       <tr><td>제어판 → 시퀀스도</td><td>제어판의 단자(소켓 번호·TB 단자)에 마우스를 올리면 그 단자의 묶음이 시퀀스도에 옅게 보이고, 누르면 그 묶음이 강조되며 시퀀스도가 그 자리로 움직입니다(시퀀스도 강조가 켜져 있을 때)</td></tr>
       <tr><td>연습 모드</td><td>아무 단자나 이을 수 있습니다. '시퀀스도 강조'를 꺼서 힌트 없이 연습하고, <b>채점</b>으로 맞는 선 초록·잘못 이은 선 빨강·아직 안 이은 단자 주황을 봅니다</td></tr>
       <tr><td>제어판 밖 기구</td><td>PB·셀렉터·램프·부저·LS·전극·전원·전동기는 제어판 밖에 있으므로 공개문제 규칙대로 <b>TB5·TB6를 거칩니다</b>. 그 기구로 가는 선은 TB 단자 바깥쪽에 세로 글씨로 적힙니다</td></tr>
-      <tr><td>단자대 배정</td><td>배관도의 배관 순서대로 자동 배정합니다. 배관은 언제나 <b>왼쪽 → 오른쪽</b>, 한 배관 안에서도 J와 상관없이 <b>왼쪽 기구부터</b>, 상자 안에서는 <b>공통선 먼저, 그다음 위에 있는 기구부터</b>입니다.<br>· <b>TB5(위 배관)</b>: 1번째 배관 1번부터 · 2번째 배관(케이블, TB1 전원) L1·L2·L3·PE = <b>9·10·11·12 고정</b> · 3번째 배관 15번부터<br>· <b>TB6(아래 배관)</b>: 왼쪽부터 1번째 배관 1번, 2번째 7번, 3번째 11번, 4번째 17번부터<br>배관도에서 상자 구멍을 바꾸면 번호도 따라 바뀝니다. '단자대 배정'에서 손으로 바꿀 수도 있는데, <b>자동과 다르게 바꾼 번호만</b> 손 배정으로 남고(배치를 바꿔도 그대로) 나머지는 계속 배관 순서대로 자동입니다. 손 배정이 있으면 설명 칸에 개수와 '모두 자동 배정으로' 단추가 보입니다</td></tr>
+      <tr><td>단자대 배정</td><td>배관도의 배관 순서대로 자동 배정합니다. 배관은 언제나 <b>왼쪽 → 오른쪽</b>, 한 배관 안에서도 J와 상관없이 <b>왼쪽 기구부터</b>, 상자 안에서는 <b>공통선 먼저, 그다음 위에 있는 기구부터</b>입니다.<br>· <b>TB5(위 배관)</b>: 1번째 배관 1번부터 · 2번째 배관(케이블, TB1 전원) L1·L2·L3·PE = <b>9·10·11·12 고정</b> · 3번째 배관 15번부터<br>· <b>TB6(아래 배관)</b>: 왼쪽부터 1번째 배관 1번, 2번째 7번, 3번째 11번, 4번째 17번부터. 배관도에 그려지지 않은 배관(예: 아래 컨트롤 박스 B4가 없을 때)은 세지 않습니다<br>배관도에서 상자 구멍을 바꾸면 번호도 따라 바뀝니다. '단자대 배정'에서 손으로 바꿀 수도 있는데, <b>자동과 다르게 바꾼 번호만</b> 손 배정으로 남고(배치를 바꿔도 그대로) 나머지는 계속 배관 순서대로 자동입니다. 손 배정이 있으면 설명 칸에 개수와 '모두 자동 배정으로' 단추가 보입니다</td></tr>
       <tr><td>바꾸면 함께 바뀌는 것</td><td>배치도에서 상자·구멍을 바꾸거나, J 방향을 바꾸거나, 제어판 기구 자리를 옮기거나, '단자대 배정'을 손으로 바꾸면 TB 번호·제어판 그림·결선표가 모두 함께 바뀝니다. <b>이미 이어 둔 선도 그대로 따라갑니다.</b> 단자대 쪽 선은 번호가 아니라 그 단자로 가는 바깥 기구를 기억해 두므로, 번호가 바뀌면 새 번호로 옮겨지고 기구 단자 쪽 선은 기구가 옮겨진 자리로 다시 그려집니다. 상자를 바꿔 공통선이 두 단자로 나뉘면 두 단자를 이어 주고, 합쳐져 한 단자에 3가닥이 되면 남는 선을 같은 전위의 다른 단자로 옮겨, 다 이어 둔 묶음은 계속 완료 상태로 남습니다</td></tr>
       <tr><td>전선 색</td><td>공개문제 기준으로 자동입니다. 주회로 갈색·흑색·회색 2.5㎟, 접지 녹황색 2.5㎟, 조작회로 황색 1.5㎟.<br><b>보조회로 색 구분</b>(기본 켬): 보조회로는 실제로 모두 황색이라 다 이으면 구분이 어려우므로, 화면에서는 묶음마다 다른 색으로 그립니다. 시퀀스도에서 묶음을 고를 때의 강조 색과 제어판 전선 색이 같습니다. 체크를 끄면 실제 색(황색)으로 그립니다</td></tr>
+      <tr><td>FLS 전극 E3</td><td>E3는 접지라서 접지(PE) 묶음에 들어갑니다. <b>FLS 단자 1(E3)은 TB6의 E3 단자에만 황색선</b>으로 잇고(E1·E2와 같이), <b>접지선(녹황)은 PE 단자들과 TB6의 E3 단자 사이에서만</b> 잇습니다. FLS 단자 1을 PE 단자에 바로 이으면 안내 모드에서는 이어지지 않고, 채점에서는 틀린 선이 됩니다</td></tr>
       <tr><td>배선 모양</td><td><b>직각 배선</b>(기본)은 단자에서 수직으로 나와 <b>상하 기구 사이 통로</b>로 지나갑니다. 좌우로 이웃한 기구 사이로는 지나가지 않고, 통로를 바꿔야 하면 <b>제어판 양끝</b>(바깥 기구와 제어판 벽 한가운데)을 거쳐 돌아갑니다. 단자대도 같습니다. 같은 통로를 쓰는 선끼리는 조금씩 비켜 그립니다. 체크를 끄면 단자끼리 곧은 선으로 그립니다</td></tr>
       <tr><td>설명 칸</td><td>넓은 화면에서는 오른쪽에 붙습니다. 왼쪽 가장자리를 끌어 너비를 바꾸고(두 번 누르면 원래대로), '설명 접기'로 숨깁니다.<br>화면이 좁으면 작업 칸 <b>아래 서랍</b>이 되어 평소에는 손잡이만 보입니다. 손잡이를 <b>끌어올리면</b> 펴지고, '설명 올리기·내리기'로도 여닫습니다. 채점을 누르면 결과를 보여 주려고 저절로 펴집니다</td></tr>
       <tr><td>잘못 이은 것 알림</td><td>한 단자에 3가닥 이상이면 빨간 테두리로 알려 줍니다. 채점에서는 전원 R·T 단락, 묶음이 안 맞는 선도 짚어 줍니다</td></tr>
@@ -1519,7 +1683,7 @@ getSample();
 
 function drawBg(){if(!bg.img||!bg.show)return;const w=bg.img.width*bg.base*bg.sc,h=bg.img.height*bg.base*bg.sc;
   ctx.save();ctx.globalAlpha=bg.op;ctx.drawImage(bg.img,bg.dx,bg.dy,w,h);ctx.restore()}
-function fitBg(){if(!bg.img)return;const w=parseFloat(cv.style.width)||800;bg.base=w/bg.img.width;bg.sc=1;bg.dx=0;bg.dy=0;syncBgBar()}
+function fitBg(){if(!bg.img)return;const w=(parseFloat(cv.style.width)||800)/ZM;bg.base=w/bg.img.width;bg.sc=1;bg.dx=0;bg.dy=0;syncBgBar()}
 function syncBgBar(){const bar=$("bgbar");bar.hidden=!bg.img;if(!bg.img)return;
   $("bgShow").checked=bg.show;$("bgOp").value=Math.round(bg.op*100);$("bgSc").value=Math.round(bg.sc*100);$("bgX").value=Math.round(bg.dx);$("bgY").value=Math.round(bg.dy)}
 function setBg(canvasOrImg){bg.img=canvasOrImg;bg.show=true;bg.op=.35;fitBg();draw()}
@@ -2099,7 +2263,7 @@ function exportDialog(){if(mode==="run")toggleMode();let saved={};try{saved=JSON
       finally{go.disabled=false}}})}
 
 // ───────────── 입력 처리 ─────────────
-function hit(e){const bb=cv.getBoundingClientRect(),x=e.clientX-bb.left,y=e.clientY-bb.top,C=circ;
+function hit(e){const bb=cv.getBoundingClientRect(),x=(e.clientX-bb.left)/ZM,y=(e.clientY-bb.top)/ZM,C=circ;
   const l=Math.round((x-X0)/LW),p=Math.floor((y-Y0)/PH);let cell=null,bus=null;
   if(l>=0&&l<C.rows&&Math.abs(x-lineX(l))<=LW/2&&p>=0&&p<C.cols)cell={l,p};
   if(y>=Y0-34&&y<Y0-2&&x>=lineX(0)){const s=Math.floor((x-X0)/LW);if(s>=0&&s<C.rows-1)bus=s}
@@ -2129,10 +2293,10 @@ function runClick(v){if(!v)return;
   else if(TOGGLE.has(v.k))sim.inputs[v.tag]=!sim.inputs[v.tag];
   else if(TRIP.has(v.k))sim.trips[v.tag]=!sim.trips[v.tag];else return false;
   sim.solve();draw();return true}
-cv.addEventListener("pointerdown",e=>{if(e.button===2)return;const h=hit(e);
+cv.addEventListener("pointerdown",e=>{if(e.button===2)return;if(e.button===1){e.preventDefault();startPan(e);return}const h=hit(e);
   if(mode==="run"){const fl=flsAt(h.x,h.y);if(fl){cycleLevel(fl);return}
     const hk=hpAt(h.x,h.y),v=hk&&circ.hparts.has(hk)?circ.hparts.get(hk):h.cell?circ.cells.get(K(h.cell.l,h.cell.p)):h.bus!=null?circ.bus.get(h.bus):null;
-    if(runClick(v)&&pressed!=null)cv.setPointerCapture(e.pointerId);return}
+    if(!v){startPan(e);return}if(runClick(v)&&pressed!=null)cv.setPointerCapture(e.pointerId);return}
   // 이미 그려진 가로선 바로 위를 누르면(배선·지우개 외 도구) 그 가로선을 선택
   const onLink=tool==="SELECT"&&linkNear(h.x,h.y)&&!circ.hparts.has(linkNear(h.x,h.y))&&linkNear(h.x,h.y);
   if(onLink){const[l0,b0]=P(onLink);kcur={l:l0,b:b0,h:true};draw();cursorHint();return}
@@ -2166,7 +2330,7 @@ cv.addEventListener("pointerdown",e=>{if(e.button===2)return;const h=hit(e);
     if(tool==="WIRE")return;
     if(CONTACT.has(realKind(tool))){place(tool,circ.bus,h.bus)}
     else setHint("R 모선 위에는 접점만 놓을 수 있습니다.",true);return}
-  if(!h.cell)return;const{l,p}=h.cell,key=K(l,p),v=circ.cells.get(key);
+  if(!h.cell){if(e.pointerType==='mouse'||tool==='SELECT')startPan(e);return}const{l,p}=h.cell,key=K(l,p),v=circ.cells.get(key);
   if(tool==="ROWINS"){snapshot();circ.insertRow(l);changed();return}
   if(tool==="ROWDEL"){snapshot();circ.deleteRow(l);changed();return}
   if(tool==="POSINS"){snapshot();circ.insertPos(p);changed();return}
@@ -2175,7 +2339,7 @@ cv.addEventListener("pointerdown",e=>{if(e.button===2)return;const h=hit(e);
   // 선택·수정 도구: 접점은 끌어 옮기고, 부하는 끌어 접점을 만듦
   if(tool==="SELECT"){if(v&&DRAGGABLE.has(v.k)){startLoadDrag(e,v);return}
     if(v&&v.k!=="WIRE"&&CONTACT.has(v.k)){startMoveDrag(e,circ.cells,key,v);return}
-    if(v&&v.k!=="WIRE")setHint("이름을 바꾸려면 기호를 더블클릭하세요.");else if(e.pointerType!=="mouse")startPan(e);return}
+    if(v&&v.k!=="WIRE")setHint("이름을 바꾸려면 기호를 더블클릭하세요.");else startPan(e);return}
   // 그 밖의 도구: 기호를 끌면 접점 옮기기·부하에서 접점 만들기, 그냥 누르면 고른 것으로 덮어씀
   if(v&&v.k!=="WIRE"&&(DRAGGABLE.has(v.k)||CONTACT.has(v.k))){
     const over=()=>{if(tool==="WIRE"){snapshot();circ.cells.set(key,{k:"WIRE",tag:""});changed()}else if(!sameAsTool(v))place(tool,circ.cells,key)};
@@ -2217,7 +2381,7 @@ cv.addEventListener("contextmenu",e=>{e.preventDefault();if(mode!=="edit")return
   if(h.bus!=null&&circ.bus.has(h.bus)){snapshot();circ.bus.delete(h.bus);changed();return}
   if(!h.cell)return;const key=K(h.cell.l,h.cell.p);if(circ.cells.has(key)){snapshot();circ.cells.delete(key);changed()}});
 window.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="z"&&!$("modalRoot").firstChild&&!(window.seqHidden&&seqHidden())){e.preventDefault();doUndo()}});
-function doUndo(){if(mode!=="edit"||!undo.length||(window.seqHidden&&seqHidden()))return;circ=Circuit.from(JSON.parse(undo.pop()));sim=new Sim(circ);resize();draw();save()}
+function doUndo(){if(mode!=="edit"||!undo.length||(window.seqHidden&&seqHidden()))return;circ=Circuit.from(JSON.parse(undo.pop()));if(QZ.on)QZ.good=JSON.stringify(circ.toJSON());sim=new Sim(circ);resize();draw();save()}
 
 // ───────────── 부하를 끌어 접점 놓기 ─────────────
 // 도면의 부하(릴레이·MC·타이머·플리커·카운터·FLS)를 끌어 빈 칸이나 R 모선 위에 놓으면 접점 종류를 골라 같은 문자기호의 접점을 넣음
@@ -2266,7 +2430,7 @@ function pickGeneric(tool,map,key,done){const opts=GENERIC[tool],r=cv.getBoundin
   else{const[l,b]=P(key);x=(lineX(l)+lineX(l+1))/2;y=bY(b);hv={link:[l,b]}}
   let last=null;try{last=localStorage.getItem("seqsim.gen."+tool)}catch(e){}
   hover=hv;draw();
-  pickContact(r.left+x+LW/2,r.top+y-10,{tag:""},opts,k=>{try{localStorage.setItem("seqsim.gen."+tool,k)}catch(e){}done(k)},`${LABEL[tool]} — 종류 고르기`,last)}
+  pickContact(r.left+(x+LW/2)*ZM,r.top+y*ZM-10,{tag:""},opts,k=>{try{localStorage.setItem("seqsim.gen."+tool,k)}catch(e){}done(k)},`${LABEL[tool]} — 종류 고르기`,last)}
 function closePick(){const el=$("pick");if(el)el.remove();if(pickOff){window.removeEventListener("pointerdown",pickOff,true);window.removeEventListener("keydown",pickOff);pickOff=null}}
 // 이름 수정은 더블클릭
 // 더블클릭의 첫 번째 클릭이 기호를 덮어썼다면 되돌린 뒤 이름 수정 창을 엶
@@ -2330,7 +2494,7 @@ function cursorHint(){if(!kcur)return;
   setHint(`선택 칸: ${kcur.l+1}번 회로선 ${kcur.p+1}단 · 방향키로 이동(위아래로 가면 가로선 자리도 고를 수 있음) · 스페이스바: ${nm2} · Delete: 지우기 · Enter: 이름 바꾸기 · Esc: 선택 해제`)}
 function cursorIntoView(){const w=$("sheetwrap"),cr=cv.getBoundingClientRect(),wr=w.getBoundingClientRect();
   const yy=kcur.h?bY(kcur.b)-PH/2:bY(kcur.p),xx=kcur.h?lineX(kcur.l)+LW/2:lineX(kcur.l);
-  const x0=cr.left+xx-LW/2,x1=x0+LW,y0=cr.top+yy,y1=y0+PH,m=12;
+  const x0=cr.left+(xx-LW/2)*ZM,x1=x0+LW*ZM,y0=cr.top+yy*ZM,y1=y0+PH*ZM,m=12;
   if(x0<wr.left+m)w.scrollLeft-=wr.left+m-x0;else if(x1>wr.right-m)w.scrollLeft+=x1-(wr.right-m);
   if(y0<wr.top+m)w.scrollTop-=wr.top+m-y0;else if(y1>wr.bottom-m)w.scrollTop+=y1-(wr.bottom-m)}
 // 위아래 이동: 칸 → (그 아래 단 경계의 가로선 자리) → 다음 칸 … 가로선은 오른쪽에 회로선이 있을 때만
@@ -2348,7 +2512,7 @@ function applyAtCursor(){
     if(tool==="WIRE"){snapshot();circ.vlinks.has(k)?circ.vlinks.delete(k):circ.vlinks.add(k);changed();cursorHint();return}
     if(tool==="ERASE"){if(circ.vlinks.has(k)){snapshot();circ.vlinks.delete(k);changed();cursorHint()}return}
     if(tool==="SELECT"){if(circ.hparts.has(k))editCell(circ.hparts,k);return}
-    if(tool==="GRID"){const r=cv.getBoundingClientRect();gridPick(r.left+lineX(kcur.l)+LW/2,r.top+bY(kcur.b),{pos:Math.max(0,kcur.b-1)});return}
+    if(tool==="GRID"){const r=cv.getBoundingClientRect();gridPick(r.left+(lineX(kcur.l)+LW/2)*ZM,r.top+bY(kcur.b)*ZM,{pos:Math.max(0,kcur.b-1)});return}
     if(CONTACT.has(realKind(tool))){if(!circ.vlinks.has(k))circ.vlinks.add(k);place(tool,circ.hparts,k);cursorHint();return}
     setHint("가로선 위에는 접점만 놓을 수 있습니다.",true);return}
   const{l,p}=kcur,key=K(l,p),v=circ.cells.get(key);
@@ -2359,7 +2523,7 @@ function applyAtCursor(){
   if(tool==="ROWDEL"){snapshot();circ.deleteRow(l);changed();return}
   if(tool==="POSINS"){snapshot();circ.insertPos(p);changed();return}
   if(tool==="POSDEL"){snapshot();circ.deletePos(p);changed();return}
-  if(tool==="GRID"){const r=cv.getBoundingClientRect();gridPick(r.left+lineX(l)+LW/2,r.top+bY(p)+PH/2,{line:l});return}
+  if(tool==="GRID"){const r=cv.getBoundingClientRect();gridPick(r.left+(lineX(l)+LW/2)*ZM,r.top+(bY(p)+PH/2)*ZM,{line:l});return}
   if(!sameAsTool(v))place(tool,circ.cells,key)}
 window.addEventListener("keydown",e=>{if(mode!=="edit"||!kcur||(window.seqHidden&&seqHidden())||$("modalRoot").firstChild||$("pick")||e.isComposing)return;
   const t=e.target;if(t&&(t.tagName==="INPUT"||t.tagName==="TEXTAREA"||t.tagName==="SELECT"||t.isContentEditable))return;
@@ -2386,10 +2550,15 @@ cv.addEventListener("pointerdown",e=>{lpFired=false;lpCancel();if(e.pointerType=
     if(loadDrag&&loadDrag.ghost)loadDrag.ghost.remove();if(moveDrag&&moveDrag.ghost)moveDrag.ghost.remove();hover=null;draw();editCell(...tgt)},550)},true);
 window.addEventListener("pointermove",e=>{if(lpTimer&&lpAt&&Math.hypot(e.clientX-lpAt[0],e.clientY-lpAt[1])>8)lpCancel()},true);
 window.addEventListener("pointerup",lpCancel,true);window.addEventListener("pointercancel",lpCancel,true);
-function startPan(e){const w=$("sheetwrap"),sx=e.clientX,sy=e.clientY,l0=w.scrollLeft,t0=w.scrollTop;
+function startPan(e){const w=$("sheetwrap"),sx=e.clientX,sy=e.clientY,l0=w.scrollLeft,t0=w.scrollTop;w.classList.add("panning");
   const mv=ev=>{w.scrollLeft=l0-(ev.clientX-sx);w.scrollTop=t0-(ev.clientY-sy)};
-  const up=()=>{window.removeEventListener("pointermove",mv);window.removeEventListener("pointerup",up);window.removeEventListener("pointercancel",up)};
+  const up=()=>{w.classList.remove("panning");window.removeEventListener("pointermove",mv);window.removeEventListener("pointerup",up);window.removeEventListener("pointercancel",up)};
   window.addEventListener("pointermove",mv);window.addEventListener("pointerup",up);window.addEventListener("pointercancel",up)}
+// 확대·축소 단추·Ctrl+휠, 도면 밖 빈 곳 끌기
+$("zIn").onclick=()=>setZoom(ZM*1.2);$("zOut").onclick=()=>setZoom(ZM/1.2);$("zPct").onclick=()=>setZoom(1);$("zFit").onclick=zoomFit;zoomUI();
+$("sheetwrap").addEventListener("wheel",e=>{if(!e.ctrlKey)return;e.preventDefault();setZoom(ZM*(e.deltaY<0?1.12:1/1.12),e.clientX,e.clientY)},{passive:false});
+$("sheetwrap").addEventListener("pointerdown",e=>{if(e.target===$("sheetwrap")&&e.button!==2&&e.offsetX<$("sheetwrap").clientWidth&&e.offsetY<$("sheetwrap").clientHeight)startPan(e)});
+cv.addEventListener("auxclick",e=>{if(e.button===1)e.preventDefault()});
 if(matchMedia("(pointer:coarse)").matches){HINT.SELECT="기호를 길게 누르면 이름·설정값을 바꿉니다. 접점은 끌어서 옮기고, 부하를 끌어 빈 칸에 놓으면 그 접점이 들어갑니다. 빈 곳을 끌면 도면 화면이 움직입니다."}
 
 // ───────────── 도면칸 확장 (간단형) ─────────────
@@ -2474,10 +2643,24 @@ function newDrawingDialog(){if(mode==="run")toggleMode();
 
 function toggleMode(){closePick();if(mode==="edit"){mode="run";sim=new Sim(circ);sim.solve();simTime=0;lastT=performance.now();chart.clear();hover=null}
   else{mode="edit";pressed=null;$("clock").textContent="";if(playCtl)playCtl.stop=true;$("playPanel").hidden=true}
-  const run=mode==="run",b=$("btnMode");b.textContent=run?"■ 편집 모드로":"▶ 동작 시작";b.classList.toggle("running",run);
+  const run=mode==="run",b=$("btnMode");uiModeBtn();b.classList.toggle("running",run);uiChart(run);
   $("modeTag").textContent=run?"동작 중":"편집 모드";$("modeTag").classList.toggle("on",run);
   $("btnReset").disabled=!run;$("btnUndo").disabled=run;cv.style.cursor=run?"pointer":"crosshair";syncPalette();draw();drawChart()}
 $("btnMode").onclick=toggleMode;
+// ── 새 화면 틀 (시안 C: 도면 꽉 차게 + 떠 있는 도구, 2026-11-12 사용자 선택) ──
+const UI_PLAY='<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8z"/></svg>',UI_STOP='<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>';
+function uiModeBtn(){const run=mode==="run",b=$("btnMode");b.innerHTML=run?UI_STOP+"<span>편집으로</span>":UI_PLAY+"<span>동작 시작</span>"}
+uiModeBtn();
+document.querySelectorAll(".dd").forEach(dd=>{const b=dd.querySelector(":scope>button"),m=dd.querySelector(".ddm");
+  b.addEventListener("click",e=>{e.stopPropagation();const open=m.hidden;document.querySelectorAll(".ddm").forEach(x=>{x.hidden=true;x.parentNode.querySelector(":scope>button").setAttribute("aria-expanded","false")});m.hidden=!open;b.setAttribute("aria-expanded",String(open))});
+  m.addEventListener("click",()=>{m.hidden=true;b.setAttribute("aria-expanded","false")})});
+document.addEventListener("click",e=>{if(!e.target.closest(".dd"))document.querySelectorAll(".ddm").forEach(x=>{x.hidden=true})});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")document.querySelectorAll(".ddm").forEach(x=>{x.hidden=true})});
+function uiChart(open){document.body.classList.toggle("chartopen",open);$("chartTgl").setAttribute("aria-expanded",String(open));$("chartTgl").querySelector(".caret").textContent=open?"▾":"▴";drawChart()}
+$("chartTgl").onclick=()=>uiChart(!document.body.classList.contains("chartopen"));
+let UI_PALNAME=false;try{UI_PALNAME=localStorage.getItem("seqsim.palname")==="1"}catch(e){}
+function uiPal(){document.body.classList.toggle("palname",UI_PALNAME);$("palMode").textContent=UI_PALNAME?"아이콘만":"이름 보기";try{localStorage.setItem("seqsim.palname",UI_PALNAME?"1":"0")}catch(e){}}
+$("palMode").onclick=()=>{UI_PALNAME=!UI_PALNAME;uiPal()};uiPal();
 $("btnReset").onclick=()=>{sim.reset();sim.solve();simTime=0;chart.clear();draw();drawChart()};
 $("btnUndo").onclick=doUndo;$("btnExport").onclick=exportDialog;$("btnFile").onclick=fileDialog;$("btnNew").onclick=newDrawingDialog;$("btnDesc").onclick=descDialog;$("btnDesign").onclick=designDialog;$("btnRevise").onclick=reviseDialog;$("btnImport").onclick=()=>{if(mode==="run")toggleMode();importDialog()};$("btnHelp").onclick=helpDialog;$("btnTpl").onclick=()=>{if(mode==="run")toggleMode();tplDialog()};
 // 배포용(OFFLINE): Claude가 필요한 버튼은 숨김
@@ -2495,11 +2678,374 @@ window.addEventListener("resize",()=>drawChart());
 matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change",()=>{draw();drawChart()});
 new MutationObserver(()=>{draw();drawChart()}).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
 
+// ==QZ==
+// ───────────── 빈칸 문제 (미완성 제어회로 완성하기) ─────────────
+// 사용자 요청(2026-11-12): 전기공사산업기사 2과제처럼 시퀀스도 일부를 비우고 동작사항을 주어 채우게 함.
+// 채점: 동작이 정답과 같으면 정답. 단, 주어진 기구(정답 도면에 쓰인 기구)와 그 기구가 가진 접점 수 안에서만.
+const QZ={on:false,prob:null,ans:null,good:null,outKey:"",loading:false,showSpec:true};
+const qzStore={get(){try{return JSON.parse(localStorage.getItem("seqsim.quiz")||"null")}catch(e){return null}},set(v){try{v?localStorage.setItem("seqsim.quiz",JSON.stringify(v)):localStorage.removeItem("seqsim.quiz")}catch(e){}}};
+const qzMine={get(){try{return JSON.parse(localStorage.getItem("seqsim.quizMine")||"[]")||[]}catch(e){return[]}},set(v){try{localStorage.setItem("seqsim.quizMine",JSON.stringify(v.slice(-40)))}catch(e){}}};
+// 빈칸 안인가: 칸(c), 가로선(v: 회로선 l과 l+1 사이 경계 b), 모선 구간(s)
+function qzInside(B,kind,a,b){return B.some(r=>kind==="c"?a>=r.l0&&a<=r.l1&&b>=r.p0&&b<=r.p1:
+  kind==="v"?a>=r.l0&&a+1<=r.l1&&b>=r.p0&&b<=r.p1+1:r.p0===0&&a>=r.l0&&a+1<=r.l1)}
+// 빈칸 밖 내용(고치면 안 되는 부분)을 문자열로
+function qzOutKey(C,B){const o=[C.rows,C.cols];
+  for(const[k,v]of[...C.cells].sort()){const[l,p]=P(k);if(!qzInside(B,"c",l,p))o.push("c"+k+v.k+v.tag+(v.p??""))}
+  for(const k of[...C.vlinks].sort()){const[l,b]=P(k);if(!qzInside(B,"v",l,b)){const h=C.hparts.get(k);o.push("v"+k+(h?h.k+h.tag:""))}}
+  for(const[s,v]of[...C.bus].sort((x,y)=>x[0]-y[0]))if(!qzInside(B,"s",s))o.push("s"+s+v.k+v.tag);return o.join("|")}
+function qzMask(ans,B){const C=Circuit.from(ans.toJSON());
+  for(const k of[...C.cells.keys()]){const[l,p]=P(k);if(qzInside(B,"c",l,p))C.cells.delete(k)}
+  for(const k of[...C.vlinks]){const[l,b]=P(k);if(qzInside(B,"v",l,b)){C.vlinks.delete(k);C.hparts.delete(k)}}
+  for(const s of[...C.bus.keys()])if(qzInside(B,"s",s))C.bus.delete(s);return C}
+// 빈칸 밖을 고치면 바로 되돌림 (changed()에서 부름)
+function qzGuard(){if(!QZ.on)return;const B=QZ.prob.blanks;
+  if(qzOutKey(circ,B)!==QZ.outKey){circ=Circuit.from(JSON.parse(QZ.good));if(undo.length&&undo[undo.length-1]===QZ.good)undo.pop();
+    setTimeout(()=>setHint("빈칸 문제 중에는 점선 상자(빈칸) 안에서만 그리거나 고칠 수 있습니다. 다른 도면을 쓰려면 '문제 끝내기'를 누르세요.",true),0);return}
+  QZ.good=JSON.stringify(circ.toJSON());qzMsg("");qzSave()}
+function qzLeave(){if(QZ.on&&!QZ.loading)qzEnd()}
+function qzSave(){if(!QZ.on){qzStore.set(null);return}qzStore.set({prob:QZ.prob.file||{id:QZ.prob.id}})}
+// 빈칸 상자 그리기 (화면·저장 그림 모두)
+function qzDraw(){if(!QZ.on)return;const B=QZ.prob.blanks;
+  B.forEach((r,i)=>{const x0=lineX(r.l0)-LW*0.42,x1=lineX(r.l1)+LW*0.42,y0=r.p0===0?Y0-30:bY(r.p0)+3,y1=bY(r.p1+1)-3;
+    ctx.save();if(!EXPORTING){ctx.fillStyle="rgba(120,140,255,.07)";ctx.fillRect(x0,y0,x1-x0,y1-y0)}
+    ctx.strokeStyle=EXPORTING?"#000":T.selfg;ctx.lineWidth=1.6;ctx.setLineDash([7,4]);ctx.strokeRect(x0,y0,x1-x0,y1-y0);ctx.setLineDash([]);
+    if(B.length>1)txt(String.fromCharCode(0x2460+i),x0+10,y1-10,EXPORTING?"#000":T.selfg,'800 12px "Noto Sans KR",sans-serif');ctx.restore()})}
+function qzMsg(t,cls){const m=$("qzMsg");if(!m)return;m.textContent=t||"";m.className="qzmsg"+(cls?" "+cls:"")}
+function qzSpecLines(p,ans){if(p.spec&&p.spec.length)return p.spec.map(s=>typeof s==="string"?{text:s,level:/^\s*[①-⑳]/.test(s)?1:0}:s);
+  try{const d=describeCircuit(ans);return d.items}catch(e){return[{text:"동작사항을 만들 수 없습니다.",level:0}]}}
+function qzBar(){const b=$("qzbar");b.hidden=!QZ.on;if(!QZ.on)return;const p=QZ.prob;
+  $("qzTitle").textContent="빈칸 문제 · "+p.title;
+  const parts=qzParts(QZ.ans);
+  $("qzSpec").innerHTML=`<div class="ql" style="color:var(--muted);font-size:12px">주어진 기구: ${escH(parts)} — 점선 상자(빈칸) 안을 동작사항에 맞게 채우세요. 빈칸 밖은 고칠 수 없습니다.</div>`+
+    QZ.spec.map(x=>`<div class="ql${x.level?" sub":""}">${escH(x.text)}</div>`).join("");
+  $("qzSpec").hidden=!QZ.showSpec;$("qzSpecT").textContent=QZ.showSpec?"동작사항 접기":"동작사항 보기"}
+function qzParts(C){const seen=new Map();const add=(t,n)=>{if(t&&!seen.has(t))seen.set(t,n)};
+  for(const v of[...C.bus.values(),...C.cells.values(),...C.hparts.values()]){if(PUSH.has(v.k))add(v.tag,"PB");else if(v.k==="SW_A"||v.k==="SW_B")add(v.tag,"SS");else if(v.k==="LS_A"||v.k==="LS_B")add(v.tag,"LS");}
+  for(const v of C.cells.values())if(LOAD.has(v.k)&&v.k!=="CRST")add(v.tag,v.k);
+  const tags=[...seen.keys()].filter(t=>t!=="EOCR");if([...C.cells.values()].some(v=>v.tag==="EOCR"))tags.unshift("EOCR");return tags.join(", ")}
+// 문제 시작
+function qzStart(p,keepCirc){const ans=p.build?p.build():Circuit.from(p.answer);p.blanks=p.blanks.slice().sort((a,b)=>a.l0-b.l0||a.p0-b.p0);
+  QZ.prob=p;QZ.ans=ans;QZ.spec=qzSpecLines(p,ans);QZ.loading=true;
+  try{if(!keepCirc)setCircuit(qzMask(ans,p.blanks),"빈칸 문제: "+p.title)}finally{QZ.loading=false}
+  QZ.on=true;QZ.outKey=qzOutKey(qzMask(ans,p.blanks),p.blanks);QZ.good=JSON.stringify(circ.toJSON());
+  if(keepCirc&&qzOutKey(circ,p.blanks)!==QZ.outKey){QZ.on=false;return false}
+  if(typeof setView==="function")setView("seq");qzBar();qzMsg(keepCirc?"풀던 문제를 이어서 합니다.":"빈칸을 채운 뒤 '채점'을 누르세요. '▶ 동작 시작'으로 직접 시험해 봐도 됩니다.");qzSave();draw();
+  $("sheetwrap").scrollLeft=0;return true}
+function qzEnd(){QZ.on=false;QZ.prob=null;QZ.ans=null;qzStore.set(null);qzBar();draw();setHint("빈칸 문제를 끝냈습니다. 지금 도면은 그대로 남아 있어 자유롭게 고칠 수 있습니다.")}
+function qzFind(id){return QZ_PROBS.find(p=>p.id===id)}
+
+// ── 채점 1: 주어진 기구·접점 안에서만 썼는지 ──
+const QZ_IN=k=>PUSH.has(k)?"PB":k==="SW_A"||k==="SW_B"?"SW":k==="LS_A"||k==="LS_B"?"LS":TRIP.has(k)?"THR":null;
+function qzAllContacts(C){return[...C.bus.values(),...C.cells.values(),...C.hparts.values()].filter(v=>v.k!=="WIRE"&&CONTACT.has(v.k))}
+function qzCheckParts(ans,C){const bad=[];
+  const loads=X=>{const m=new Map();for(const v of X.cells.values())if(LOAD.has(v.k)){const k=v.k+"|"+v.tag;m.set(k,(m.get(k)||0)+1)}return m};
+  const A=loads(ans),U=loads(C),loadKind=new Map([...A.keys()].map(k=>{const[kk,t]=k.split("|");return[t,kk]}).filter(([t,kk])=>kk!=="CRST"));
+  const nm=k=>{const[kk,t]=k.split("|");return kk==="CRST"?`카운터 ${t} 리셋 코일`:outName(kk,t)};
+  for(const[k,n]of U){if(!A.has(k))bad.push(`주어진 기구에 없는 ${jo(nm(k),"을")} 썼습니다.`);else if(n>A.get(k))bad.push(`${jo(nm(k),"을")} ${n}번 그렸습니다 (주어진 것은 ${A.get(k)}개).`)}
+  const inA=new Map();for(const v of qzAllContacts(ans)){const f=QZ_IN(v.k);if(f){const k=v.k+"|"+v.tag;inA.set(k,(inA.get(k)||0)+1);inA.set("F|"+f+"|"+v.tag,1)}}
+  const inU=new Map();
+  for(const v of qzAllContacts(C)){const f=QZ_IN(v.k),t=v.tag||"(이름 없음)";
+    if(f){if(!inA.has("F|"+f+"|"+v.tag)){bad.push(`주어진 기구에 없는 입력 ${jo(t,"을")} 썼습니다.`);continue}const k=v.k+"|"+v.tag;inU.set(k,(inU.get(k)||0)+1);continue}
+    const lk=loadKind.get(v.tag);
+    if(!lk){bad.push(`접점 ${t}: 주어진 기구 중 이 이름의 코일(릴레이·타이머 등)이 없습니다.`);continue}
+    if((v.k==="TA"||v.k==="TB")&&lk!=="TIMER")bad.push(`${t}은(는) 타이머가 아니어서 한시 접점을 쓸 수 없습니다.`);
+    if((v.k==="FA"||v.k==="FB")&&lk!=="FR")bad.push(`${t}은(는) 플리커 릴레이가 아니어서 플리커 접점을 쓸 수 없습니다.`)}
+  for(const[k,n]of inU){const[kk,t]=k.split("|"),lim=Math.max(1,inA.get(k)||0);
+    if(n>lim)bad.push(`${t}의 ${/_A$/.test(kk)?"a":"b"}접점을 ${n}개 썼습니다 (이 기구는 ${lim}개).`)}
+  for(const r of contactUsage(C))if(r.over)bad.push(usageWarn(r));
+  return[...new Set(bad)]}
+
+// ── 채점 2: 동작 비교 (정답 회로와 같은 조작을 여러 순서로 해 보고 출력 비교) ──
+function qzRng(seed){let a=seed>>>0;return()=>{a=a+0x6D2B79F5>>>0;let t=a;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}}
+function qzActions(ans){const ins=new Map();for(const v of qzAllContacts(ans)){const f=QZ_IN(v.k);if(f&&!ins.has(v.tag))ins.set(v.tag,f)}
+  const fls=[...new Set([...ans.cells.values()].filter(v=>v.k==="FLS").map(v=>v.tag))];
+  const s=new Sim(ans);s.presets();const T=[...Object.values(s.tp),...Object.values(s.fp).map(x=>2*x),...Object.values(s.cp).map(()=>1)];
+  return{ins:[...ins].map(([tag,f])=>({tag,f})),fls,waits:[...new Set([0.4,1,...T.flatMap(x=>[Math.max(0.3,x-0.4),x+0.4]),Math.max(0,...T)*2+0.5].map(x=>Math.round(x*10)/10))].sort((a,b)=>a-b)}}
+function qzActText(a){if(a.t==="press")return`${a.tag} 누름`;if(a.t==="hold")return`${a.tag}을(를) ${a.w}초 동안 누르고 있다가 뗌`;
+  if(a.t==="toggle")return a.f==="SW"?`${a.tag}를 ${a.on?"A(자동)":"M(수동)"}으로 전환`:a.f==="LS"?`${a.tag} ${a.on?"동작(감지)":"복귀"}`:`${a.tag} ${a.on?"ON":"OFF"}`;
+  if(a.t==="trip")return a.on?`${a.tag} 트립(과전류)`:`${a.tag} 리셋`;if(a.t==="level")return`${a.tag} 수위 ${["E2 아래(낮음)","E1~E2 사이","E1 도달(높음)"][a.v]}`;
+  return`${a.w}초 기다림`}
+function qzOutState(s,o){return outVal(s,o)}
+function qzCompare(ans,C,opt={}){const OUT=outputsOf(ans),dt=0.1,A=qzActions(ans);
+  const mk=X=>{const s=new Sim(X);s.solve();return s};
+  let a,b,log,steps=0,seqs=0;
+  const cmp=()=>{steps++;if(b.short)return{why:"short"};if(b.unstable&&!a.unstable)return{why:"unstable"};
+    for(const[key,o]of OUT){const x=qzOutState(a,o),y=qzOutState(b,o);if(x!==y)return{why:"diff",key,o,want:x,got:y}}return null};
+  const run=sec=>{for(let t=0;t<sec-1e-9;t+=dt){a.step(dt);b.step(dt);const r=cmp();if(r)return r}return null};
+  const doAct=act=>{log.push(act);
+    if(act.t==="press"){a.inputs[act.tag]=b.inputs[act.tag]=true;let r=run(0.3);if(r)return r;a.inputs[act.tag]=b.inputs[act.tag]=false;return run(0.3)}
+    if(act.t==="hold"){a.inputs[act.tag]=b.inputs[act.tag]=true;let r=run(act.w);if(r)return r;a.inputs[act.tag]=b.inputs[act.tag]=false;return run(0.3)}
+    if(act.t==="toggle"){act.on=!a.inputs[act.tag];a.inputs[act.tag]=b.inputs[act.tag]=act.on;return run(0.3)}
+    if(act.t==="trip"){act.on=!a.trips[act.tag];a.trips[act.tag]=b.trips[act.tag]=act.on;return run(0.3)}
+    if(act.t==="level"){a.level[act.tag]=b.level[act.tag]=act.v;return run(0.3)}
+    return run(act.w)};
+  const fresh=()=>{a=mk(ans);b=mk(C);log=[];seqs++;const r0=cmp();return r0||run(0.4)};
+  const pool=[];for(const x of A.ins){if(x.f==="PB"){pool.push({t:"press",tag:x.tag,w:0});pool.push({t:"press",tag:x.tag,w:0})}else if(x.f==="THR")pool.push({t:"trip",tag:x.tag,f:x.f});else pool.push({t:"toggle",tag:x.tag,f:x.f},{t:"toggle",tag:x.tag,f:x.f})}
+  for(const t of A.fls)for(const v of[0,1,2])pool.push({t:"level",tag:t,v});
+  const result=(r)=>({ok:false,r,log:log.slice(),steps,seqs});
+  // ① 하나씩 · 둘씩 차례로 (빠짐없이)
+  const singles=pool.filter((x,i)=>pool.findIndex(y=>JSON.stringify(y)===JSON.stringify(x))===i);
+  const W=A.waits[A.waits.length-1];
+  for(const p1 of singles){let r=fresh();if(r)return result(r);r=doAct({...p1});if(r)return result(r);r=doAct({t:"wait",w:W});if(r)return result(r)}
+  for(const p1 of singles)for(const p2 of singles){let r=fresh();if(r)return result(r);for(const x of[p1,{t:"wait",w:W},p2,{t:"wait",w:W}]){r=doAct({...x});if(r)return result(r)}}
+  // ② 무작위 순서 (기다리는 시간도 여러 가지, 길게 누르기 포함)
+  const rnd=qzRng(opt.seed||20261112),N=opt.n||70,L=opt.len||12;
+  for(let i=0;i<N;i++){let r=fresh();if(r)return result(r);
+    for(let j=0;j<L;j++){let act;const u=rnd();
+      if(u<0.3)act={t:"wait",w:A.waits[Math.floor(rnd()*A.waits.length)]};
+      else{act={...pool[Math.floor(rnd()*pool.length)]};if(act.t==="press"&&rnd()<0.25)act={t:"hold",tag:act.tag,w:A.waits[Math.floor(rnd()*A.waits.length)]}}
+      r=doAct(act);if(r)return result(r)}}
+  return{ok:true,steps,seqs}}
+function qzGrade(){if(!QZ.on)return;if(mode==="run")toggleMode();qzMsg("채점 중… (여러 조작 순서로 동작을 비교하고 있습니다)");$("qzGrade").disabled=true;
+  setTimeout(()=>{try{qzGradeNow()}finally{$("qzGrade").disabled=false}},40)}
+function qzGradeNow(){
+  const C=circ,ans=QZ.ans,parts=qzCheckParts(ans,C);let beh=null;
+  try{beh=qzCompare(ans,C)}catch(e){beh={ok:false,err:String(e)}}
+  const ok=!parts.length&&beh.ok;
+  let html=`<h2>채점 결과 — ${ok?"정답입니다":"다시 해 보세요"}</h2><div class="qzres">`;
+  html+=`<p class="${parts.length?"bad":"ok"}">${parts.length?"✘":"✔"} 주어진 기구·접점 안에서 썼는가</p>`;
+  if(parts.length)html+=`<ul>${parts.map(x=>`<li>${escH(x)}</li>`).join("")}</ul>`;
+  if(beh.ok)html+=`<p class="ok">✔ 동작이 정답과 같은가 — 조작 순서 ${beh.seqs}가지(${beh.steps}번 확인)에서 모두 같았습니다.</p>`;
+  else if(beh.err)html+=`<p class="bad">✘ 동작을 확인하는 중 문제가 생겼습니다: ${escH(beh.err)}</p>`;
+  else{const r=beh.r,how=r.why==="short"?"<b>단락</b>이 됩니다 (R·T 모선이 부하 없이 이어짐).":r.why==="unstable"?"회로가 안정되지 않고 계속 바뀝니다 (발진).":
+      `정답은 <b>${escH(jo(outName(r.o.k,r.o.t),"이"))}</b> <b>${qzWord(r.o,r.want)}</b>인데, 내 회로는 <b>${qzWord(r.o,r.got)}</b>입니다.`;
+    html+=`<p class="bad">✘ 동작이 정답과 다릅니다.</p><p>아래 순서로 조작했을 때 차이가 났습니다. '▶ 동작 시작'으로 같은 순서를 직접 해 보세요.</p>
+      <ol><li>전원 투입</li>${beh.log.map(a=>`<li>${escH(qzActText(a))}</li>`).join("")}</ol><p>→ ${how}</p>`}
+  html+=`</div><div class="row">${ok?"":`<button type="button" class="btn" id="qgAns">정답 보기</button>`}<button type="button" class="btn primary" id="qgOk">확인</button></div>`;
+  qzMsg(ok?"정답입니다! 배치도·제어반 결선 탭에서 이어서 연습할 수 있습니다.":"아직 정답과 다릅니다. 채점 결과를 확인하세요.",ok?"ok":"bad");
+  modal(html,(ov,close)=>{ov.firstChild.classList.add("wide");ov.querySelector("#qgOk").onclick=()=>close();const g=ov.querySelector("#qgAns");if(g)g.onclick=()=>{close();qzShowAnswer()}})}
+function qzWord(o,v){if(o.k==="LAMP")return v?"점등":"소등";if(o.k==="BZ")return v?"울림":"정지";return v?"동작(여자)":"정지(소자)"}
+// 정답 그림
+function qzAnswerImg(){const keep=circ,kh=hover,kk=kcur;let url="";
+  try{circ=QZ.ans;hover=null;kcur=null;const c=renderDrawing(1.15,{});url=c.toDataURL("image/png")}finally{circ=keep;hover=kh;kcur=kk;resize();draw()}return url}
+function qzShowAnswer(){if(!QZ.on)return;if(mode==="run")toggleMode();const url=qzAnswerImg();
+  modal(`<h2>정답 도면 — ${escH(QZ.prob.title)}</h2><p>빈칸을 채우는 방법은 여러 가지일 수 있습니다. 동작이 같고 주어진 접점 안에서 썼다면 이것과 달라도 정답입니다.</p>
+    <div style="overflow:auto;max-height:58vh;border:1px solid var(--line);border-radius:6px;background:#fff"><img src="${url}" alt="정답 도면" style="display:block;max-width:none"></div>
+    <div class="row"><button type="button" class="btn" id="qaFill">정답으로 채우기</button><button type="button" class="btn primary" id="qaOk">닫기</button></div>`,(ov,close)=>{ov.firstChild.classList.add("xwide");
+    ov.querySelector("#qaOk").onclick=()=>close();
+    ov.querySelector("#qaFill").onclick=()=>{close();snapshot();circ=Circuit.from(QZ.ans.toJSON());QZ.good=JSON.stringify(circ.toJSON());changed();qzMsg("정답으로 채웠습니다. '처음부터'로 다시 풀 수 있습니다.")}})}
+
+// 문제 고르기 창
+function qzDialog(){if(mode==="run")toggleMode();const mine=qzMine.get();
+  const lv=p=>`<span class="qzlv">${p.grade==="ind"?"산업기사":"기능사"} · ${"★".repeat(p.level||1)}</span>`;
+  const item=(p,i,kind)=>`<div class="qzitem"><div class="qi"><b>${escH(p.title)}</b><span>${escH(p.note||"")}${p.note?" · ":""}빈칸 ${p.blanks.length}곳</span></div>${lv(p)}
+    ${kind==="mine"?`<button type="button" class="btn" data-del="${i}">지우기</button>`:""}<button type="button" class="btn primary" data-${kind}="${i}">풀기</button></div>`;
+  modal(`<h2>빈칸 문제 — 미완성 시퀀스도 완성하기</h2>
+    <p>시퀀스도의 일부가 점선 상자로 비어 있습니다. 동작사항을 읽고 빈칸 안을 채운 뒤 <b>채점</b>을 누르세요. 주어진 기구와 그 기구가 가진 접점 수 안에서, 동작이 정답과 같으면 정답입니다.</p>
+    <div class="qzlist">${QZ_PROBS.map((p,i)=>item(p,i,"ex")).join("")}
+    ${mine.length?`<div style="font-weight:700;margin-top:6px">내가 만든 문제</div>`+mine.map((p,i)=>item(p,i,"mine")).join(""):""}</div>
+    <div class="sec"><div class="row left"><button type="button" class="btn" id="qzMake">지금 도면으로 문제 만들기</button>
+      <input type="file" id="qzFile" accept=".json,application/json" style="max-width:100%"><button type="button" class="btn" id="qzOpen">문제 파일 열기</button></div>
+      <span class="hint" id="qzDMsg"></span></div>
+    <div class="row"><button type="button" class="btn" id="qzX">닫기</button></div>`,(ov,close)=>{ov.firstChild.classList.add("wide");
+    ov.querySelector("#qzX").onclick=()=>close();
+    ov.querySelectorAll("[data-ex]").forEach(b=>b.onclick=()=>{close();qzStart(QZ_PROBS[+b.dataset.ex])});
+    ov.querySelectorAll("[data-mine]").forEach(b=>b.onclick=()=>{close();const f=mine[+b.dataset.mine];qzStart({...f,id:"mine:"+f.title,file:f})});
+    ov.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{mine.splice(+b.dataset.del,1);qzMine.set(mine);close();qzDialog()});
+    ov.querySelector("#qzMake").onclick=()=>{close();qzMaker()};
+    ov.querySelector("#qzOpen").onclick=()=>{const f=ov.querySelector("#qzFile").files[0],msg=ov.querySelector("#qzDMsg");if(!f){msg.textContent="먼저 문제 파일(.json)을 고르세요.";return}
+      f.text().then(t=>{let d;try{d=JSON.parse(t)}catch(e){msg.textContent="JSON 파일이 아닙니다.";return}
+        const p=qzFromFile(d);if(!p){msg.textContent="빈칸 문제 파일이 아닙니다. (시퀀스 도면 파일은 '파일·예제'에서 엽니다.)";return}close();qzStart(p)})}})}
+function qzFromFile(d){if(!d||d.app!=="seqsim-quiz"||!d.answer||!Array.isArray(d.blanks)||!d.blanks.length)return null;
+  const blanks=d.blanks.map(r=>({l0:+r.l0,l1:+r.l1,p0:+r.p0,p1:+r.p1})).filter(r=>[r.l0,r.l1,r.p0,r.p1].every(Number.isFinite));if(!blanks.length)return null;
+  const f={app:"seqsim-quiz",version:1,title:String(d.title||"빈칸 문제").slice(0,60),note:String(d.note||"").slice(0,80),grade:d.grade==="ind"?"ind":"func",level:Math.max(1,Math.min(3,+d.level||2)),
+    spec:Array.isArray(d.spec)?d.spec.map(String).slice(0,60):[],blanks,answer:d.answer};return{...f,id:"file:"+f.title,file:f}}
+// 문제 만들기: 지금 도면에서 빈칸 범위를 끌어서 고름
+function qzMaker(){if(mode==="run")toggleMode();if(QZ.on){setHint("빈칸 문제를 푸는 중에는 문제를 만들 수 없습니다. '문제 끝내기'를 먼저 누르세요.",true);return}
+  const C=circ;let d;try{d=describeCircuit(C)}catch(e){d={items:[],error:"동작 사항을 만들 수 없습니다."}}
+  if(d.error){setHint("문제를 만들 수 없습니다: "+d.error,true);return}
+  const keepH=hover,keepK=kcur,keepZ=ZM;hover=null;kcur=null;ZM=1;resize();draw();const url=cv.toDataURL("image/png"),{w,h}=sheetSize();ZM=keepZ;hover=keepH;kcur=keepK;resize();draw();
+  const blanks=[];let defTitle=(name||"").replace(/^빈칸 문제:\s*/,"").replace(/^[①-⑳]\s*/,"")||"내가 만든 문제";
+  modal(`<h2>지금 도면으로 빈칸 문제 만들기</h2>
+    <p>도면에서 비울 부분을 <b>끌어서 사각형으로</b> 고르세요(여러 곳 가능, 상자를 누르면 지워짐). 상자 안의 접점·코일·선은 훈련생 화면에서 지워지고, 지금 도면이 정답이 됩니다.</p>
+    <div class="qzmk" id="qmBox"><img src="${url}" width="${w}" height="${h}" alt="지금 도면"><svg id="qmSvg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"></svg></div>
+    <label>문제 제목<input id="qmTitle" value="${escH(defTitle)}" maxlength="60"></label>
+    <label>동작사항 (자동으로 만든 문장입니다. 고쳐 써도 됩니다. 한 줄에 한 항목)<textarea id="qmSpec" style="min-height:160px;font-size:13px;line-height:1.6">${escH(d.items.map(x=>x.text).join("\n"))}</textarea></label>
+    <label>난이도 <select id="qmLv"><option value="1">★ 쉬움</option><option value="2" selected>★★ 보통</option><option value="3">★★★ 어려움</option></select></label>
+    <span class="hint" id="qmMsg"></span>
+    <div class="row"><button type="button" class="btn" id="qmX">취소</button><button type="button" class="btn" id="qmFile">파일로 저장</button><button type="button" class="btn" id="qmSave">내 문제로 저장</button><button type="button" class="btn primary" id="qmGo">바로 풀어 보기</button></div>`,(ov,close)=>{
+    ov.firstChild.classList.add("xwide");const svg=ov.querySelector("#qmSvg"),msg=ov.querySelector("#qmMsg");ov.querySelector("#qmBox").scrollLeft=Math.max(0,X0-40);
+    const pt=e=>{const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;return p.matrixTransform(svg.getScreenCTM().inverse())};
+    const cellOf=(x,y)=>({l:Math.max(0,Math.min(C.rows-1,Math.round((x-X0)/LW))),p:Math.max(0,Math.min(C.cols-1,Math.floor((y-Y0)/PH)))});
+    const rectOf=r=>({x:lineX(r.l0)-LW*0.42,y:r.p0===0?Y0-30:bY(r.p0)+3,x2:lineX(r.l1)+LW*0.42,y2:bY(r.p1+1)-3});
+    const paint=(tmp)=>{svg.innerHTML=[...blanks,...(tmp?[tmp]:[])].map((r,i)=>{const q=rectOf(r);
+      return`<rect data-i="${i}" x="${q.x}" y="${q.y}" width="${q.x2-q.x}" height="${q.y2-q.y}" fill="rgba(80,110,255,.16)" stroke="#3b5bdb" stroke-width="2" stroke-dasharray="7 4" style="cursor:pointer"/>`}).join("")};
+    let st=null;
+    svg.addEventListener("pointerdown",e=>{if(e.target.dataset&&e.target.dataset.i!=null&&+e.target.dataset.i<blanks.length){blanks.splice(+e.target.dataset.i,1);paint();return}
+      const q=pt(e);st=cellOf(q.x,q.y);svg.setPointerCapture(e.pointerId);paint({l0:st.l,l1:st.l,p0:st.p,p1:st.p})});
+    svg.addEventListener("pointermove",e=>{if(!st)return;const q=pt(e),c=cellOf(q.x,q.y);paint({l0:Math.min(st.l,c.l),l1:Math.max(st.l,c.l),p0:Math.min(st.p,c.p),p1:Math.max(st.p,c.p)})});
+    svg.addEventListener("pointerup",e=>{if(!st)return;const q=pt(e),c=cellOf(q.x,q.y);blanks.push({l0:Math.min(st.l,c.l),l1:Math.max(st.l,c.l),p0:Math.min(st.p,c.p),p1:Math.max(st.p,c.p)});st=null;paint();msg.textContent=`빈칸 ${blanks.length}곳`});
+    const make=()=>{if(!blanks.length){msg.textContent="먼저 도면에서 비울 부분을 끌어서 고르세요.";return null}
+      const masked=qzMask(C,blanks);if(qzOutKey(masked,blanks)===qzOutKey(C,blanks)&&JSON.stringify(masked.toJSON())===JSON.stringify(C.toJSON())){msg.textContent="고른 상자 안에 지울 것이 없습니다.";return null}
+      return{app:"seqsim-quiz",version:1,title:ov.querySelector("#qmTitle").value.trim()||"내가 만든 문제",note:"직접 만든 문제",grade:typeof LY!=="undefined"&&LY.grade==="ind"?"ind":"func",level:+ov.querySelector("#qmLv").value,
+        spec:ov.querySelector("#qmSpec").value.split("\n").map(s=>s.trim()).filter(Boolean),blanks:blanks.slice(),answer:C.toJSON()}};
+    ov.querySelector("#qmX").onclick=()=>close();
+    ov.querySelector("#qmSave").onclick=()=>{const f=make();if(!f)return;const m=qzMine.get().filter(x=>x.title!==f.title);m.push(f);qzMine.set(m);msg.textContent="'빈칸 문제' 목록의 '내가 만든 문제'에 저장했습니다."};
+    ov.querySelector("#qmFile").onclick=async()=>{const f=make();if(!f)return;try{await saveFile((f.title||"빈칸문제").replace(/[\\/:*?"<>|]/g,"_")+".json",new Blob([JSON.stringify(f,null,1)],{type:"application/json"}));msg.textContent="문제 파일을 저장했습니다. 훈련생은 '빈칸 문제 → 문제 파일 열기'로 엽니다."}catch(e){msg.textContent="저장하지 못했습니다."}};
+    ov.querySelector("#qmGo").onclick=()=>{const f=make();if(!f)return;close();qzStart({...f,id:"file:"+f.title,file:f})}})}
+$("btnQuiz").onclick=qzDialog;
+$("qzGrade").onclick=qzGrade;$("qzAns").onclick=qzShowAnswer;$("qzEnd").onclick=qzEnd;
+$("qzRe").onclick=()=>{if(!QZ.on)return;if(mode==="run")toggleMode();const p=QZ.prob;snapshot();circ=qzMask(QZ.ans,p.blanks);QZ.good=JSON.stringify(circ.toJSON());changed();qzMsg("빈칸을 비웠습니다. 처음부터 풀어 보세요.")};
+$("qzSpecT").onclick=()=>{QZ.showSpec=!QZ.showSpec;qzBar()};
+// 새로 고침 뒤: 풀던 문제 이어서
+function qzResume(){const s=qzStore.get();if(!s||!s.prob)return;const p=s.prob.id?qzFind(s.prob.id):qzFromFile(s.prob);
+  if(!p||!qzStart(p,true)){qzStore.set(null);QZ.on=false;qzBar()}}
+// ── 빈칸 문제 예제 ── (정답 도면 + 빈칸 범위. 동작사항은 정답 도면을 실제로 조작해 자동으로 만듦)
+// 빈칸 {l0,l1: 회로선 범위, p0,p1: 칸 범위} — 그 안의 접점·코일·세로선·가로선이 지워짐
+// 공통: 0번 회로선 EOCR 전원, 1번 회로선 EOCR a접점 → YL, 모선에 EOCR b · PB0
+function qzEocr(put,wire,link,bus,Z,stopAt=1){bus(0,"THR_B","EOCR");bus(stopAt,"PB_B","PB0");
+  wire(0,0,Z-1);put(0,Z,"COIL","EOCR");link([0,1]);put(1,1,"THR_A","EOCR");wire(1,2,Z-1);put(1,Z,"LAMP","YL")}
+const QZ_PROBS=[
+ {id:"q01",title:"자기유지 회로 (기동·정지)",grade:"func",level:1,note:"PB1 기동, PB0 정지, MC 자기유지",
+  blanks:[{l0:2,l1:3,p0:0,p1:0}],
+  build:()=>build(6,3,(put,wire,link,bus,Z)=>{qzEocr(put,wire,link,bus,Z);
+    put(2,0,"PB_A","PB1");wire(2,1,1);put(2,Z,"COIL","MC");put(3,0,"A","MC");link([2,1]);
+    put(4,0,"A","MC");wire(4,1,1);put(4,Z,"LAMP","RL");put(5,0,"B","MC");wire(5,1,1);put(5,Z,"LAMP","GL")})},
+ {id:"q02",title:"지연 점등 (타이머 한시 접점)",grade:"func",level:1,note:"SS ON 후 설정시간이 지나면 램프 전환",
+  blanks:[{l0:1,l1:2,p0:1,p1:1}],
+  build:()=>build(3,3,(put,wire,link,bus,Z)=>{put(0,0,"SW_A","SS");put(0,1,"WIRE");put(0,Z,"TIMER","T1",3);
+    put(1,1,"TA","T1");put(1,Z,"LAMP","RL");put(2,1,"TB","T1");put(2,Z,"LAMP","GL");link([0,1],[1,1])})},
+ {id:"q03",title:"플리커 교대 점멸",grade:"func",level:1,note:"SS ON이면 YL·GL 교대 점멸",
+  blanks:[{l0:1,l1:2,p0:1,p1:1}],
+  build:()=>build(3,3,(put,wire,link,bus,Z)=>{put(0,0,"SW_A","SS");put(0,1,"WIRE");put(0,Z,"FR","FR",1);
+    put(1,1,"FA","FR");put(1,Z,"LAMP","YL");put(2,1,"FB","FR");put(2,Z,"LAMP","GL");link([0,1],[1,1])})},
+ {id:"q04",title:"2개소 기동·정지",grade:"func",level:1,note:"PB1·PB2 어느 쪽으로도 기동, PB0·PB3 어느 쪽으로도 정지",
+  blanks:[{l0:2,l1:4,p0:0,p1:1}],
+  build:()=>build(7,4,(put,wire,link,bus,Z)=>{qzEocr(put,wire,link,bus,Z);
+    put(2,0,"PB_A","PB1");put(2,1,"PB_B","PB3");wire(2,2,2);put(2,Z,"COIL","MC");put(3,0,"PB_A","PB2");put(4,0,"A","MC");link([2,1],[3,1]);
+    put(5,0,"A","MC");wire(5,1,2);put(5,Z,"LAMP","RL");put(6,0,"B","MC");wire(6,1,2);put(6,Z,"LAMP","GL")})},
+ {id:"q05",title:"선입력 우선 회로 (인터록)",grade:"func",level:1,note:"먼저 누른 쪽만 동작",
+  blanks:[{l0:1,l1:1,p0:1,p1:1},{l0:4,l1:4,p0:1,p1:1}],build:()=>EXAMPLES[2][1]()},
+ {id:"q06",title:"후입력 우선 회로",grade:"func",level:2,note:"나중에 누른 쪽이 동작",
+  blanks:[{l0:1,l1:1,p0:1,p1:1},{l0:3,l1:3,p0:1,p1:1}],build:()=>EXAMPLES[3][1]()},
+ {id:"q07",title:"정·역 운전 (MC 인터록)",grade:"func",level:2,note:"MC1·MC2 동시 동작 금지",
+  blanks:[{l0:2,l1:2,p0:1,p1:1},{l0:4,l1:4,p0:1,p1:1}],
+  build:()=>build(8,4,(put,wire,link,bus,Z)=>{qzEocr(put,wire,link,bus,Z);
+    put(2,0,"PB_A","PB1");put(2,1,"B","MC2");put(2,2,"WIRE");put(2,Z,"COIL","MC1");put(3,0,"A","MC1");link([2,1]);
+    put(4,0,"PB_A","PB2");put(4,1,"B","MC1");put(4,2,"WIRE");put(4,Z,"COIL","MC2");put(5,0,"A","MC2");link([4,1]);
+    put(6,0,"A","MC1");wire(6,1,2);put(6,Z,"LAMP","RL1");put(7,0,"A","MC2");wire(7,1,2);put(7,Z,"LAMP","RL2")})},
+ {id:"q08",title:"한시 정지 (기동 후 일정 시간 뒤 정지)",grade:"func",level:2,note:"PB1 기동, T1 설정시간 뒤 자동 정지",
+  blanks:[{l0:2,l1:3,p0:0,p1:1}],build:()=>EXAMPLES[1][1]()},
+ {id:"q09",title:"순차 기동 (MC1 → 설정시간 뒤 MC2)",grade:"func",level:2,note:"PB1을 누르면 MC1, T1 뒤 MC2",
+  blanks:[{l0:4,l1:4,p0:0,p1:2}],
+  build:()=>build(8,4,(put,wire,link,bus,Z)=>{qzEocr(put,wire,link,bus,Z);
+    put(2,0,"PB_A","PB1");wire(2,1,2);put(2,Z,"COIL","MC1");put(3,0,"A","MC1");wire(3,1,2);put(3,Z,"TIMER","T1",3);link([2,1]);
+    put(4,0,"TA","T1");wire(4,1,2);put(4,Z,"COIL","MC2");
+    put(5,0,"A","MC1");wire(5,1,2);put(5,Z,"LAMP","RL");put(6,0,"A","MC2");wire(6,1,2);put(6,Z,"LAMP","GL");
+    put(7,0,"B","MC1");wire(7,1,2);put(7,Z,"LAMP","WL")})},
+ {id:"q10",title:"촌동·연속 운전",grade:"func",level:2,note:"PB1 연속 운전, PB2는 누르는 동안만 운전",
+  blanks:[{l0:3,l1:4,p0:0,p1:1}],
+  build:()=>build(7,4,(put,wire,link,bus,Z)=>{qzEocr(put,wire,link,bus,Z);
+    put(2,0,"PB_A","PB1");wire(2,1,2);put(2,Z,"COIL","MC");
+    put(3,0,"A","MC");put(3,1,"PB_B","PB2");put(4,0,"PB_A","PB2");put(4,1,"WIRE");link([2,2],[3,2]);
+    put(5,0,"A","MC");wire(5,1,2);put(5,Z,"LAMP","RL");put(6,0,"B","MC");wire(6,1,2);put(6,Z,"LAMP","GL")})},
+ {id:"q11",title:"리밋 스위치로 정지 (컨베이어)",grade:"func",level:2,note:"LS1이 감지되면 정지하고 WL 점등",
+  blanks:[{l0:2,l1:3,p0:0,p1:1}],
+  build:()=>build(6,4,(put,wire,link,bus,Z)=>{qzEocr(put,wire,link,bus,Z);
+    put(2,0,"PB_A","PB1");put(2,1,"LS_B","LS1");put(2,2,"WIRE");put(2,Z,"COIL","MC1");put(3,0,"A","MC1");link([2,1]);
+    put(4,0,"LS_A","LS1");wire(4,1,2);put(4,Z,"LAMP","WL");put(5,0,"A","MC1");wire(5,1,2);put(5,Z,"LAMP","RL")})},
+ {id:"q12",title:"플로트리스 스위치 급수 회로",grade:"func",level:2,note:"수위가 낮으면 MC1 운전, E1에 닿으면 정지",
+  blanks:[{l0:3,l1:5,p0:0,p1:0}],build:()=>EXAMPLES[6][1]()},
+ {id:"q13",title:"과전류 경보와 부저 정지",grade:"func",level:2,note:"EOCR 트립 시 YL·부저, PB3로 부저만 정지",
+  spec:["(1) 배선용 차단기 MCCB를 통해 전원을 투입하면 EOCR에 전원이 공급되고, 램프 GL이 점등된다.",
+   "(2) 푸시버튼 스위치 PB1을 누르면 전자접촉기 MC가 여자되어 자기유지되고, 램프 RL이 점등되며, 램프 GL은 소등된다.",
+   "(3) 동작 중 푸시버튼 스위치 PB0을 누르면 모든 동작이 정지되고 초기 상태로 복귀한다.",
+   "(4) 운전 중 과부하에 의해 EOCR이 동작(트립)하면 모든 동작이 정지되고, 램프 YL이 점등되며, 부저 BZ가 울린다.",
+   "① 이 상태에서 푸시버튼 스위치 PB3을 누르면 릴레이 X1이 여자되어 자기유지되고, 부저 BZ는 정지한다. (램프 YL은 계속 점등)",
+   "※ EOCR이 동작하지 않은 상태에서는 PB3을 눌러도 아무 변화가 없다.",
+   "(5) EOCR을 리셋하면 릴레이 X1이 소자되고, 램프 YL은 소등되어 초기 상태로 복귀한다."],
+  blanks:[{l0:2,l1:4,p0:2,p1:3}],
+  build:()=>build(9,5,(put,wire,link,bus,Z)=>{bus(0,"THR_B","EOCR");bus(4,"PB_B","PB0");
+    wire(0,0,3);put(0,Z,"COIL","EOCR");link([0,1]);put(1,1,"THR_A","EOCR");wire(1,2,3);put(1,Z,"LAMP","YL");
+    put(2,2,"B","X1");put(2,3,"WIRE");put(2,Z,"BZ","BZ");link([1,2]);
+    put(3,2,"PB_A","PB3");put(3,3,"WIRE");put(3,Z,"COIL","X1");link([2,2]);
+    put(4,2,"A","X1");link([3,2],[3,3]);
+    put(5,0,"PB_A","PB1");wire(5,1,3);put(5,Z,"COIL","MC");put(6,0,"A","MC");link([5,1]);
+    put(7,0,"A","MC");wire(7,1,3);put(7,Z,"LAMP","RL");put(8,0,"B","MC");wire(8,1,3);put(8,Z,"LAMP","GL")})},
+ {id:"q14",title:"반복 운전 (MC1 ↔ MC2 교대)",grade:"func",level:3,note:"T1·T2 시간마다 MC1·MC2 교대 운전",
+  spec:["(1) 배선용 차단기 MCCB를 통해 전원을 투입하면 EOCR에 전원이 공급된다.",
+   "(2) 푸시버튼 스위치 PB1을 누르면 릴레이 X1이 여자되어 자기유지되고, 전자접촉기 MC1, 타이머 T1이 여자되며, 램프 RL이 점등된다.",
+   "① 타이머 T1의 설정시간(3초)이 지나면 전자접촉기 MC1이 소자되고 램프 RL은 소등되며, 전자접촉기 MC2, 타이머 T2가 여자되고 램프 GL이 점등된다.",
+   "② 타이머 T2의 설정시간(3초)이 지나면 타이머 T1이 소자되어 전자접촉기 MC2, 타이머 T2가 소자되고(램프 GL 소등), 다시 전자접촉기 MC1, 타이머 T1이 여자되어(램프 RL 점등) ①~②를 반복한다.",
+   "(3) 동작 중 푸시버튼 스위치 PB0을 누르면 모든 동작이 정지되고 초기 상태로 복귀한다.",
+   "(4) 운전 중 과부하에 의해 EOCR이 동작(트립)하면 모든 동작이 정지되고, 램프 YL이 점등된다.",
+   "(5) EOCR을 리셋하면 램프 YL은 소등되고, 초기 상태로 복귀한다."],
+  blanks:[{l0:4,l1:7,p0:1,p1:2}],
+  build:()=>build(10,4,(put,wire,link,bus,Z)=>{qzEocr(put,wire,link,bus,Z);
+    put(2,0,"PB_A","PB1");wire(2,1,2);put(2,Z,"COIL","X1");put(3,0,"A","X1");link([2,1],[3,1],[4,1],[5,1]);
+    put(4,1,"TB","T2");put(4,2,"WIRE");put(4,Z,"TIMER","T1",3);
+    put(5,1,"TB","T1");put(5,2,"WIRE");put(5,Z,"COIL","MC1");
+    put(6,1,"TA","T1");put(6,2,"WIRE");put(6,Z,"COIL","MC2");link([6,2]);put(7,2,"WIRE");put(7,Z,"TIMER","T2",3);
+    put(8,0,"A","MC1");wire(8,1,2);put(8,Z,"LAMP","RL");put(9,0,"A","MC2");wire(9,1,2);put(9,Z,"LAMP","GL")})},
+ {id:"q15",title:"자동·수동 전환 급수 (SS + FLS)",grade:"func",level:3,note:"A(자동)은 FLS, M(수동)은 PB1·PB2로 운전",
+  blanks:[{l0:3,l1:3,p0:0,p1:3},{l0:5,l1:5,p0:2,p1:2}],
+  build:()=>build(8,5,(put,wire,link,bus,Z)=>{bus(0,"THR_B","EOCR");
+    wire(0,0,3);put(0,Z,"COIL","EOCR");link([0,1]);put(1,1,"THR_A","EOCR");wire(1,2,3);put(1,Z,"LAMP","YL");
+    wire(2,0,3);put(2,Z,"FLS","FLS");
+    put(3,0,"SW_A","SS");put(3,1,"B","FLS");wire(3,2,3);link([3,4]);
+    put(4,0,"SW_B","SS");put(4,1,"PB_B","PB2");put(4,2,"PB_A","PB1");put(4,3,"WIRE");put(4,Z,"COIL","MC");
+    put(5,2,"A","MC");link([4,2],[4,3]);
+    put(6,0,"A","MC");wire(6,1,3);put(6,Z,"LAMP","RL");put(7,0,"B","MC");wire(7,1,3);put(7,Z,"LAMP","GL")})},
+ {id:"q16",title:"연습 도면 ① 일부 완성",grade:"func",level:3,note:"X1·X2·MC1·MC2·T1·T2 (공개문제형)",
+  blanks:[{l0:5,l1:7,p0:0,p1:3}],build:()=>EXAMPLES[0][1]()},
+ {id:"q17",title:"연습 도면 ② 일부 완성",grade:"func",level:3,note:"LS1·LS2·X1·X2·MC1·MC2",
+  blanks:[{l0:2,l1:4,p0:0,p1:2}],build:()=>EXAMPLES[5][1]()},
+ {id:"q18",title:"산업기사형 ① 순차·교대 운전",grade:"ind",level:3,note:"X1·X2·X3·T·FR·MC1·MC2, LS1·LS2 (2과제 형식)",
+  spec:["가) MCCB를 통해 전원을 투입하면 EOCR에 전원이 공급되고 램프 GL이 점등된다.",
+   "나) 전동기 M1 운전",
+   "① 리밋 스위치 LS1이 복귀(NC) 상태에서 푸시버튼 스위치 PB1을 누르면 릴레이 X1이 여자되어 자기유지되고, 전자접촉기 MC1이 여자되어 전동기 M1이 회전하며, 램프 RL1이 점등되고 램프 GL은 소등된다.",
+   "② 운전 중 리밋 스위치 LS1이 감지되면 릴레이 X1, 전자접촉기 MC1이 소자되고 램프 RL1은 소등된다. (릴레이 X2가 동작 중이 아니면 램프 GL 점등)",
+   "다) 전동기 M2 운전",
+   "① 리밋 스위치 LS2가 복귀(NC) 상태에서 푸시버튼 스위치 PB2를 누르면 릴레이 X2가 여자되어 자기유지되고, 타이머 T가 여자되며, 램프 GL은 소등된다.",
+   "② 타이머 T의 설정시간(3초)이 지나면 전자접촉기 MC2가 여자되어 전동기 M2가 회전하고 램프 RL2가 점등된다.",
+   "③ 운전 중 리밋 스위치 LS2가 감지되면 릴레이 X2, 타이머 T, 전자접촉기 MC2가 소자되고 램프 RL2는 소등된다.",
+   "라) 전동기 M1, M2 교대 운전",
+   "① 푸시버튼 스위치 PB3을 누르면 릴레이 X3이 여자되어 자기유지되고, 플리커 릴레이 FR이 여자되며 램프 WL이 점등된다.",
+   "② 플리커 릴레이 FR의 설정시간(1초) 간격으로 M1(전자접촉기 MC1 여자, 램프 RL1 점등) 동작과 M2(전자접촉기 MC2 여자, 램프 RL2 점등) 동작이 서로 반복한다. (MC1 동작이 먼저) 이때 나)·다)의 MC1·MC2 운전 회로는 릴레이 X3에 의해 차단된다.",
+   "마) 푸시버튼 스위치 PB0을 누르면 모든 전자접촉기와 릴레이가 소자되어 초기 상태로 돌아간다.",
+   "바) 운전 중 과부하에 의해 EOCR이 동작하면 제어회로 전원이 차단되어 정지하고 램프 YL이 점등된다. EOCR을 리셋하면 초기 상태로 복귀한다."],
+  blanks:[{l0:11,l1:14,p0:0,p1:1},{l0:2,l1:3,p0:0,p1:1}],
+  build:()=>build(18,5,(put,wire,link,bus,Z)=>{qzEocr(put,wire,link,bus,Z);
+    put(2,0,"PB_A","PB1");put(2,1,"LS_B","LS1");wire(2,2,3);put(2,Z,"COIL","X1");put(3,0,"A","X1");link([2,1]);
+    put(4,0,"PB_A","PB2");put(4,1,"LS_B","LS2");wire(4,2,3);put(4,Z,"COIL","X2");put(5,0,"A","X2");link([4,1],[4,3],[5,3]);put(6,3,"WIRE");put(6,Z,"TIMER","T",3);
+    put(7,0,"PB_A","PB3");wire(7,1,3);put(7,Z,"COIL","X3");put(8,0,"A","X3");link([7,1],[7,3],[8,3],[9,3]);put(9,3,"WIRE");put(9,Z,"FR","FR",1);put(10,3,"WIRE");put(10,Z,"LAMP","WL");
+    put(11,0,"B","X3");put(11,1,"A","X1");wire(11,2,3);put(11,Z,"COIL","MC1");
+    put(12,0,"A","X3");put(12,1,"FA","FR");link([11,2],[12,1]);
+    put(13,1,"FB","FR");wire(13,2,3);put(13,Z,"COIL","MC2");
+    put(14,0,"B","X3");put(14,1,"TA","T");link([13,2]);
+    put(15,0,"A","MC1");wire(15,1,3);put(15,Z,"LAMP","RL1");put(16,0,"A","MC2");wire(16,1,3);put(16,Z,"LAMP","RL2");
+    put(17,0,"B","X1");put(17,1,"B","X2");wire(17,2,3);put(17,Z,"LAMP","GL")})},
+ {id:"q19",title:"산업기사형 ② 셀렉터 S1·S2 교대 운전",grade:"ind",level:3,note:"SS·LS1·LS2·X1·X2·X3·FR·T·BZ (2과제 형식)",
+  spec:["가) MCCB를 통해 전원을 투입하면 EOCR에 전원이 공급되고 램프 WL이 점등된다.",
+   "나) S1 운전 — 셀렉터 스위치 SS가 M(S1) 위치일 때",
+   "① 리밋 스위치 LS1이 복귀(NC) 상태에서 푸시버튼 스위치 PB1을 누르면 릴레이 X1이 여자되어 자기유지되고, 플리커 릴레이 FR, 릴레이 X3이 여자되며 램프 WL은 소등된다.",
+   "② 플리커 릴레이 FR의 설정시간(1초) 간격으로 M1(전자접촉기 MC1 여자, 램프 RL1 점등) 동작과 M2(전자접촉기 MC2 여자, 램프 RL2 점등) 동작이 서로 반복한다. (MC1 동작이 먼저)",
+   "③ 운전 중 푸시버튼 스위치 PB0을 누르거나, 셀렉터 스위치 SS를 A(S2) 위치로 바꾸거나, 리밋 스위치 LS1이 감지되면 릴레이 X1, 플리커 릴레이 FR, 릴레이 X3이 소자되어 전동기가 정지하고 램프 RL1, RL2는 소등, 램프 WL은 점등된다.",
+   "다) S2 운전 — 셀렉터 스위치 SS가 A(S2) 위치일 때",
+   "① 리밋 스위치 LS2가 복귀(NC) 상태에서 푸시버튼 스위치 PB2를 누르면 릴레이 X2가 여자되어 자기유지되고, 나)의 ②와 같이 교대 운전한다.",
+   "② 운전 중 푸시버튼 스위치 PB0을 누르거나, 셀렉터 스위치 SS를 M(S1) 위치로 바꾸거나, 리밋 스위치 LS2가 감지되면 정지하고 램프 WL이 점등된다.",
+   "라) EOCR 동작 사항",
+   "① 운전 중 과부하에 의해 EOCR이 동작하면 제어회로 전원이 차단되어 전동기는 정지하고, 타이머 T와 부저 BZ가 여자된다. 1초 후 부저 BZ는 정지하고 램프 YL이 점등된다.",
+   "② EOCR을 리셋하면 제어회로는 초기 상태로 복귀한다."],
+  blanks:[{l0:4,l1:5,p0:0,p1:3},{l0:11,l1:13,p0:1,p1:1}],
+  build:()=>build(16,6,(put,wire,link,bus,Z)=>{bus(0,"THR_B","EOCR");bus(3,"PB_B","PB0");
+    wire(0,0,Z-1);put(0,Z,"COIL","EOCR");link([0,1]);
+    put(1,1,"THR_A","EOCR");wire(1,2,Z-1);put(1,Z,"TIMER","T",1);
+    put(2,2,"TB","T");wire(2,3,Z-1);put(2,Z,"BZ","BZ");put(3,2,"TA","T");wire(3,3,Z-1);put(3,Z,"LAMP","YL");link([1,2],[2,2]);
+    put(4,0,"SW_B","SS");put(4,1,"LS_B","LS1");put(4,2,"PB_A","PB1");wire(4,3,Z-1);put(4,Z,"COIL","X1");put(5,2,"A","X1");link([4,2],[4,3]);
+    put(6,0,"SW_A","SS");put(6,1,"LS_B","LS2");put(6,2,"PB_A","PB2");wire(6,3,Z-1);put(6,Z,"COIL","X2");put(7,2,"A","X2");link([6,2],[6,3]);
+    put(8,0,"A","X1");wire(8,1,Z-1);put(8,Z,"FR","FR",1);put(9,0,"A","X2");link([8,1],[9,1],[10,1],[11,1],[12,1]);
+    wire(10,1,Z-1);put(10,Z,"COIL","X3");
+    put(11,1,"FA","FR");wire(11,2,Z-1);put(11,Z,"COIL","MC1");link([11,Z]);put(12,Z,"LAMP","RL1");
+    put(13,1,"FB","FR");wire(13,2,Z-1);put(13,Z,"COIL","MC2");link([13,Z]);put(14,Z,"LAMP","RL2");
+    put(15,0,"B","X3");wire(15,1,Z-1);put(15,Z,"LAMP","WL")})}
+];
+// ==QZ_END==
 // ───────────── 시작 ─────────────
 buildPalette();
 (function boot(){let d=null;try{d=JSON.parse(store.get()||"null")}catch(e){}
   if(d&&d.circ){circ=Circuit.from(d.circ);name=d.name||""}else{circ=EXAMPLES[0][1]();name=EXAMPLES[0][0]}
-  sim=new Sim(circ);sim.solve();resize();draw();drawChart()})();
+  sim=new Sim(circ);sim.solve();resize();draw();drawChart();try{qzResume()}catch(e){}})();
 document.fonts?.ready.then(()=>{draw();drawChart()});
 </script>
 <script>
@@ -2668,15 +3214,15 @@ const wrSeqHex=n=>n&&n.col==="C"&&WR.multi&&n.hex?n.hex:WR_HI;
 
 // ── 시퀀스도 위 좌표 ──
 // 주회로: drawMain과 같은 좌표
-function wrMainGeo(){const a=66,b=a+170,L=[a,a+28,a+56],PE=a+90,L2=[b,b+28,b+56],PE2=b+90,T0=Y0-24,xV=MAINW-22,xL=lineX(0),yB=bY(circ.cols);
-  const yM=T0+56,y1=T0+92,y2=T0+110,fx=MAINW-74,yE0=T0+124,yE1=T0+148,yC=T0+238,yT=T0+290,brY=[T0+204,T0+190,T0+176],g={};
+function wrMainGeo(){const{a,b,L,PE,L2,PE2}=mainX(),xV=MAINW-22,xL=lineX(0),yB=bY(circ.cols),MY=mainY(),T0=MY.T0;
+  const yM=MY.yM,y1=MY.y1,y2=MY.y2,fx=MAINW-74,yE0=MY.yE0,yE1=MY.yE1,yC=MY.yC,yT=MY.yT,brY=MY.br,g={};
   const S=(id,segs,pts)=>{g[id]={segs,pts}};
   ["L1","L2","L3"].forEach((n,i)=>{const x=L[i];
     S("in"+n,[[x,T0,x,yM-12]],[[x,T0],[x,yM-12]]);
     const o=[[x,yM+12,x,yE0]],op=[[x,yM+12],[x,yE0]];if(i!==1){const yy=i?y2:y1;o.push([x,yy,fx,yy]);op.push([fx,yy])}S("o"+n,o,op);
     S("e"+n,[[x,yE1,x,yC-12],[x,brY[i],L2[i],brY[i]],[L2[i],brY[i],L2[i],yC-12]],[[x,yE1],[x,yC-12],[L2[i],yC-12]]);
     S("m1"+n,[[x,yC+12,x,yT]],[[x,yC+12],[x,yT]]);S("m2"+n,[[L2[i],yC+12,L2[i],yT]],[[L2[i],yC+12],[L2[i],yT]])});
-  S("PE",[[PE,T0,PE,yT],[PE,T0+162,PE2,T0+162],[PE2,T0+162,PE2,yT]],[[PE,T0],[PE,yT],[PE2,yT]]);
+  S("PE",[[PE,T0,PE,yT],[PE,MY.yP,PE2,MY.yP],[PE2,MY.yP,PE2,yT]],[[PE,T0],[PE,yT],[PE2,yT]]);
   S("R",[[fx+28,y1,xV,y1],[xV,y1,xV,Y0],[xV,Y0,xL,Y0]],[[fx+28,y1]]);
   S("T",[[fx+28,y2,xV,y2],[xV,y2,xV,yB],[xV,yB,xL,yB]],[[fx+28,y2]]);
   return g}
@@ -2735,8 +3281,14 @@ function wrBuild(){const C=circ,M=pnModel(C),st=lyState(),Pp=st.P,issues=[...M.i
   for(const n of M.nets){const isR=n.pins.includes("pwr:전원#r"),isT=n.pins.includes("pwr:전원#t");
     nets.push({id:"c"+n.no,where:isR?"R 모선 (퓨즈 2차 L1 → 조작회로)":isT?"T 모선 (퓨즈 2차 L3 → 조작회로 공통)":n.where,col:"C",
       pins:n.pins.map(p=>p==="pwr:전원#r"?"F#L1b":p==="pwr:전원#t"?"F#L3b":p),ctl:n,geo:isR?["R"]:isT?["T"]:[]})}
+  // FLS 전극 E3는 접지 (사용자 요청, 2026-11-12): E3 묶음을 PE 묶음에 합침.
+  // FLS 단자 → TB6(E3)는 황색, TB6에서 E3 단자와 PE 단자를 녹황색으로 이음 → n.yel(황색으로 그릴 기구 단자)
+  {const pe=nets.find(n=>n.id==="PE");
+   for(const n of nets.filter(n=>n.ctl&&n.pins.some(p=>/^elec:.*#E3$/.test(p)))){if(!pe)break;
+     pe.pins.push(...n.pins);pe.ctls=[...(pe.ctls||[]),n.ctl];pe.yel=new Set([...(pe.yel||[]),...n.pins.filter(p=>/^fls:/.test(p))]);
+     {const tg=n.pins.find(p=>/^fls:/.test(p)).split("#")[0].slice(4);pe.where+=` · ${tg==="FLS"?"FLS":"FLS "+tg} 전극 E3`}nets.splice(nets.indexOf(n),1)}}
   for(const n of nets){const segs=[],sp=[];for(const g of n.geo){const q=mg[g];if(q){segs.push(...q.segs);sp.push(...q.pts)}}
-    if(n.ctl){segs.push(...(sgeo.get(n.ctl.id)||[]));for(const nd of n.ctl.nodes){const q=wrNodeXY(nd,C);if(q)sp.push(q)}}
+    for(const c of[...(n.ctl?[n.ctl]:[]),...(n.ctls||[])]){segs.push(...(sgeo.get(c.id)||[]));for(const nd of c.nodes){const q=wrNodeXY(nd,C);if(q)sp.push(q)}}
     n.sq={segs,pts:sp}}
   // 외부 기구 → (묶음, 위치)마다 TB 단자 하나
   const boxOf=new Map();for(const[b,items]of Object.entries(st.box.boxes))if(items)items.forEach((t,i)=>{if(t!=="CAP")boxOf.set(t,[b,i])});
@@ -2763,11 +3315,11 @@ function wrBuild(){const C=circ,M=pnModel(C),st=lyState(),Pp=st.P,issues=[...M.i
   //  · 상자 안에서는 공통선(그 상자 기구 둘 이상이 함께 쓰는 선) 먼저, 그다음 위에 있는 기구부터.
   //  · TB5(위): 1번째 배관 1번부터 · 2번째 배관(케이블, TB1 전원) L1·L2·L3·PE = 9·10·11·12 고정 · 3번째 배관 15번부터.
   //  · TB6(아래): 왼쪽부터 1번째 배관 1번, 2번째 7번, 3번째 11번, 4번째 17번부터.
-  const sg=LY.jside==="left"?-1:1,BX={B1:-500,B2:450,B3:750,B4:-500};
+  const sg=LY.jside==="left"?-1:1,BX={B1:-500,B2:450,B3:750,B4:-500},TBn=n=>(st.tb&&st.tb[n])||n;   // 아래 단자대는 배치도에서 맞바꿀 수 있음(st.tb)
   const topP=[{x:-100,locs:["B1"]},{x:0,locs:["TB1"]},{x:100,locs:["B2","B3"]}].sort((a,b)=>sg*a.x-sg*b.x);
   const botP=lyInd()   // 산업기사: 아래쪽은 뒤집지 않음 — ④ 금속관 TB2 · TB4 · TB3 · 오른쪽 가운데 상자 B4
-    ?[{x:-150,locs:["TB2"]},...(Pp.tb4?[{x:-50,locs:["TB4"]}]:[]),{x:50,locs:["TB3"]},...(st.box.boxes.B4?[{x:150,locs:["B4"]}]:[])]
-    :[{x:-150,locs:["B4"]},{x:-50,locs:[sg>0?"TB3":"TB2"]},...(Pp.tb4?[{x:50,locs:["TB4"]}]:[]),{x:150,locs:[sg>0?"TB2":"TB3"]}].sort((a,b)=>sg*a.x-sg*b.x);
+    ?[{x:-150,locs:[TBn("TB2")]},...(Pp.tb4?[{x:-50,locs:[TBn("TB4")]}]:[]),{x:50,locs:[TBn("TB3")]},...(st.box.boxes.B4?[{x:150,locs:["B4"]}]:[])]
+    :[{x:-150,locs:["B4"]},{x:-50,locs:[TBn(sg>0?"TB3":"TB2")]},...(Pp.tb4?[{x:50,locs:[TBn("TB4")]}]:[]),{x:150,locs:[TBn(sg>0?"TB2":"TB3")]}].sort((a,b)=>sg*a.x-sg*b.x);
   const START={TB5:[1,9,15],TB6:[1,7,11,17]};
   const devOf=pid=>pid.split("#")[0],idxIn=pid=>{const dv=M.devMap.get(devOf(pid));const b=dv&&boxOf.get(dv.tag);return b?b[1]:99};
   const ordLoc=L=>{const us=units.filter(u=>u.loc===L&&!u.tb);
@@ -2777,7 +3329,8 @@ function wrBuild(){const C=circ,M=pnModel(C),st=lyState(),Pp=st.P,issues=[...M.i
   const place=(tb,start,list)=>{let k=start;for(const u of list){while(k<=20&&slots[tb][k])k++;if(k>20)break;slots[tb][k]=u;u.tb=tb;u.n=k;k++}};
   topP.forEach((pp,i)=>{if(pp.locs[0]==="TB1"){for(const u of ordLoc("TB1")){const k=9+["L1","L2","L3","PE"].indexOf(u.pins[0].split("#")[1]);if(k>=9&&!slots.TB5[k]){slots.TB5[k]=u;u.tb="TB5";u.n=k}}return}
     place("TB5",START.TB5[i],pp.locs.slice().sort((a,b)=>sg*BX[a]-sg*BX[b]).flatMap(ordLoc))});
-  botP.forEach((pp,i)=>place("TB6",START.TB6[i],pp.locs.flatMap(ordLoc)));
+  // 아래 배관: 배관도에 실제로 그려진 배관만 셈 — 컨트롤 박스 B4가 없으면 그 배관도 없음 (사용자: 예제 ⑦ FLS 전극은 TB6 7·8·9)
+  botP.filter(pp=>!pp.locs.includes("B4")||st.box.boxes.B4).forEach((pp,i)=>place("TB6",START.TB6[i],pp.locs.flatMap(ordLoc)));
   // 남은 것(상자에 못 들어간 기구 등)은 빈 번호에
   for(const u of units.filter(u=>!u.tb).sort((a,b)=>a.rank-b.rank)){for(const tb of u.loc.startsWith("TB")?["TB6","TB5"]:["TB5","TB6"]){const i=free(tb);if(i){slots[tb][i]=u;u.tb=tb;u.n=i;break}}}
   const lost=units.filter(u=>!u.tb);if(lost.length)issues.push(`TB5·TB6 단자 40개가 모자라 ${lost.map(u=>u.label).join(", ")}을(를) 배정하지 못했습니다.`);
@@ -2789,6 +3342,7 @@ function wrBuild(){const C=circ,M=pnModel(C),st=lyState(),Pp=st.P,issues=[...M.i
   for(const d of M.devs){const al=PN_TPL[d.type].alias;if(al)for(const[a,c]of Object.entries(al))if(pts.has(d.id+"#"+a)&&pts.has(d.id+"#"+c))bridges.push([d.id+"#"+c,d.id+"#"+a])}
   for(const n of nets){n.pts=[...(n.inner||[]),...(n.units||[]).filter(u=>u.tb).map(u=>u.tb+"#"+u.n)];n.alt=[];
     for(const[c,a]of bridges)if(n.pts.includes(c))n.alt.push(a)}
+  for(const n of nets)if(n.yel)n.e3tb=n.pts.find(id=>{const q=pts.get(id);return q&&q.ext&&q.ext.pins.some(p=>/^elec:.*#E3$/.test(p))})||null;
   const wn=nets.filter(n=>n.pts.length>=2);let ci=0;wn.forEach((n,i)=>{n.no=i+1;n.pts.forEach(p=>ptNet.set(p,n));n.alt.forEach(p=>ptNet.set(p,n));if(n.col==="C")n.hex=WR_PAL[ci++%WR_PAL.length]});
   return{M,st,geo,ch,pts,pinTB,tbPins,nets:wn,all:nets,units,outside,ptNet,bridges,issues:[...new Set(issues)],rNet:wn.find(n=>n.pts.includes("F#L1b")),tNet:wn.find(n=>n.pts.includes("F#L3b"))}}
 function wrRefresh(){const key=JSON.stringify(circ.toJSON())+"|"+MAIN_ON+"|"+JSON.stringify(LY.saved)+JSON.stringify(LY.widths)+"|"+LY.jside+"|"+LY.grade+"|"+JSON.stringify(WR.assign)+"|"+JSON.stringify(pnPinMap());
@@ -2804,8 +3358,10 @@ const wrPN=id=>{const p=WR.model.pts.get(id);if(!p)return id;return p.kind==="tb
 // ── 이어진 상태 ──
 function pnUF(){const par=new Map(),f=x=>{if(!par.has(x))par.set(x,x);while(par.get(x)!==x){par.set(x,par.get(par.get(x)));x=par.get(x)}return x};return{f,u:(a,b)=>par.set(f(a),f(b))}}
 function wrUF(){const uf=pnUF();for(const[a,b]of WR.model.bridges)uf.u(a,b);WR.wires.forEach(([a,b])=>uf.u(a,b));return uf}
+// 접지 묶음 안의 FLS E3: FLS 단자 1(E3)은 TB6의 E3 단자에만(황색), 접지선(녹황)은 PE 단자와 TB6 E3 단자 사이에서만
+function wrPairOk(n,a,b){if(!n||!n.yel)return true;const ya=n.yel.has(a),yb=n.yel.has(b);if(ya||yb)return(ya?b:a)===n.e3tb;return true}
 function wrEval(){const Mo=WR.model,uf=wrUF(),cnt=new Map();WR.wires.forEach(([a,b])=>{cnt.set(a,(cnt.get(a)||0)+1);cnt.set(b,(cnt.get(b)||0)+1)});
-  const wireOk=WR.wires.map(([a,b])=>{const na=Mo.ptNet.get(a),nb=Mo.ptNet.get(b);return!!(na&&na===nb)});
+  const wireOk=WR.wires.map(([a,b])=>{const na=Mo.ptNet.get(a),nb=Mo.ptNet.get(b);return!!(na&&na===nb&&wrPairOk(na,a,b))});
   let need=0,done=0;const st=new Map();
   for(const n of Mo.nets){const roots=new Map();n.pts.forEach(p=>{const r=uf.f(p);roots.set(r,(roots.get(r)||0)+1)});const comp=roots.size;need+=n.pts.length-1;done+=n.pts.length-comp;
     const big=[...roots].sort((a,b)=>b[1]-a[1])[0];st.set(n.id,{complete:comp===1,left:comp-1,big:big[1]>1?big[0]:null,uf})}
@@ -2816,11 +3372,20 @@ function wrEval(){const Mo=WR.model,uf=wrUF(),cnt=new Map();WR.wires.forEach(([a
   return{uf,wireOk,bad:wireOk.filter(x=>!x).length,need,done,st,shorts,powerShort,over,cnt,complete:Mo.nets.filter(n=>st.get(n.id).complete).length}}
 // 정답 결선: 묶음마다 가까운 점끼리 한 줄로 (한 단자 2가닥까지)
 function wrAnswer(){const Mo=WR.model,steps=[];
-  for(const n of Mo.nets){const Q=n.pts.map(id=>({id,p:Mo.pts.get(id)}));
+  for(const n of Mo.nets){
+    // 접지 + FLS E3: FLS E3 → TB6(E3) 황색, TB6(E3) → 가까운 TB6 PE 단자 녹황색, 나머지 PE는 그대로
+    const yel=n.yel?n.pts.filter(id=>n.yel.has(id)):[],e3tb=yel.length?n.pts.find(id=>{const q=Mo.pts.get(id);return q.ext&&q.ext.pins.some(p=>/^elec:.*#E3$/.test(p))}):null;
+    const Q=n.pts.filter(id=>!yel.includes(id)&&id!==e3tb).map(id=>({id,p:Mo.pts.get(id)}));
     let cur=Q.find(q=>q.id.startsWith("TB"))||Q.find(q=>q.id.startsWith("F#"))||Q.slice().sort((a,b)=>a.p.y-b.p.y||a.p.x-b.p.x)[0];const left=Q.filter(q=>q!==cur),chain=[cur];
     while(left.length){let bi=0,bd=1e9;left.forEach((q,i)=>{const d=Math.hypot(q.p.x-cur.p.x,q.p.y-cur.p.y);if(d<bd){bd=d;bi=i}});cur=left.splice(bi,1)[0];chain.push(cur)}
-    n.chain=chain.map(q=>q.id);for(let i=0;i+1<chain.length;i++)steps.push({net:n,a:chain[i].id,b:chain[i+1].id})}
+    n.chain=chain.map(q=>q.id);for(let i=0;i+1<chain.length;i++)steps.push({net:n,a:chain[i].id,b:chain[i+1].id})
+    if(e3tb){const E=Mo.pts.get(e3tb),ends=[chain[0],chain[chain.length-1]].filter(q=>q&&q.id.startsWith("TB6#")),cand=ends.length?ends:chain.filter(q=>q.id.startsWith("TB"));
+      const best=cand.slice().sort((a,b)=>Math.hypot(a.p.x-E.x,a.p.y-E.y)-Math.hypot(b.p.x-E.x,b.p.y-E.y))[0];
+      if(best){steps.push({net:n,a:best.id,b:e3tb});n.chain.push(e3tb)}
+      for(const y of yel){steps.push({net:n,a:e3tb,b:y,yel:true});n.chain.push(y)}}}
   return steps}
+// 선 하나의 색: 접지 묶음이라도 FLS 단자에 물린 선은 황색
+const wrWireYel=(n,a,b)=>!!(n&&n.yel&&(n.yel.has(a)||n.yel.has(b)));
 
 // ── 시퀀스도 쪽 그림 (인쇄 색으로 그린 그림 + 강조 겹침) ──
 function wrSeqImage(){const key=JSON.stringify(circ.toJSON())+"|"+MAIN_ON;if(WR.img&&WR.imgKey===key)return WR.img;
@@ -2893,13 +3458,13 @@ function wrPanelSVG(ev,opt={}){const Mo=WR.model,X=x=>x,Y=y=>y;let s=`<rect x="$
   // 정답 결선
   if(opt.ans){const rp=wrRoutes(opt.ans.map(t=>[t.a,t.b]));
     opt.ans.forEach((stp,i)=>{const pa=rp[i];if(!pa)return;
-      if(opt.print)s+=wrWire(pa,stp.net.col,{print:true,hex:wrHex(stp.net)});
-      else s+=`<polyline points="${wrPts(pa)}" fill="none" stroke="${(h=>h===WR_COL.C?"#c9a000":h)(wrHex(stp.net))}" stroke-width="1" stroke-dasharray="3 2" opacity=".85" pointer-events="none"/>`})}
+      if(opt.print)s+=stp.yel?wrWire(pa,"C",{print:true,hex:WR_COL.C}):wrWire(pa,stp.net.col,{print:true,hex:wrHex(stp.net)});
+      else s+=`<polyline points="${wrPts(pa)}" fill="none" stroke="${(h=>h===WR_COL.C?"#c9a000":h)(stp.yel?WR_COL.C:wrHex(stp.net))}" stroke-width="1" stroke-dasharray="3 2" opacity=".85" pointer-events="none"/>`})}
   // 내 배선
   if(!opt.noUser){const rp=wrRoutes(WR.wires);
     WR.wires.forEach(([a0,b0],i)=>{const pa=rp[i];if(!pa)return;const n=Mo.ptNet.get(a0)||Mo.ptNet.get(b0);
       s+=`<g data-w="${i}" style="cursor:pointer"><polyline points="${wrPts(pa)}" fill="none" stroke="transparent" stroke-width="4.5"/>`+
-        wrWire(pa,n?n.col:"C",{sel:WR.wsel===i,bad:WR.check&&!ev.wireOk[i],print:opt.print,hex:n?wrHex(n):null})+`</g>`})}
+        (wrWireYel(n,a0,b0)?wrWire(pa,"C",{sel:WR.wsel===i,bad:WR.check&&!ev.wireOk[i],print:opt.print,hex:WR_COL.C}):wrWire(pa,n?n.col:"C",{sel:WR.wsel===i,bad:WR.check&&!ev.wireOk[i],print:opt.print,hex:n?wrHex(n):null}))+`</g>`})}
   if(opt.print)return s;
   // 표시: 고른 묶음의 점 · 채점 결과 · 3가닥
   const n=wrHiOn()?wrNet(WR.sel):null,ring=(q,c,w,cls="",r=4.3,f="none")=>`<circle cx="${q.x}" cy="${q.y}" r="${r}" fill="${f}" stroke="${c}" stroke-width="${w}" class="${cls}" pointer-events="none"/>`;
@@ -2926,7 +3491,7 @@ function wrInfo(ev){const Mo=WR.model,n=wrNet(WR.sel);let h="";
   if(n&&wrHiOn()){const t=ev.st.get(n.id);
     if(!n.pts||n.pts.length<2){const o=Mo.outside.find(x=>x.net===n);h+=`<div class="card"><div class="big">제어판 밖에서 잇는 선</div>${o?escH(o.locName)+" 안에서 "+escH(o.label)+"을(를) 서로 잇습니다.":"이 선은 제어판 단자를 거치지 않습니다."}</div>`}
     else{h+=`<div class="card guide"><div class="big">묶음 ${n.no} · ${escH(n.where)}</div>
-      <div><span class="wrsw" style="background:${wrHex(n)}${n.col==="PE"?";background-image:repeating-linear-gradient(90deg,transparent 0 5px,#ffd43b 5px 10px)":""}"></span>${WR_CNAME[n.col]}${n.col==="C"&&WR.multi?" (화면에서는 묶음 구분색)":""} · 점 ${n.pts.length}곳 · 전선 ${n.pts.length-1}가닥 ${t.complete?`<b style="color:${WR_OK}">완료 ✔</b>`:`(남은 연결 ${t.left})`}</div>
+      <div><span class="wrsw" style="background:${wrHex(n)}${n.col==="PE"?";background-image:repeating-linear-gradient(90deg,transparent 0 5px,#ffd43b 5px 10px)":""}"></span>${WR_CNAME[n.col]}${n.yel?" (FLS E3 → TB6 구간은 황색 1.5㎟, TB6에서 E3와 PE를 녹황색으로 이음)":""}${n.col==="C"&&WR.multi?" (화면에서는 묶음 구분색)":""} · 점 ${n.pts.length}곳 · 전선 ${n.pts.length-1}가닥 ${t.complete?`<b style="color:${WR_OK}">완료 ✔</b>`:`(남은 연결 ${t.left})`}</div>
       <ul class="wrpts">${n.pts.map(p=>{const q=Mo.pts.get(p),j=t.big&&t.uf.f(p)===t.big,alt=n.alt.find(a=>WR.model.bridges.some(([c,x])=>c===p&&x===a));
         return`<li><span style="color:${j?WR_OK:WR_HI};font-weight:700">${j?"✔":"○"}</span><span><b class="mono">${escH(q.name)}</b>${alt?` (또는 ${escH(Mo.pts.get(alt).name)})`:""} <span style="color:var(--muted)">${escH(q.kind==="tb"&&q.ext?"→ "+q.ext.locName+" "+q.ext.label:q.info)}</span></span></li>`}).join("")}</ul>
       <div class="row"><button class="btn" data-a="next">다음 묶음 ▶</button>${!t.complete&&WR.mode==="guide"?`<button class="btn" data-a="draw">이 묶음 그려 주기</button>`:""}</div></div>`}}
@@ -2951,6 +3516,7 @@ function wrAddWire(a,b){const Mo=WR.model;if(a===b)return false;
   const na=Mo.ptNet.get(a),nb=Mo.ptNet.get(b),cnt=id=>WR.wires.filter(w=>w.includes(id)).length;
   if(WR.mode==="guide"){
     if(!na||na!==nb){wrHint(`${wrPN(a)}와(과) ${wrPN(b)}는 같은 묶음이 아니라 이을 수 없습니다. 파랗게 깜박이는 단자끼리 이어 주세요.`,true);return false}
+    if(!wrPairOk(na,a,b)){wrHint(`FLS 전극 E3(단자 1)는 TB6의 E3 단자${na.e3tb?"("+wrPN(na.e3tb)+")":""}에만 황색선으로 잇습니다. 접지선(녹황)은 PE 단자와 TB6 E3 단자 사이에서만 잇습니다.`,true);return false}
     if(wrUF().f(a)===wrUF().f(b)){wrHint("두 단자는 이미 다른 선을 거쳐 이어져 있습니다.",true);return false}
     if(cnt(a)>=2||cnt(b)>=2){wrHint(`${wrPN(cnt(a)>=2?a:b)} 단자에는 이미 2가닥이 물려 있습니다. 한 단자에 3가닥은 걸 수 없으니 같은 묶음의 다른 단자에서 이어 주세요.`,true);return false}}
   wrSnap();WR.wires.push([a,b]);WR.wsel=null;wrSave();WR.sel=(na||nb||{}).id||WR.sel;
@@ -3132,7 +3698,7 @@ function pnPinDialog(){const map=pnPinMap(),types=PN_ORDER.filter(t=>t!=="pwr");
       pnStore.set("seqsim.pinmap",m);close();wrRender();wrHint("단자 번호를 바꿨습니다.")}})}
 
 // ── 화면 전환 ──
-const SEQ_ONLY=["btnMode","btnReset","btnUndo","btnNew","btnFile","btnImport","btnDesc","btnTpl","btnDesign","btnRevise","btnExport","clock","modeTag"];
+const SEQ_ONLY=["fTool","btnMode","btnReset","btnUndo","btnNew","btnFile","btnImport","btnDesc","btnTpl","btnDesign","btnRevise","btnExport","clock","modeTag"];
 SEQ_ONLY.forEach(id=>{const el=$(id);if(el)el.classList.add("seqonly")});
 document.querySelector(".work").classList.add("seqonly");document.querySelector(".chartbox").classList.add("seqonly");
 function setView(v){if(v!=="seq"&&mode==="run")toggleMode();PN.view=v;document.body.classList.toggle("pvmode",v!=="seq");$("pvView").hidden=v!=="panel";const lv=$("lyView");if(lv)lv.hidden=v!=="layout";
@@ -3223,8 +3789,12 @@ function lyState(){const P=lyParts(circ),sig=lySig(P),auto=lyAutoInner(P),ab=lyA
   const shape=b=>JSON.stringify(Object.values(b.boxes).map(x=>x?x.length:0));
   let box=ab;if(sv&&sv.box&&sv.box.cap===ab.cap&&shape(sv.box)===shape(ab)){const want=[...P.pb,...P.ss,...P.lamp,...P.bz].sort().join(),have=Object.values(sv.box.boxes).flat().filter(x=>x&&x!=="CAP").sort().join();
     if(want===have)box={cap:sv.box.cap,boxes:JSON.parse(JSON.stringify(sv.box.boxes)),over:[]}}
-  return{P,sig,inner,box,custom:!!sv}}
-function lyRemember(st){LY.saved[st.sig]={inner:st.inner,box:{cap:st.box.cap,boxes:st.box.boxes}};lySave()}
+  // 아래쪽 단자대 자리(사용자 요청, 2026-11-12: TB끼리만 맞바꾸기). tb[기본 자리 주인] = 실제로 그 자리에 놓인 TB.
+  // 자리 이름을 '기본 주인'으로 두어 J 좌우형을 바꿔도 화면상 같은 자리를 가리킴.
+  const tbs=["TB2","TB3",...(P.tb4?["TB4"]:[])],tb={};tbs.forEach(n=>tb[n]=n);
+  if(sv&&sv.tb){const v=tbs.map(n=>sv.tb[n]);if(v.every(Boolean)&&[...v].sort().join()===[...tbs].sort().join())tbs.forEach((n,i)=>tb[n]=v[i])}
+  return{P,sig,inner,box,tb,custom:!!sv}}
+function lyRemember(st){LY.saved[st.sig]={inner:st.inner,box:{cap:st.box.cap,boxes:st.box.boxes},tb:st.tb};lySave()}
 function lySnap(){LY.undo.push(JSON.stringify(LY.saved));if(LY.undo.length>60)LY.undo.shift()}
 
 // ── 가로 위치 계산 (mm) ──
@@ -3326,15 +3896,20 @@ function lyPipeSVG(st,ox,oy,k){const sg=LY.jside==="left"?-1:1,X=x=>ox+sg*x*k,Y=
     const nb=sg>0?["④","①","②","①"]:["④","②","①","②"];
     [[-150,nb[0]],...(P.tb4?[[-50,nb[1]]]:[]),[50,nb[2]],...(box.boxes.B4?[[150,nb[3]]]:[])].forEach(([x,n])=>{s+=cnum(XN(x),Y(410),n)})}
   // 단자대
-  const tbH=(x,y,lab,above)=>lyR(x-30*k,y-12*k,60*k,24*k,1.5)+lyL([[x-22*k,y-3.5*k],[x+22*k,y-3.5*k]],1)+lyL([[x-22*k,y+3.5*k],[x+22*k,y+3.5*k]],1)+lyT(x,above?y-12*k-5:y+12*k+11,lab,8.5,{w:600});
+  LY.pgeo={items:[],tbs:[]};const tbH=(x,y,lab,above)=>lyR(x-30*k,y-12*k,60*k,24*k,1.5)+lyL([[x-22*k,y-3.5*k],[x+22*k,y-3.5*k]],1)+lyL([[x-22*k,y+3.5*k],[x+22*k,y+3.5*k]],1)+lyT(x,above?y-12*k-5:y+12*k+11,lab,8.5,{w:600});
   const tbV=(x,y,lab,side)=>lyR(x-12*k,y-30*k,24*k,60*k,1.5)+lyL([[x-3.5*k,y-22*k],[x-3.5*k,y+22*k]],1)+lyL([[x+3.5*k,y-22*k],[x+3.5*k,y+22*k]],1)+lyT(x+side*(12*k+6),y+3,lab,8.5,{w:600,a:side>0?"start":"end"});
   s+=tbH(X(0),Y(-668),"TB1",true);
-  if(!ind){s+=tbV(X(550),Y(610),sg>0?"TB2":"TB3",sg);s+=tbV(X(-550),Y(710),sg>0?"TB3":"TB2",-sg);   // 기능사: TB3는 언제나 왼쪽, TB2는 오른쪽
-    if(P.tb4)s+=tbH(X(50),Y(745),"TB4",false)}
-  else{s+=tbV(XN(-550),Y(610),"TB2",-1);s+=tbV(XN(550),Y(710),"TB3",1);   // 산업기사: TB2(금속관) 왼쪽, TB3 오른쪽
-    if(P.tb4)s+=tbH(XN(-50),Y(745),"TB4",false)}
+  // 아래 단자대: 자리(기본 주인 이름)마다 st.tb에 따라 실제 TB 이름을 적고, 끌어서 다른 TB와 맞바꿈
+  LY.pgeo.tbs=[];const TBn=n=>(st.tb&&st.tb[n])||n;
+  const tbG=(slot,x,y,svg,vert)=>{const drag=LY.drag&&LY.drag.tb===slot;LY.pgeo.tbs.push({slot,x,y,r:34*k+8});
+    return`<g class="lytb" data-tb="${slot}" style="cursor:grab;opacity:${drag?.35:1}">${svg}<rect x="${x-(vert?16:34)*k}" y="${y-(vert?34:16)*k}" width="${(vert?32:68)*k}" height="${(vert?68:32)*k}" fill="transparent"/></g>`};
+  if(!ind){const sR=sg>0?"TB2":"TB3",sL=sg>0?"TB3":"TB2";   // 기능사 기본: TB3 왼쪽, TB2 오른쪽
+    s+=tbG(sR,X(550),Y(610),tbV(X(550),Y(610),TBn(sR),sg),1);s+=tbG(sL,X(-550),Y(710),tbV(X(-550),Y(710),TBn(sL),-sg),1);
+    if(P.tb4)s+=tbG("TB4",X(50),Y(745),tbH(X(50),Y(745),TBn("TB4"),false),0)}
+  else{s+=tbG("TB2",XN(-550),Y(610),tbV(XN(-550),Y(610),TBn("TB2"),-1),1);s+=tbG("TB3",XN(550),Y(710),tbV(XN(550),Y(710),TBn("TB3"),1),1);   // 산업기사 기본: TB2(금속관) 왼쪽, TB3 오른쪽
+    if(P.tb4)s+=tbG("TB4",XN(-50),Y(745),tbH(XN(-50),Y(745),TBn("TB4"),false),0)}
   // 컨트롤 박스
-  LY.pgeo={items:[]};
+  LY.pgeo.items=[];
   for(const[b,[bx,where]]of Object.entries(LY_BOXPOS)){const items=box.boxes[b];if(!items)continue;
     const indB4=ind&&b==="B4",bh=bhOf(items),y0=indB4?B4Y:where==="top"?top:lowTop,x=indB4?XN(550):X(bx);s+=lyR(x-bw/2*k,Y(y0),bw*k,bh*k,1.6);
     const labLeft=indB4||sg*bx>600;
@@ -3420,19 +3995,22 @@ function lyRender(){if(PN.view!=="layout")return;const st=lyState();LY.cur=st;
     `<span>조작 기구 (PB·SS)</span><b>${P.pb.length+P.ss.length}개</b><span>표시 기구 (램프·부저)</span><b>${P.lamp.length+P.bz.length}개</b></div>`+
     (typeof WR!=="undefined"&&Object.keys(WR.assign).length?`<div class="card"><div class="big">제어반 결선의 손 배정 ${Object.keys(WR.assign).length}개</div>제어반 결선 탭 '단자대 배정'에서 직접 정한 단자대 번호는 배치를 바꿔도 그대로입니다. 나머지 번호와 이어 둔 배선은 배치대로 따라 바뀝니다.</div>`:"")+
     (warn.length?`<div class="card bad"><div class="warn">확인</div><ul>${warn.map(x=>`<li>${escH(x)}</li>`).join("")}</ul></div>`:"")+
-    `<div class="card"><div class="big">바꾸는 법</div><ul><li>2쪽 제어판 기구를 끌어 순서를 바꾸거나 다른 줄로 옮깁니다. 줄마다 양 끝 50 mm, 사이는 같은 간격으로 다시 맞춰집니다.</li><li>1쪽 컨트롤 박스의 구멍(PB·램프·CAP)을 끌어 다른 구멍에 놓으면 서로 바뀝니다.</li><li>${st.custom?"지금은 직접 바꾼 배치입니다. ":""}'자동 배치로'를 누르면 처음 규칙대로 돌아갑니다.</li></ul></div>`;
+    `<div class="card"><div class="big">바꾸는 법</div><ul><li>2쪽 제어판 기구를 끌어 순서를 바꾸거나 다른 줄로 옮깁니다. 줄마다 양 끝 50 mm, 사이는 같은 간격으로 다시 맞춰집니다.</li><li>1쪽 컨트롤 박스의 구멍(PB·램프·CAP)을 끌어 다른 구멍에 놓으면 서로 바뀝니다.</li><li>1쪽 아래 단자대(TB2·TB3·TB4)를 끌어 다른 단자대에 놓으면 자리를 바꿉니다. 제어반 결선의 TB6 번호·배선도 따라 바뀝니다.</li><li>${st.custom?"지금은 직접 바꾼 배치입니다. ":""}'자동 배치로'를 누르면 처음 규칙대로 돌아갑니다.</li></ul></div>`;
   document.querySelectorAll('input[name="lyJ"]').forEach(r=>r.checked=r.value===LY.jside);document.querySelectorAll('input[name="lyG"]').forEach(r=>r.checked=r.value===LY.grade)}
 function lySvgPt(svg,e){const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;return p.matrixTransform(svg.getScreenCTM().inverse())}
 // 끌기: 제어판 기구(2쪽) · 박스 구멍(1쪽)
-$("lyPages").addEventListener("pointerdown",e=>{if(e.button!==0)return;const dev=e.target.closest(".lydev"),hole=e.target.closest(".lyhole");if(!dev&&!hole)return;e.preventDefault();
+$("lyPages").addEventListener("pointerdown",e=>{if(e.button!==0)return;const dev=e.target.closest(".lydev"),hole=e.target.closest(".lyhole"),tbg=e.target.closest(".lytb");if(!dev&&!hole&&!tbg)return;e.preventDefault();
   const svg=e.target.closest("svg"),st=LY.cur,g={x0:e.clientX,y0:e.clientY,on:false,el:null};
-  const label=dev?(st.P.inner.find(d=>d.id===dev.dataset.id)||{}).tag:(()=>{const[b,i]=hole.dataset.slot.split(":");return st.box.boxes[b][+i]})();
-  const mv=ev=>{if(!g.on){if(Math.hypot(ev.clientX-g.x0,ev.clientY-g.y0)<5)return;g.on=true;LY.drag=dev?{id:dev.dataset.id}:{slot:hole.dataset.slot};lyRender();
+  const label=tbg?st.tb[tbg.dataset.tb]:dev?(st.P.inner.find(d=>d.id===dev.dataset.id)||{}).tag:(()=>{const[b,i]=hole.dataset.slot.split(":");return st.box.boxes[b][+i]})();
+  const mv=ev=>{if(!g.on){if(Math.hypot(ev.clientX-g.x0,ev.clientY-g.y0)<5)return;g.on=true;LY.drag=tbg?{tb:tbg.dataset.tb}:dev?{id:dev.dataset.id}:{slot:hole.dataset.slot};lyRender();
       g.el=document.createElement("div");g.el.className="ghost";g.el.textContent=label+" 옮기기";document.body.appendChild(g.el)}
     g.el.style.left=ev.clientX+"px";g.el.style.top=ev.clientY+"px"};
   const up=ev=>{window.removeEventListener("pointermove",mv);window.removeEventListener("pointerup",up);window.removeEventListener("pointercancel",up);
     if(g.el)g.el.remove();const drag=LY.drag;LY.drag=null;if(!g.on||ev.type==="pointercancel"){lyRender();return}
     const s2=$(dev?"lyP2":"lyP1"),pt=lySvgPt(s2,ev);
+    if(tbg){const tgt=LY.pgeo.tbs.find(q=>Math.hypot(q.x-pt.x,q.y-pt.y)<=q.r);if(!tgt||tgt.slot===drag.tb){lyRender();if(!tgt)lyHint("단자대는 다른 단자대(TB2·TB3·TB4) 위에 놓으면 서로 자리를 바꿉니다.",true);return}
+      const T=st.tb,a=T[drag.tb];T[drag.tb]=T[tgt.slot];T[tgt.slot]=a;
+      lySnap();lyRemember(st);lyRender();lyHint(`${a}와(과) ${T[drag.tb]} 자리를 바꿨습니다. 제어반 결선의 TB6 번호와 배선도 따라 바뀝니다.`);return}
     if(dev){const G=LY.geo,mx=(pt.x-G.ox)/G.k,my=(pt.y-G.oy)/G.k;if(mx<-60||mx>460||my<20||my>400){lyRender();return}
       const row=my<210?"r1":"r2",R={r1:st.inner.r1.filter(i=>i!==drag.id),r2:st.inner.r2.filter(i=>i!==drag.id)};
       const cx=id=>{const it=G.items.find(q=>q.id===id);return it?it.x+it.w/2:0};let idx=R[row].findIndex(id=>cx(id)>mx);if(idx<0)idx=R[row].length;R[row].splice(idx,0,drag.id);
