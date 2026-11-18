@@ -1682,6 +1682,7 @@ ${SIMPLE?`<tr><td>도면칸 확장</td><td>'도면칸 확장'을 고르고 회�
       <tr><td>제어판 → 시퀀스도</td><td>제어판의 단자(소켓 번호·TB 단자)에 마우스를 올리면 그 단자의 묶음이 시퀀스도에 옅게 보이고, 누르면 그 묶음이 강조되며 시퀀스도가 그 자리로 움직입니다(시퀀스도 강조가 켜져 있을 때)</td></tr>
       <tr><td>연습 모드</td><td>아무 단자나 이을 수 있습니다. '시퀀스도 강조'를 꺼서 힌트 없이 연습하고, <b>채점</b>으로 맞는 선 초록·잘못 이은 선 빨강·아직 안 이은 단자 주황을 봅니다</td></tr>
       <tr><td>채점 중 살펴보기</td><td>'채점'을 켠 상태에서 제어판의 단자(또는 선)를 누르면, 그 단자와 <b>내가 이은 선으로 연결된 단자·선이 보라색</b>으로 강조되고 단자 이름이 나옵니다. 동시에 왼쪽 시퀀스도에는 그 단자의 <b>정답 묶음</b>이 강조되고, 오른쪽 설명 칸에 내가 이은 단자·정답 단자·빠진 단자·다른 묶음에 잘못 이은 단자가 나옵니다. 선을 고치려면 '채점'을 끄세요</td></tr>
+      <tr><td>묶음 더블클릭</td><td>왼쪽 시퀀스도에서 묶음을 <b>더블클릭</b>하면 그 묶음의 배선이 오른쪽 제어판에 정답 순서대로 자동으로 그려지고, 다시 더블클릭하면 그 묶음의 선이 지워집니다(Ctrl+Z로 되돌리기 가능). 연습 모드에서는 '시퀀스도 강조'를 켠 때만 됩니다</td></tr>
       <tr><td>빈 곳 누르기</td><td>시퀀스도나 제어판의 빈 곳을 누르면(또는 Esc) 고른 묶음·단자·선 강조가 모두 사라지고 처음 화면으로 돌아갑니다</td></tr>
       <tr><td>제어판 밖 기구</td><td>PB·셀렉터·램프·부저·LS·전극·전원·전동기는 제어판 밖에 있으므로 공개문제 규칙대로 <b>TB5·TB6를 거칩니다</b>. 그 기구로 가는 선은 TB 단자 바깥쪽에 세로 글씨로 적힙니다</td></tr>
       <tr><td>단자대 배정</td><td>배관도의 배관 순서대로 자동 배정합니다. 배관은 언제나 <b>왼쪽 → 오른쪽</b>, 한 배관 안에서도 J와 상관없이 <b>왼쪽 기구부터</b>, 상자 안에서는 <b>공통선 먼저, 그다음 위에 있는 기구부터</b>입니다.<br>· <b>TB5(위 배관)</b>: 1번째 배관 1번부터 · 2번째 배관(케이블, TB1 전원) L1·L2·L3·PE = <b>9·10·11·12 고정</b> · 3번째 배관 15번부터<br>· <b>TB6(아래 배관)</b>: 왼쪽부터 1번째 배관 1번, 2번째 7번, 3번째 11번, 4번째 17번부터. 배관도에 그려지지 않은 배관(예: 아래 컨트롤 박스 B4가 없을 때)은 세지 않습니다<br>배관도에서 상자 구멍을 바꾸면 번호도 따라 바뀝니다. '단자대 배정'에서 손으로 바꿀 수도 있는데, <b>자동과 다르게 바꾼 번호만</b> 손 배정으로 남고(배치를 바꿔도 그대로) 나머지는 계속 배관 순서대로 자동입니다. 손 배정이 있으면 설명 칸에 개수와 '모두 자동 배정으로' 단추가 보입니다</td></tr>
@@ -3876,8 +3877,21 @@ function wrDrawNet(){const n=wrNet(WR.sel);if(!n)return;const ans=wrAnswer().fil
 
 // ── 조작: 시퀀스도 ──
 const wrSeqPt=e=>{const sv=$("wrSeqSvg"),p=sv.createSVGPoint();p.x=e.clientX;p.y=e.clientY;return p.matrixTransform(sv.getScreenCTM().inverse())};
-$("wrSeqSvg").addEventListener("click",e=>{if(e.button!==0||wrPanUsed("wrSeqBox"))return;wrRefresh();if(!wrHiOn()){const q=wrSeqPt(e);if(!wrSeqHit(q.x,q.y)){wrClearSel();return}wrHint("연습 모드에서 '시퀀스도 강조'를 켜면 시퀀스도에서 묶음을 고를 수 있습니다.",true);return}
+$("wrSeqSvg").addEventListener("click",e=>{if(e.button!==0||wrPanUsed("wrSeqBox"))return;wrRefresh();if(!wrHiOn()){const q=wrSeqPt(e);if(!wrSeqHit(q.x,q.y)){wrClearSel();return}wrHint("연습 모드에서 '시퀀스도 강조'를 켜면 시퀀스도에서 묶음을 고를 수 있습니다.",true);return}const q0=wrSeqPt(e),n0=wrSeqHit(q0.x,q0.y);if(n0&&wrSeqDbl(e,n0)){WR.insp=null;if(WR.sel!==n0.id)wrSelect(n0.id,"seq");wrToggleNetWires(n0);return}
   const q=wrSeqPt(e),n=wrSeqHit(q.x,q.y);if(!n){wrClearSel();return}WR.insp=null;wrSelect(n.id,"seq");wrRender()});
+// 시퀀스도에서 묶음을 더블클릭하면 그 묶음의 배선을 제어판에 자동으로 그리고, 다시 더블클릭하면 지움(2026-11-18 사용자 요청)
+function wrNetPtSet(n){return new Set([...n.pts,...(n.alt||[]),...(n.chain||[])])}
+function wrToggleNetWires(n){const set=wrNetPtSet(n),mine=WR.wires.filter(w=>set.has(w[0])&&set.has(w[1]));wrSnap();
+  if(mine.length){WR.wires=WR.wires.filter(w=>!(set.has(w[0])&&set.has(w[1])));WR.wsel=null;WR.pend=null;wrSave();wrRender();
+    wrHint(`묶음 ${n.no}(${n.where})의 선 ${mine.length}가닥을 지웠습니다. 다시 더블클릭하면 그려집니다.`);return}
+  const steps=wrAnswer().filter(s=>s.net.id===n.id);let k=0;
+  for(const s of steps)if(!WR.wires.some(w=>w[0]===s.a&&w[1]===s.b||w[0]===s.b&&w[1]===s.a)){WR.wires.push([s.a,s.b]);k++}
+  if(!k){WR.undo.pop();wrHint(`묶음 ${n.no}은(는) 이을 선이 없습니다.`,true);return}
+  WR.wsel=null;WR.pend=null;wrSave();wrRender();wrHint(`묶음 ${n.no}(${n.where})를 ${k}가닥으로 이었습니다: ${n.chain.map(wrPN).join(" → ")}. 다시 더블클릭하면 지워집니다.`)}
+let wrLastClk={t:0,id:null,x:0,y:0};
+// 클릭할 때 SVG를 다시 그려 브라우저 dblclick이 안 생기므로, 같은 묶음을 450ms 안에 두 번 누르면 더블클릭으로 봄
+function wrSeqDbl(e,n){const now=performance.now(),d=now-wrLastClk.t<450&&wrLastClk.id===n.id&&Math.hypot(e.clientX-wrLastClk.x,e.clientY-wrLastClk.y)<12;
+  wrLastClk=d?{t:0,id:null,x:0,y:0}:{t:now,id:n.id,x:e.clientX,y:e.clientY};return d}
 $("wrSeqSvg").addEventListener("pointermove",e=>{if(!WR.model||!wrHiOn())return;const q=wrSeqPt(e),n=wrSeqHit(q.x,q.y),id=n?n.id:null;$("wrSeqSvg").style.cursor=n?"pointer":"grab";
   if(id!==WR.hov){WR.hov=id;$("wrSeqSvg").innerHTML=wrSeqSVG(WR.ev||wrEval())}});
 $("wrSeqSvg").addEventListener("pointerleave",()=>{if(WR.hov){WR.hov=null;if(WR.model)$("wrSeqSvg").innerHTML=wrSeqSVG(WR.ev||wrEval())}});
