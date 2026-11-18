@@ -320,6 +320,8 @@ table.nett td.chain{font-family:var(--mono);font-size:12px;line-height:1.7}
 .lyt{flex-direction:column;align-items:stretch;gap:3px;color:var(--muted)}
 .lyt input{font:inherit;font-size:13px;padding:5px 7px;border:1px solid var(--line);border-radius:6px;background:var(--panel2);color:var(--fg)}
 .lypages{background:var(--panel2);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);overflow:auto;padding:14px;display:flex;flex-direction:column;align-items:center;gap:14px;min-height:320px}
+#lyZbar{position:absolute;right:14px;bottom:44px;top:auto;z-index:6;border-radius:10px;box-shadow:var(--shadow)}
+.lypages.lypan{cursor:grabbing;user-select:none}
 .lypage{background:#fff;box-shadow:0 2px 12px rgba(0,0,0,.18);line-height:0}
 .lypage svg{display:block;touch-action:none;user-select:none;-webkit-user-select:none}
 @media (max-width:1100px){.ly{grid-template-columns:200px minmax(0,1fr)}.ly .pvinfo{grid-column:1/-1}}
@@ -563,8 +565,9 @@ table.nett td.chain{font-family:var(--mono);font-size:12px;line-height:1.7}
 
 <div class="ly" id="lyView" hidden>
   <aside class="pvside" id="lySide" aria-label="배치도 설정"></aside>
-  <div style="display:flex;flex-direction:column;gap:6px;min-width:0;min-height:0">
+  <div style="display:flex;flex-direction:column;gap:6px;min-width:0;min-height:0;position:relative">
     <div class="lypages" id="lyPages" style="flex:1"></div>
+    <div class="zbar" id="lyZbar" role="group" aria-label="배치도 확대·축소"><button id="lyZo" title="축소 (Ctrl+휠)" aria-label="축소">－</button><button class="zpct" id="lyZp" title="100%로">100%</button><button id="lyZi" title="확대 (Ctrl+휠)" aria-label="확대">＋</button><button id="lyZf" title="도면 한 쪽이 화면에 다 보이게">맞춤</button><button id="lyZw" title="도면 폭을 화면 폭에 맞춤">폭 맞춤</button></div>
     <div class="pvhint" id="lyHint"></div>
   </div>
   <aside class="pvside pvinfo" id="lyInfo" aria-label="배치도 상태"></aside>
@@ -769,6 +772,8 @@ function build(lines,pos,fn){const c=new Circuit(lines,pos);
   const wire=(l,a,b)=>{for(let i=a;i<=b;i++)put(l,i,"WIRE")};
   const link=(...a)=>a.forEach(([l,b])=>c.vlinks.add(K(l,b)));
   const bus=(s,k,tag)=>c.bus.set(s,{k,tag});fn(put,wire,link,bus,pos-1);return c.bus.has(-1)?Circuit.from(c.toJSON()):c}
+// 산업기사 예상문제용 EOCR·PB0 머리(줄 0: EOCR 코일, 줄 1: THR a → YL, PB0은 줄 1·2 사이 모선)
+const indEocr=(put,wire,link,bus,Z)=>{bus(0,"THR_B","EOCR");bus(1,"PB_B","PB0");wire(0,0,Z-1);put(0,Z,"COIL","EOCR");link([0,1]);put(1,1,"THR_A","EOCR");wire(1,2,Z-1);put(1,Z,"LAMP","YL")};
 const EXAMPLES=[
  ["① 연습 도면 (X1·X2·MC1·MC2·T1·T2)",()=>build(12,5,(put,wire,link,bus,Z)=>{
    bus(0,"THR_B","EOCR");bus(1,"PB_B","PB0");
@@ -816,7 +821,97 @@ const EXAMPLES=[
    wire(2,0,1);put(2,Z,"FLS","FLS");
    put(3,0,"B","FLS");put(3,1,"WIRE");put(3,Z,"COIL","MC1");
    put(4,Z,"LAMP","RL");link([3,2]);
-   put(5,0,"A","FLS");wire(5,1,1);put(5,Z,"LAMP","GL")})]];
+   put(5,0,"A","FLS");wire(5,1,1);put(5,Z,"LAMP","GL")})],
+ // 2026-11-18 사용자 요청: 전기공사산업기사 예상문제(어렵게) — 선입력 우선 + LS1 정지·대기 경보 + 타이머 자동 역전 + LS2 정지
+ ["예상 ① 선입력 우선·자동 역전",()=>build(15,6,(put,wire,link,bus,Z)=>{
+   bus(0,"THR_B","EOCR");bus(1,"PB_B","PB0");wire(0,0,Z-1);put(0,Z,"COIL","EOCR");link([0,1]);put(1,1,"THR_A","EOCR");wire(1,2,Z-1);put(1,Z,"LAMP","YL");
+   put(2,0,"PB_A","PB1");put(3,0,"A","X1");link([2,1]);
+   put(2,1,"B","X3");put(2,2,"B","X2");wire(2,3,Z-1);put(2,Z,"COIL","X1");link([2,Z]);put(3,Z,"COIL","MC1");
+   put(4,0,"PB_A","PB2");put(5,0,"A","X2");put(6,0,"TA","T");link([4,1],[5,1]);
+   put(4,1,"B","X1");put(4,2,"LS_B","LS2");wire(4,3,Z-1);put(4,Z,"COIL","X2");link([4,Z]);put(5,Z,"COIL","MC2");
+   put(7,0,"B","MC2");put(7,1,"LS_A","LS1");put(8,1,"A","X3");link([7,1],[8,1],[9,1],[7,2]);
+   wire(7,2,Z-1);put(7,Z,"COIL","X3");link([7,Z],[8,Z]);put(8,Z,"TIMER","T",3);put(9,Z,"FR","FR",0.5);
+   put(10,1,"B","MC1");wire(10,2,Z-1);put(10,Z,"LAMP","GL");
+   put(11,0,"A","T");link([11,1]);put(11,1,"FA","FR");wire(11,2,Z-1);put(11,Z,"BZ","BZ");put(12,1,"FB","FR");wire(12,2,Z-1);put(12,Z,"LAMP","WL");
+   put(13,0,"A","MC1");wire(13,1,Z-1);put(13,Z,"LAMP","RL1");
+   put(14,0,"A","MC2");wire(14,1,Z-1);put(14,Z,"LAMP","RL2")}),{grade:"ind"}],
+ // 2026-11-18 사용자 요청: 산업기사 예상문제 10종(릴레이 3개 기본, 셀렉터·플로트리스·리밋 포함) — 빈칸 문제 q21~q30과 같은 회로
+ ["예상 ② 셀렉터 수동·자동 급수 (FLS)",()=>build(15,6,(put,wire,link,bus,Z)=>{indEocr(put,wire,link,bus,Z);
+  put(2,0,"SW_B","SS");put(2,1,"PB_A","PB1");put(3,1,"A","X1");link([2,1],[2,2]);wire(2,2,Z-1);put(2,Z,"COIL","X1");
+  put(4,0,"SW_A","SS");wire(4,1,Z-1);put(4,Z,"COIL","X2");link([4,Z]);put(5,Z,"FLS","FLS");
+  put(6,0,"A","X2");put(6,1,"B","FLS");wire(6,2,Z-1);put(6,Z,"COIL","X3");link([6,Z]);put(7,Z,"TIMER","T",5);
+  link([6,1],[7,1]);put(8,1,"A","FLS");wire(8,2,Z-1);put(8,Z,"LAMP","GL");
+  put(9,0,"A","X1");put(10,0,"A","X3");link([9,1]);wire(9,1,Z-1);put(9,Z,"COIL","MC1");
+  put(11,0,"TA","T");wire(11,1,Z-1);put(11,Z,"COIL","MC2");link([11,Z]);put(12,Z,"BZ","BZ");
+  put(13,0,"A","T");wire(13,1,Z-1);put(13,Z,"LAMP","WL");
+  put(14,0,"A","MC1");wire(14,1,Z-1);put(14,Z,"LAMP","RL1")}),{grade:"ind"}],
+ ["예상 ③ 리밋 스위치 연속 왕복 (방향 기억)",()=>build(14,6,(put,wire,link,bus,Z)=>{indEocr(put,wire,link,bus,Z);
+  put(2,0,"PB_A","PB1");put(3,0,"A","X1");link([2,1]);wire(2,1,Z-1);put(2,Z,"COIL","X1");
+  put(4,0,"A","X1");put(4,1,"B","X3");wire(4,2,Z-1);put(4,Z,"COIL","MC1");link([4,1]);put(5,1,"A","X3");put(5,2,"TA","T");wire(5,3,Z-1);put(5,Z,"COIL","MC2");
+  link([5,2]);put(6,2,"TB","T");wire(6,3,Z-1);put(6,Z,"FR","FR",0.5);
+  put(7,0,"LS_A","LS1");put(8,0,"A","X3");link([7,1]);put(7,1,"B","X2");wire(7,2,Z-1);put(7,Z,"COIL","X3");link([7,Z]);put(8,Z,"TIMER","T",2);
+  put(9,0,"LS_A","LS2");wire(9,1,Z-1);put(9,Z,"COIL","X2");
+  put(10,0,"FA","FR");wire(10,1,Z-1);put(10,Z,"BZ","BZ");
+  put(11,0,"A","MC1");wire(11,1,Z-1);put(11,Z,"LAMP","RL1");put(12,0,"A","MC2");wire(12,1,Z-1);put(12,Z,"LAMP","RL2");
+  put(13,0,"B","MC1");put(13,1,"B","MC2");wire(13,2,Z-1);put(13,Z,"LAMP","GL")}),{grade:"ind"}],
+ ["예상 ④ 후입력 우선 + 한시 정지 경보",()=>build(14,6,(put,wire,link,bus,Z)=>{indEocr(put,wire,link,bus,Z);
+  put(2,0,"PB_A","PB1");put(3,0,"A","X1");link([2,1]);put(2,1,"PB_B","PB2");wire(2,2,Z-1);put(2,Z,"COIL","X1");link([2,Z]);put(3,Z,"COIL","MC1");
+  put(4,0,"PB_A","PB2");put(5,0,"A","X2");link([4,1]);put(4,1,"PB_B","PB1");wire(4,2,Z-1);put(4,Z,"COIL","X2");link([4,Z]);put(5,Z,"TIMER","T",5);
+  put(6,0,"A","X2");put(6,1,"TB","T");wire(6,2,Z-1);put(6,Z,"COIL","MC2");link([6,1]);put(7,1,"TA","T");wire(7,2,Z-1);put(7,Z,"COIL","X3");link([7,Z]);put(8,Z,"FR","FR",0.5);
+  put(9,0,"A","X3");link([9,1]);put(9,1,"FA","FR");wire(9,2,Z-1);put(9,Z,"BZ","BZ");put(10,1,"FB","FR");wire(10,2,Z-1);put(10,Z,"LAMP","WL");
+  put(11,0,"A","MC1");wire(11,1,Z-1);put(11,Z,"LAMP","RL1");put(12,0,"A","MC2");wire(12,1,Z-1);put(12,Z,"LAMP","RL2");
+  put(13,0,"B","MC1");put(13,1,"B","MC2");wire(13,2,Z-1);put(13,Z,"LAMP","GL")}),{grade:"ind"}],
+ ["예상 ⑤ 3입력 우선순위 + 자동 전환",()=>build(15,6,(put,wire,link,bus,Z)=>{indEocr(put,wire,link,bus,Z);
+  put(2,0,"PB_A","PB1");put(3,0,"A","X1");link([2,1]);wire(2,1,Z-1);put(2,Z,"COIL","X1");
+  put(4,0,"B","X1");put(4,1,"PB_A","PB2");put(5,1,"A","X2");put(6,1,"TA","T");link([4,1],[5,1],[6,1],[4,2],[5,2]);wire(4,2,Z-1);put(4,Z,"COIL","X2");link([4,Z]);put(5,Z,"COIL","MC2");
+  put(7,1,"B","X2");put(7,2,"PB_A","PB3");put(8,2,"A","X3");link([7,2],[7,3]);wire(7,3,Z-1);put(7,Z,"COIL","X3");link([7,Z],[8,Z]);put(8,Z,"TIMER","T",3);put(9,Z,"FR","FR",0.5);
+  put(10,0,"A","X1");put(11,0,"A","X3");link([10,1]);wire(10,1,Z-1);put(10,Z,"COIL","MC1");
+  put(12,0,"FA","FR");wire(12,1,Z-1);put(12,Z,"LAMP","WL");
+  put(13,0,"A","MC1");wire(13,1,Z-1);put(13,Z,"LAMP","RL1");put(14,0,"A","MC2");wire(14,1,Z-1);put(14,Z,"LAMP","RL2")}),{grade:"ind"}],
+ ["예상 ⑥ 컨베이어 순차 기동·비움 후 정지",()=>build(13,6,(put,wire,link,bus,Z)=>{indEocr(put,wire,link,bus,Z);
+  put(2,0,"PB_A","PB1");put(3,0,"A","X1");link([2,1]);put(2,1,"B","X2");wire(2,2,Z-1);put(2,Z,"COIL","X1");link([2,Z],[3,Z]);put(3,Z,"COIL","MC1");put(4,Z,"TIMER","T",3);
+  put(5,0,"B","X3");put(5,1,"TA","T");wire(5,2,Z-1);put(5,Z,"COIL","MC2");
+  put(6,0,"PB_A","PB2");put(7,0,"A","X3");link([6,1]);put(6,1,"A","X1");wire(6,2,Z-1);put(6,Z,"COIL","X3");link([6,Z]);put(7,Z,"FR","FR",0.5);
+  put(8,0,"A","X3");put(8,1,"LS_A","LS1");wire(8,2,Z-1);put(8,Z,"COIL","X2");
+  put(9,0,"FA","FR");wire(9,1,Z-1);put(9,Z,"LAMP","WL");
+  put(10,0,"A","MC1");wire(10,1,Z-1);put(10,Z,"LAMP","RL1");put(11,0,"A","MC2");wire(11,1,Z-1);put(11,Z,"LAMP","RL2");
+  put(12,0,"B","MC1");wire(12,1,Z-1);put(12,Z,"LAMP","GL")}),{grade:"ind"}],
+ ["예상 ⑦ 셀렉터 S1·S2 + 리밋 정지 + 운전 시간 경보",()=>build(13,6,(put,wire,link,bus,Z)=>{indEocr(put,wire,link,bus,Z);
+  put(2,0,"SW_B","SS");put(2,1,"PB_A","PB1");put(3,1,"A","X1");link([2,1],[2,2]);put(2,2,"LS_B","LS1");wire(2,3,Z-1);put(2,Z,"COIL","X1");link([2,Z]);put(3,Z,"COIL","MC1");
+  put(4,0,"SW_A","SS");put(4,1,"PB_A","PB2");put(5,1,"A","X2");link([4,1],[4,2]);put(4,2,"LS_B","LS2");wire(4,3,Z-1);put(4,Z,"COIL","X2");link([4,Z]);put(5,Z,"COIL","MC2");
+  put(6,0,"A","X1");put(7,0,"A","X2");link([6,1]);wire(6,1,Z-1);put(6,Z,"COIL","X3");link([6,Z]);put(7,Z,"TIMER","T",5);
+  put(8,0,"TA","T");wire(8,1,Z-1);put(8,Z,"FR","FR",0.5);link([8,1],[9,1]);put(9,1,"FA","FR");wire(9,2,Z-1);put(9,Z,"BZ","BZ");put(10,1,"FB","FR");wire(10,2,Z-1);put(10,Z,"LAMP","WL");
+  put(11,0,"A","X3");wire(11,1,Z-1);put(11,Z,"LAMP","RL");put(12,0,"B","X3");wire(12,1,Z-1);put(12,Z,"LAMP","GL")}),{grade:"ind"}],
+ ["예상 ⑧ EOCR 경보·경보 정지 + 순차 기동",()=>build(15,6,(put,wire,link,bus,Z)=>{bus(0,"THR_B","EOCR");bus(5,"PB_B","PB0");
+  wire(0,0,Z-1);put(0,Z,"COIL","EOCR");link([0,1]);put(1,1,"THR_A","EOCR");wire(1,2,Z-1);put(1,Z,"FR","FR",0.5);link([1,2],[2,2],[3,2],[4,2]);
+  put(2,2,"FA","FR");wire(2,3,Z-1);put(2,Z,"LAMP","YL");
+  put(3,2,"PB_A","PB3");put(4,2,"A","X3");link([3,3]);wire(3,3,Z-1);put(3,Z,"COIL","X3");
+  put(5,2,"B","X3");wire(5,3,Z-1);put(5,Z,"BZ","BZ");
+  put(6,0,"PB_A","PB1");put(7,0,"A","X1");link([6,1]);wire(6,1,Z-1);put(6,Z,"COIL","X1");link([6,Z],[7,Z]);put(7,Z,"COIL","MC1");put(8,Z,"TIMER","T",3);
+  put(9,0,"TA","T");put(9,1,"B","X2");wire(9,2,Z-1);put(9,Z,"COIL","MC2");
+  put(10,0,"PB_A","PB2");put(11,0,"A","X2");link([10,1]);put(10,1,"A","X1");wire(10,2,Z-1);put(10,Z,"COIL","X2");
+  put(12,0,"A","MC1");wire(12,1,Z-1);put(12,Z,"LAMP","RL1");put(13,0,"A","MC2");wire(13,1,Z-1);put(13,Z,"LAMP","RL2");
+  put(14,0,"B","MC1");wire(14,1,Z-1);put(14,Z,"LAMP","GL")}),{grade:"ind"}],
+ ["예상 ⑨ 배수 펌프 2단 운전 (FLS)",()=>build(13,6,(put,wire,link,bus,Z)=>{indEocr(put,wire,link,bus,Z);
+  put(2,0,"PB_A","PB1");put(3,0,"A","X1");link([2,1]);wire(2,1,Z-1);put(2,Z,"COIL","X1");link([2,Z]);put(3,Z,"FLS","FLS");
+  put(4,0,"A","X1");put(4,1,"A","FLS");wire(4,2,Z-1);put(4,Z,"COIL","X2");link([4,Z]);put(5,Z,"TIMER","T",5);link([4,1],[5,1]);put(6,1,"B","FLS");wire(6,2,Z-1);put(6,Z,"LAMP","GL");
+  put(7,0,"A","X2");wire(7,1,Z-1);put(7,Z,"COIL","MC1");
+  put(8,0,"TA","T");wire(8,1,Z-1);put(8,Z,"COIL","X3");link([8,Z]);put(9,Z,"BZ","BZ");
+  put(10,0,"A","X3");wire(10,1,Z-1);put(10,Z,"COIL","MC2");
+  put(11,0,"A","MC1");wire(11,1,Z-1);put(11,Z,"LAMP","RL1");put(12,0,"A","MC2");wire(12,1,Z-1);put(12,Z,"LAMP","RL2")}),{grade:"ind"}],
+ ["예상 ⑩ 셀렉터 촌동·연속 + 역전 지연",()=>build(13,6,(put,wire,link,bus,Z)=>{indEocr(put,wire,link,bus,Z);
+  put(2,0,"PB_A","PB1");put(2,1,"WIRE");put(3,0,"SW_A","SS");put(3,1,"A","X1");link([2,2]);put(2,2,"B","X2");wire(2,3,Z-1);put(2,Z,"COIL","X1");link([2,Z]);put(3,Z,"COIL","MC1");
+  put(4,0,"PB_A","PB2");put(5,0,"A","X2");link([4,1]);put(4,1,"B","X1");wire(4,2,Z-1);put(4,Z,"COIL","X2");link([4,Z]);put(5,Z,"TIMER","T",3);
+  link([4,2],[5,2],[6,2],[7,2]);put(6,2,"TB","T");wire(6,3,Z-1);put(6,Z,"COIL","X3");link([6,Z]);put(7,Z,"FR","FR",0.5);put(8,2,"TA","T");wire(8,3,Z-1);put(8,Z,"COIL","MC2");
+  put(9,0,"FA","FR");wire(9,1,Z-1);put(9,Z,"LAMP","WL");
+  put(10,0,"B","MC1");put(10,1,"B","X3");put(10,2,"B","MC2");wire(10,3,Z-1);put(10,Z,"LAMP","GL");
+  put(11,0,"A","MC1");wire(11,1,Z-1);put(11,Z,"LAMP","RL1");put(12,0,"A","MC2");wire(12,1,Z-1);put(12,Z,"LAMP","RL2")}),{grade:"ind"}],
+ ["예상 ⑪ 급수 + 밸브(LS) 확인 + 이상 경보",()=>build(13,6,(put,wire,link,bus,Z)=>{indEocr(put,wire,link,bus,Z);
+  put(2,0,"PB_A","PB1");put(3,0,"A","X1");link([2,1]);wire(2,1,Z-1);put(2,Z,"COIL","X1");link([2,Z]);put(3,Z,"FLS","FLS");
+  put(4,0,"A","X1");put(4,1,"B","FLS");wire(4,2,Z-1);put(4,Z,"COIL","X2");link([4,Z]);put(5,Z,"TIMER","T",5);link([4,1],[5,1]);put(6,1,"A","FLS");wire(6,2,Z-1);put(6,Z,"LAMP","GL");
+  put(7,0,"B","X3");put(7,1,"A","X2");put(7,2,"LS_A","LS1");wire(7,3,Z-1);put(7,Z,"COIL","MC1");
+  put(8,0,"TA","T");put(9,0,"A","X3");link([8,1]);put(8,1,"PB_B","PB2");wire(8,2,Z-1);put(8,Z,"COIL","X3");link([8,Z],[9,Z]);put(9,Z,"COIL","MC2");put(10,Z,"BZ","BZ");
+  put(11,0,"A","MC1");wire(11,1,Z-1);put(11,Z,"LAMP","RL1");put(12,0,"A","MC2");wire(12,1,Z-1);put(12,Z,"LAMP","RL2")}),{grade:"ind"}]];
 
 // ───────────── 동작 사항 자동 작성 (공개문제 형식) ─────────────
 // 회로를 실제로 조작해 보며(시뮬레이션) 결과를 문장으로 만듦
@@ -1402,7 +1497,7 @@ function syncPreset(kind,tag,p){for(const v of circ.cells.values())if(v.k===kind
 
 function fileDialog(){const json=JSON.stringify(circ.toJSON()),hasOld=!!store.get("seqsim.v1");
   modal(`<h2>파일·예제</h2>
-    <div class="sec" style="border:0;padding:0"><label>예제 불러오기<select id="exSel">${EXAMPLES.map((e,i)=>`<option value="${i}">${e[0]}</option>`).join("")}</select></label>
+    <div class="sec" style="border:0;padding:0"><label>예제 불러오기<select id="exSel"><optgroup label="연습 예제">${EXAMPLES.map((e,i)=>(e[2]||{}).grade==="ind"?"":`<option value="${i}">${e[0]}</option>`).join("")}</optgroup><optgroup label="전기공사산업기사 예상문제">${EXAMPLES.map((e,i)=>(e[2]||{}).grade==="ind"?`<option value="${i}">${e[0]}</option>`:"").join("")}</optgroup></select></label>
       <div class="row left"><button class="btn" id="exGo">예제 열기</button><button class="btn" id="newGo">새 도면</button>
       ${hasOld?'<button class="btn" id="oldGo">이전 버전 작업 열기</button>':""}</div></div>
     <div class="sec"><label>도면 크기<span style="display:flex;gap:8px;align-items:center;font-weight:400;flex-wrap:wrap">
@@ -1417,7 +1512,8 @@ function fileDialog(){const json=JSON.stringify(circ.toJSON()),hasOld=!!store.ge
       <span id="inMsg" class="hint"></span></div>
     <div class="row"><button class="btn" id="xGo">닫기</button></div>`,(ov,close)=>{
     const q=s=>ov.querySelector(s);
-    q("#exGo").onclick=()=>{const i=+q("#exSel").value;setCircuit(EXAMPLES[i][1](),EXAMPLES[i][0]);close()};
+    q("#exGo").onclick=()=>{const i=+q("#exSel").value,g=(EXAMPLES[i][2]||{}).grade;setCircuit(EXAMPLES[i][1](),EXAMPLES[i][0]);   // 산업기사 예상문제를 열면 배치도도 산업기사 양식으로
+      if(g==="ind"&&typeof lySetGrade==="function"&&LY.grade!=="ind"){lySetGrade("ind");setHint("전기공사산업기사 예상문제입니다. 배치도 도면 종류도 전기공사산업기사로 바꿨습니다.")}close()};
     q("#newGo").onclick=()=>{close();setTimeout(newDrawingDialog,0)};
     if(hasOld)q("#oldGo").onclick=()=>{try{setCircuit(Circuit.from(JSON.parse(store.get("seqsim.v1")).circ),"이전 작업");close()}catch(e){}};
     q("#mainOn").onchange=e=>setMain(e.target.checked);
@@ -1565,6 +1661,7 @@ ${SIMPLE?`<tr><td>도면칸 확장</td><td>'도면칸 확장'을 고르고 회�
       <tr><td>가로 간격</td><td>줄마다 양 끝 기구의 바깥 끝선이 제어판 끝에서 50 mm, 안쪽 기구는 같은 간격. 기구 폭은 왼쪽 맨 아래 '▸ 기구 폭'을 눌러 펼쳐서 바꿉니다</td></tr>
       <tr><td>기구 모양</td><td>8P·12P 기구는 소켓 모양에 단자번호(8P 윗줄 6·5·4·3·아랫줄 7·8·1·2, 12P 1~6·7~12)와 홈 방향 ▲, MCCB는 위·아래 L1·L2·L3, 퓨즈는 위·아래 L1·L3 단자. TB5·TB6은 10P 단자대 두 개를 이어 붙인 모양에 1~10·11~20 번호</td></tr>
       <tr><td>순서 바꾸기</td><td>2쪽의 기구를 끌어 다른 자리·다른 줄로 옮깁니다. 간격은 자동으로 다시 맞춰집니다</td></tr>
+      <tr><td>도면 크기</td><td>배치도 오른쪽 아래 막대에서 <b>－ / ＋</b>로 줄이거나 키우고(30~300%), 가운데 %를 누르면 100%, <b>맞춤</b>은 한 쪽 전체가 화면에 보이게, <b>폭 맞춤</b>은 도면 폭을 화면 폭에 맞춥니다. Ctrl+마우스 휠로 마우스 위치를 중심으로 확대·축소하고, 빈 곳을 끌면 도면이 움직입니다. 정한 크기는 기억됩니다</td></tr>
       <tr><td>컨트롤 박스</td><td>전기기능사는 언제나 <b>2구 박스 4개</b>. PB는 둘씩, 셀렉터 스위치는 한 박스, 램프·부저는 둘씩 넣고 남는 구멍과 빈 박스는 <b>CAP(홀마개)</b>. 묶음이 4개를 넘으면 구멍을 차례로 채워 섞어 담습니다. 빈 박스(CAP만)로 가는 배관은 전선이 없어 TB 번호를 쓰지 않습니다. 구멍을 끌어 다른 구멍에 놓으면 서로 바뀝니다</td></tr>
       <tr><td>J박스 위치</td><td>오른쪽형(기능사 2·10번)과 왼쪽형(기능사 1·9번) 중 고릅니다</td></tr>
       <tr><td>아래 단자대 옮기기</td><td>1쪽 아래의 TB2·TB3·TB4를 끌어 다른 단자대 위에 놓으면 서로 자리를 바꿉니다(단자대끼리만, 컨트롤 박스 자리는 그대로). 제어반 결선의 TB6 번호(배관 순서)와 이어 둔 배선도 함께 따라 바뀝니다</td></tr>
@@ -1605,7 +1702,7 @@ ${SIMPLE?`<tr><td>도면칸 확장</td><td>'도면칸 확장'을 고르고 회�
       <tr><td>타이머 (8P)</td><td>전원 2–7, 순시 a 1–3, 한시 공통 8 → 한시 a 6·한시 b 5</td></tr>
       <tr><td>플리커 릴레이 (8P)</td><td>전원 2–7, 공통 8 → a 6·b 5</td></tr>
       <tr><td>8P·12P 소켓</td><td>제어판 위 기구는 공개문제 「소켓(베이스) 구성도」 모양으로, 배치도와 같은 자리에 그립니다. 8P는 윗줄 6·5·4·3, 아랫줄 7·8·1·2 / 12P는 윗줄 1~6, 아랫줄 7~12. 단자에 마우스를 올리면 그 단자의 쓰임(코일·a접점·b접점 등)이 보입니다</td></tr>
-      <tr><td>그 밖</td><td>푸시버튼·셀렉터 b 1–2·a 3–4, <b>리밋 스위치도 공통 없이 b접점 1–2·a접점 3–4 따로</b>, 플로트리스 전원 5·6, 전극 E1 7·E2 8·E3 1(접지), <b>접점 공통 4 → b접점 4–2, a접점 4–3</b></td></tr>
+      <tr><td>그 밖</td><td>푸시버튼·셀렉터 b 1–2·a 3–4, <b>리밋 스위치도 공통 없이 b접점 1–2·a접점 3–4 따로</b>(<b>한 도면에서 리밋 스위치마다 a·b 중 하나만</b> 사용 — 둘 다 쓰면 접점 경고), 플로트리스 전원 5·6, 전극 E1 7·E2 8·E3 1(접지), <b>접점 공통 4 → b접점 4–2, a접점 4–3</b></td></tr>
     </table>
     <p class="hnote">같은 기구의 a·b접점이 시퀀스도에서 공통 단자를 함께 쓰면 c접점 하나(공통 단자 공유)로 배정합니다. 기구에 접점이 모자라면 오른쪽에 '시퀀스도 확인'으로 알려 줍니다. 공개문제에 그림이 없는 기구 등은 단자 번호가 제조사마다 다르니 '단자 번호 설정'에서 맞춰 쓰세요.</p>`],
   ["file","저장·불러오기",`
@@ -1872,9 +1969,10 @@ const escH=x=>String(x).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,
 
 // 접점 구성: 릴레이 X·플리커 FR·타이머 한시접점은 c접점(공통 단자 + a + b) 단위, 나머지는 a·b가 따로
 // 허용 개수는 실습장 부품에 맞게 바꿀 수 있음 (이 브라우저에 기억)
-const LIMIT_DEF={relay:{c:2},tlim:{c:1},fr:{c:1},fls:{c:1},mc:{a:2,b:2},tinst:{a:1,b:0},eocr:{a:1,b:1}};
-const LIMIT_NAME={relay:"릴레이 X",mc:"전자접촉기 MC",tlim:"타이머 한시접점",tinst:"타이머 순시접점(a만)",fr:"플리커 FR",fls:"플로트리스 FLS",eocr:"EOCR",cnt:"카운터"};
-const LIMIT_EN={relay:"each relay X (A/B contacts whose tag is a COIL not starting with MC)",tlim:"each timer's time-delay contacts (TA/TB)",
+// ls: 리밋 스위치는 한 도면에서 LS마다 a·b 중 하나만(2026-11-18 사용자 지시) — 공통 단자가 없어 a·b 짝짓기 없음
+const LIMIT_DEF={ls:{c:1},relay:{c:2},tlim:{c:1},fr:{c:1},fls:{c:1},mc:{a:2,b:2},tinst:{a:1,b:0},eocr:{a:1,b:1}};
+const LIMIT_NAME={ls:"리밋 스위치 LS",relay:"릴레이 X",mc:"전자접촉기 MC",tlim:"타이머 한시접점",tinst:"타이머 순시접점(a만)",fr:"플리커 FR",fls:"플로트리스 FLS",eocr:"EOCR",cnt:"카운터"};
+const LIMIT_EN={ls:"each limit switch LS (LS_A/LS_B with the same tag): use only ONE contact per limit switch in a drawing — either its a or its b, never both",relay:"each relay X (A/B contacts whose tag is a COIL not starting with MC)",tlim:"each timer's time-delay contacts (TA/TB)",
   fr:"each flicker relay (FA/FB, or A/B with the FR tag)",fls:"each floatless switch FLS (A/B with the FLS tag)",mc:"each magnetic contactor MC auxiliary contacts (A/B, independent)",
   tinst:"each timer's instantaneous a contact (A with the timer's tag); a timer has NO instantaneous b contact, so never use B with a timer's tag",
   eocr:"EOCR contacts (THR_A/THR_B, including the one on the R bus)"};
@@ -1902,18 +2000,20 @@ function contactUsage(C){const loads=new Map();for(const v of C.cells.values())i
     if(k==="A"||k==="B"){const lk=loads.get(t);add(t,lk==="FLS"?"fls":lk==="TIMER"?"tinst":lk==="FR"?"fr":lk==="CNT"?"cnt":/^MC/.test(t)?"mc":"relay",k==="A"?"a":"b",term,key)}
     else if(k==="TA"||k==="TB")add(t,"tlim",k==="TA"?"a":"b",term,key);
     else if(k==="FA"||k==="FB")add(t,"fr",k==="FA"?"a":"b",term,key);
-    else if(k==="THR_A"||k==="THR_B")add(t,"eocr",k==="THR_A"?"a":"b",term,key)};
+    else if(k==="THR_A"||k==="THR_B")add(t,"eocr",k==="THR_A"?"a":"b",term,key);
+    else if(k==="LS_A"||k==="LS_B")add(t,"ls",k==="LS_A"?"a":"b",term,key)};
   for(const[k,v]of C.cells){const[l,p]=P(k);each(v,[K(l,p),K(l,p+1)],"c:"+k)}
   for(const[s,v]of C.bus)each(v,[K(s,0),K(s+1,0)],"b:"+s);
   for(const[k,v]of C.hparts||[]){const[l,b]=P(k);each(v,[K(l,b),K(l+1,b)],"h:"+k)}
   const L=getLimits();
   return[...u.values()].map(e=>{const lim=L[e.cat]||null,a=e.a.length,b=e.b.length,keys=[...e.a,...e.b].map(x=>x.key);
-      if(lim&&lim.c!=null){const pairs=maxPairs(e.a.map(x=>x.term),e.b.map(x=>x.term),find),need=a+b-pairs;
+      if(lim&&lim.c!=null){const pairs=e.cat==="ls"?0:maxPairs(e.a.map(x=>x.term),e.b.map(x=>x.term),find),need=a+b-pairs;
         return{tag:e.tag,cat:e.cat,type:"c",a,b,pairs,need,limC:lim.c,over:need>lim.c,keys}}
       return{tag:e.tag,cat:e.cat,type:"ab",a,b,limA:lim?lim.a:null,limB:lim?lim.b:null,over:!!lim&&(a>lim.a||b>lim.b),keys}})
     .sort((x,y)=>x.tag.localeCompare(y.tag)||x.cat.localeCompare(y.cat))}
 // 사람이 읽는 경고 문장
 function usageWarn(r){const nm=`${r.tag}(${LIMIT_NAME[r.cat]||r.cat})`;
+  if(r.cat==="ls")return `${nm}: 한 도면에서 리밋 스위치마다 a·b접점 중 하나만 쓸 수 있는데 a ${r.a}개·b ${r.b}개를 썼습니다. 나머지 동작은 보조 릴레이 접점으로 바꾸세요.`;
   if(r.type==="c"){const fix=r.a+r.b<=2*r.limC&&r.pairs<Math.min(r.a,r.b)?" a·b접점의 한쪽 단자를 같은 점(공통 단자)에 연결하면 c접점을 줄일 수 있습니다.":" 보조 릴레이를 추가하세요.";
     return `${nm}: a ${r.a}개·b ${r.b}개 중 공통 단자를 함께 쓰는 쌍이 ${r.pairs}개뿐이라 c접점이 ${r.need}개 필요합니다 (허용 ${r.limC}개).${fix}`}
   if(r.cat==="tinst"&&r.b>0)return `${nm}: 타이머에는 순시 b접점이 없습니다.`;
@@ -3039,11 +3139,11 @@ const QZ_PROBS=[
     put(2,0,"PB_A","PB1");wire(2,1,2);put(2,Z,"COIL","MC");
     put(3,0,"A","MC");put(3,1,"PB_B","PB2");put(4,0,"PB_A","PB2");put(4,1,"WIRE");link([2,2],[3,2]);
     put(5,0,"A","MC");wire(5,1,2);put(5,Z,"LAMP","RL");put(6,0,"B","MC");wire(6,1,2);put(6,Z,"LAMP","GL")})},
- {id:"q11",title:"리밋 스위치로 정지 (컨베이어)",grade:"func",level:2,note:"LS1이 감지되면 정지하고 WL 점등",
+ {id:"q11",title:"리밋 스위치로 정지 (컨베이어)",grade:"func",level:2,note:"LS1이 감지되면 정지, 정지 중 WL 점등 (LS는 한 접점만)",
   blanks:[{l0:2,l1:3,p0:0,p1:1}],
   build:()=>build(6,4,(put,wire,link,bus,Z)=>{qzEocr(put,wire,link,bus,Z);
     put(2,0,"PB_A","PB1");put(2,1,"LS_B","LS1");put(2,2,"WIRE");put(2,Z,"COIL","MC1");put(3,0,"A","MC1");link([2,1]);
-    put(4,0,"LS_A","LS1");wire(4,1,2);put(4,Z,"LAMP","WL");put(5,0,"A","MC1");wire(5,1,2);put(5,Z,"LAMP","RL")})},
+    put(4,0,"B","MC1");wire(4,1,2);put(4,Z,"LAMP","WL");put(5,0,"A","MC1");wire(5,1,2);put(5,Z,"LAMP","RL")})},
  {id:"q12",title:"플로트리스 스위치 급수 회로",grade:"func",level:2,note:"수위가 낮으면 MC1 운전, E1에 닿으면 정지",
   blanks:[{l0:3,l1:5,p0:0,p1:0}],build:()=>EXAMPLES[6][1]()},
  {id:"q13",title:"과전류 경보와 부저 정지",grade:"func",level:2,note:"EOCR 트립 시 YL·부저, PB3로 부저만 정지",
@@ -3138,7 +3238,66 @@ const QZ_PROBS=[
     wire(10,1,Z-1);put(10,Z,"COIL","X3");
     put(11,1,"FB","FR");wire(11,2,Z-1);put(11,Z,"COIL","MC1");link([11,Z]);put(12,Z,"LAMP","RL1");
     put(13,1,"FA","FR");wire(13,2,Z-1);put(13,Z,"COIL","MC2");link([13,Z]);put(14,Z,"LAMP","RL2");
-    put(15,0,"B","X3");wire(15,1,Z-1);put(15,Z,"LAMP","WL")})}
+    put(15,0,"B","X3");wire(15,1,Z-1);put(15,Z,"LAMP","WL")})},
+ // 2026-11-18 사용자 요청 '전기공사산업기사 예상문제, 최대한 어렵게' — 예제 ⑧과 같은 회로
+ {id:"q20",title:"예상 ① 선입력 우선·자동 역전",grade:"ind",level:3,note:"X1·X2·X3·T·FR·MC1·MC2, PB0~PB2, LS1·LS2, BZ (2과제 형식)",
+  spec:["가) 배선용 차단기 MCCB를 통해 전원을 투입하면 EOCR에 전원이 공급되고 램프 GL이 점등된다.",
+   "나) 전동기 M1 운전 (선입력 우선)",
+   "① 푸시버튼 스위치 PB1을 누르면 릴레이 X1이 여자되어 자기유지되고, 전자접촉기 MC1이 여자되어 전동기 M1이 회전하며, 램프 RL1이 점등되고 램프 GL은 소등된다.",
+   "② 릴레이 X1이 동작 중일 때 푸시버튼 스위치 PB2를 눌러도 릴레이 X2는 여자되지 않는다. (릴레이 X2가 먼저 동작 중일 때 PB1을 눌러도 X1은 여자되지 않는다.)",
+   "다) 리밋 스위치 LS1 감지 — 정지 대기 후 자동 역전",
+   "① 전동기 M1 운전 중 리밋 스위치 LS1이 감지되면 릴레이 X3이 여자되어 자기유지되고, 타이머 T와 플리커 릴레이 FR이 여자되며, 릴레이 X1·전자접촉기 MC1이 소자되어 전동기 M1이 정지하고 램프 RL1은 소등, 램프 GL은 점등된다.",
+   "② 릴레이 X3이 동작하는 동안 플리커 릴레이 FR의 설정시간(0.5초) 간격으로 램프 WL과 부저 BZ가 교대로 동작한다. (램프 WL이 먼저)",
+   "③ 타이머 T의 설정시간(3초)이 지나면 릴레이 X2가 여자되어 자기유지되고, 전자접촉기 MC2가 여자되어 전동기 M2가 회전하며, 램프 RL2가 점등되고 램프 GL은 소등된다. 이때 릴레이 X3, 타이머 T, 플리커 릴레이 FR은 소자되어 램프 WL과 부저 BZ는 정지한다.",
+   "④ 릴레이 X3이 동작하는 동안에는 푸시버튼 스위치 PB1을 눌러도 릴레이 X1은 여자되지 않는다.",
+   "라) 전동기 M2 운전 중 리밋 스위치 LS2가 감지되면 릴레이 X2, 전자접촉기 MC2가 소자되어 전동기 M2가 정지하고, 램프 RL2는 소등, 램프 GL은 점등된다.",
+   "마) 초기 상태에서 푸시버튼 스위치 PB2를 누르면 릴레이 X2가 여자되어 자기유지되고 전자접촉기 MC2가 여자되어 전동기 M2가 회전한다. (나)의 ②와 같이 선입력 우선)",
+   "바) 푸시버튼 스위치 PB0을 누르면 모든 동작이 정지된다.",
+   "사) 운전 중 과부하에 의해 EOCR이 동작하면 제어회로 전원이 차단되어 전동기가 정지하고 램프 YL이 점등된다. EOCR을 리셋하면 초기 상태로 복귀한다."],
+  blanks:[{l0:4,l1:6,p0:0,p1:1},{l0:7,l1:10,p0:0,p1:1}],
+  build:()=>build(15,6,(put,wire,link,bus,Z)=>{
+   bus(0,"THR_B","EOCR");bus(1,"PB_B","PB0");wire(0,0,Z-1);put(0,Z,"COIL","EOCR");link([0,1]);put(1,1,"THR_A","EOCR");wire(1,2,Z-1);put(1,Z,"LAMP","YL");
+   put(2,0,"PB_A","PB1");put(3,0,"A","X1");link([2,1]);
+   put(2,1,"B","X3");put(2,2,"B","X2");wire(2,3,Z-1);put(2,Z,"COIL","X1");link([2,Z]);put(3,Z,"COIL","MC1");
+   put(4,0,"PB_A","PB2");put(5,0,"A","X2");put(6,0,"TA","T");link([4,1],[5,1]);
+   put(4,1,"B","X1");put(4,2,"LS_B","LS2");wire(4,3,Z-1);put(4,Z,"COIL","X2");link([4,Z]);put(5,Z,"COIL","MC2");
+   put(7,0,"B","MC2");put(7,1,"LS_A","LS1");put(8,1,"A","X3");link([7,1],[8,1],[9,1],[7,2]);
+   wire(7,2,Z-1);put(7,Z,"COIL","X3");link([7,Z],[8,Z]);put(8,Z,"TIMER","T",3);put(9,Z,"FR","FR",0.5);
+   put(10,1,"B","MC1");wire(10,2,Z-1);put(10,Z,"LAMP","GL");
+   put(11,0,"A","T");link([11,1]);put(11,1,"FA","FR");wire(11,2,Z-1);put(11,Z,"BZ","BZ");put(12,1,"FB","FR");wire(12,2,Z-1);put(12,Z,"LAMP","WL");
+   put(13,0,"A","MC1");wire(13,1,Z-1);put(13,Z,"LAMP","RL1");
+   put(14,0,"A","MC2");wire(14,1,Z-1);put(14,Z,"LAMP","RL2")})},
+ // 2026-11-18 산업기사 예상문제 10종(예제 '예상 ②~⑪'과 같은 회로)
+ {id:"q21",title:"예상 ② 셀렉터 수동·자동 급수 (FLS)",grade:"ind",level:3,note:"SS·FLS·X1·X2·X3·T·MC1·MC2·BZ",
+  spec:["가) 배선용 차단기 MCCB를 통해 전원을 투입하면 EOCR에 전원이 공급된다.", "나) 수동 운전 — 셀렉터 스위치 SS가 수동(M) 위치일 때", "① 푸시버튼 스위치 PB1을 누르면 릴레이 X1이 여자되어 자기유지되고, 전자접촉기 MC1이 여자되어 펌프 M1이 운전되며 램프 RL1이 점등된다.", "② 운전 중 푸시버튼 스위치 PB0을 누르거나 셀렉터 스위치 SS를 자동(A) 위치로 바꾸면 릴레이 X1이 소자되어 펌프 M1이 정지하고 램프 RL1이 소등된다.", "다) 자동 운전 — 셀렉터 스위치 SS가 자동(A) 위치일 때", "① 릴레이 X2가 여자되고 플로트리스 스위치 FLS에 전원이 공급된다.", "② 수위가 전극 E2 아래로 내려가면 릴레이 X3과 타이머 T가 여자되어 전자접촉기 MC1이 여자(펌프 M1 운전, 램프 RL1 점등)되고 램프 WL이 점등된다.", "③ 타이머 T의 설정시간(5초)이 지나도 만수가 되지 않으면 전자접촉기 MC2가 여자되어 보조 펌프 M2가 함께 운전되고 부저 BZ가 울린다.", "④ 수위가 전극 E1에 도달하면 릴레이 X3, 타이머 T, 전자접촉기 MC1·MC2가 소자되어 펌프가 정지하고 램프 RL1·WL이 소등, 부저 BZ가 정지하며 램프 GL(만수 표시)이 점등된다.", "⑤ 셀렉터 스위치 SS를 수동(M) 위치로 바꾸면 자동 운전은 정지된다.", "라) 푸시버튼 스위치 PB0을 누르면 모든 동작이 정지된다.", "마) 운전 중 과부하에 의해 EOCR이 동작하면 제어회로 전원이 차단되어 전동기가 정지하고 램프 YL이 점등된다. EOCR을 리셋하면 초기 상태로 복귀한다."],
+  blanks:[{l0: 6, l1: 8, p0: 0, p1: 1}],build:()=>EXAMPLES[8][1]()},
+ {id:"q22",title:"예상 ③ 리밋 스위치 연속 왕복 (방향 기억)",grade:"ind",level:3,note:"LS1 a·LS2 a (LS마다 한 접점), X1·X2·X3·T(c접점)·FR·MC1·MC2·BZ",
+  spec:["가) 배선용 차단기 MCCB를 통해 전원을 투입하면 EOCR에 전원이 공급되고 램프 GL이 점등된다.", "나) 푸시버튼 스위치 PB1을 누르면 릴레이 X1이 여자되어 자기유지되고, 전자접촉기 MC1이 여자되어 전동기 M1(전진)이 운전되며 램프 RL1이 점등, 램프 GL은 소등된다.", "다) 전진 중 리밋 스위치 LS1이 감지되면 릴레이 X3이 여자되어 자기유지(방향 기억)되고 타이머 T, 플리커 릴레이 FR이 여자된다. 전자접촉기 MC1이 소자되어 전진이 정지하고 램프 RL1은 소등, 램프 GL은 점등되며, FR의 설정시간(0.5초) 간격으로 부저 BZ가 단속적으로 울린다.", "라) 타이머 T의 설정시간(2초)이 지나면 플리커 릴레이 FR이 소자되어 부저 BZ가 정지하고, 전자접촉기 MC2가 여자되어 전동기 M2(후진)가 운전되며 램프 RL2가 점등, 램프 GL은 소등된다.", "마) 후진 중 리밋 스위치 LS2가 감지되면 릴레이 X2가 여자되어 릴레이 X3, 타이머 T가 소자되고, 전자접촉기 MC2가 소자, 전자접촉기 MC1이 여자되어 다시 전진한다. 이후 PB0을 누를 때까지 다)~마)를 반복한다.", "바) 푸시버튼 스위치 PB0을 누르면 모든 동작이 정지된다.", "사) 운전 중 과부하에 의해 EOCR이 동작하면 제어회로 전원이 차단되어 전동기가 정지하고 램프 YL이 점등된다. EOCR을 리셋하면 초기 상태로 복귀한다."],
+  blanks:[{l0:4,l1:6,p0:0,p1:2}],build:()=>EXAMPLES[9][1]()},
+ {id:"q23",title:"예상 ④ 후입력 우선 + 한시 정지 경보",grade:"ind",level:3,note:"PB1·PB2 후입력 우선, X1·X2·X3·T·FR·MC1·MC2·BZ",
+  spec:["가) 배선용 차단기 MCCB를 통해 전원을 투입하면 EOCR에 전원이 공급되고 램프 GL이 점등된다.", "나) 푸시버튼 스위치 PB1을 누르면 릴레이 X1이 여자되어 자기유지되고, 전자접촉기 MC1이 여자되어 전동기 M1이 회전하며, 램프 RL1이 점등되고 램프 GL은 소등된다.", "다) 후입력 우선", "① 전동기 M1 운전 중 푸시버튼 스위치 PB2를 누르면 릴레이 X1이 소자되어 전동기 M1이 정지하고, 릴레이 X2가 여자되어 자기유지되며 전자접촉기 MC2가 여자되어 전동기 M2가 회전하고 램프 RL2가 점등된다. 이때 타이머 T가 여자된다.", "② 반대로 릴레이 X2가 동작 중일 때 푸시버튼 스위치 PB1을 누르면 릴레이 X2가 소자되고 릴레이 X1이 동작한다(나중에 누른 쪽이 우선).", "라) 한시 정지 경보", "① 타이머 T의 설정시간(5초)이 지나면 전자접촉기 MC2가 소자되어 전동기 M2가 정지하고 램프 RL2는 소등, 램프 GL은 점등된다.", "② 동시에 릴레이 X3과 플리커 릴레이 FR이 여자되어 FR의 설정시간(0.5초) 간격으로 램프 WL과 부저 BZ가 교대로 동작한다(램프 WL이 먼저).", "③ 경보 중 푸시버튼 스위치 PB1을 누르면 릴레이 X2·X3, 타이머 T, 플리커 릴레이 FR이 소자되어 경보가 멈추고 나)와 같이 전동기 M1이 운전된다.", "마) 푸시버튼 스위치 PB0을 누르면 모든 동작이 정지된다.", "바) 운전 중 과부하에 의해 EOCR이 동작하면 제어회로 전원이 차단되어 전동기가 정지하고 램프 YL이 점등된다. EOCR을 리셋하면 초기 상태로 복귀한다."],
+  blanks:[{l0: 2, l1: 5, p0: 1, p1: 1}, {l0: 6, l1: 7, p0: 1, p1: 1}],build:()=>EXAMPLES[10][1]()},
+ {id:"q24",title:"예상 ⑤ 3입력 우선순위 + 자동 전환",grade:"ind",level:3,note:"PB1>PB2>PB3 우선순위, X1·X2·X3·T·FR·MC1·MC2",
+  spec:["가) 배선용 차단기 MCCB를 통해 전원을 투입하면 EOCR에 전원이 공급된다.", "나) 우선순위 운전 (X1 > X2 > X3)", "① 푸시버튼 스위치 PB1을 누르면 릴레이 X1이 여자되어 자기유지되고 전자접촉기 MC1이 여자되어 전동기 M1이 회전하며 램프 RL1이 점등된다. 릴레이 X2나 X3이 동작 중일 때 PB1을 누르면 X2·X3은 소자되고 X1이 동작한다. X1이 동작 중일 때는 PB2·PB3을 눌러도 동작하지 않는다.", "② 릴레이 X1이 동작하지 않을 때 푸시버튼 스위치 PB2를 누르면 릴레이 X2가 여자되어 자기유지되고 전자접촉기 MC2가 여자되어 전동기 M2가 회전하며 램프 RL2가 점등된다. 릴레이 X3이 동작 중일 때 PB2를 누르면 X3은 소자되고 X2가 동작한다. X2가 동작 중일 때는 PB3을 눌러도 동작하지 않는다.", "③ 릴레이 X1·X2가 모두 동작하지 않을 때 푸시버튼 스위치 PB3을 누르면 릴레이 X3이 여자되어 자기유지되고, 전자접촉기 MC1이 여자되어 전동기 M1이 회전하며 램프 RL1이 점등된다. 동시에 타이머 T와 플리커 릴레이 FR이 여자되어 FR의 설정시간(0.5초) 간격으로 램프 WL이 점멸한다.", "다) 자동 전환 — 릴레이 X3 동작 후 타이머 T의 설정시간(3초)이 지나면 릴레이 X2가 여자되어 자기유지되고 전자접촉기 MC2가 여자되어 전동기 M2가 회전하며 램프 RL2가 점등된다. 이때 릴레이 X3, 타이머 T, 플리커 릴레이 FR, 전자접촉기 MC1이 소자되어 전동기 M1이 정지하고 램프 RL1·WL이 소등된다.", "라) 푸시버튼 스위치 PB0을 누르면 모든 동작이 정지된다.", "마) 운전 중 과부하에 의해 EOCR이 동작하면 제어회로 전원이 차단되어 전동기가 정지하고 램프 YL이 점등된다. EOCR을 리셋하면 초기 상태로 복귀한다."],
+  blanks:[{l0: 4, l1: 8, p0: 0, p1: 2}],build:()=>EXAMPLES[11][1]()},
+ {id:"q25",title:"예상 ⑥ 컨베이어 순차 기동·비움 후 정지",grade:"ind",level:3,note:"LS1·X1·X2·X3·T·FR·MC1·MC2",
+  spec:["가) 배선용 차단기 MCCB를 통해 전원을 투입하면 EOCR에 전원이 공급되고 램프 GL이 점등된다.", "나) 순차 기동", "① 푸시버튼 스위치 PB1을 누르면 릴레이 X1이 여자되어 자기유지되고, 전자접촉기 MC1이 여자되어 컨베이어 M1이 운전되며 램프 RL1이 점등, 램프 GL은 소등된다. 동시에 타이머 T가 여자된다.", "② 타이머 T의 설정시간(3초)이 지나면 전자접촉기 MC2가 여자되어 컨베이어 M2가 운전되고 램프 RL2가 점등된다.", "다) 비움 후 정지", "① 운전 중 푸시버튼 스위치 PB2를 누르면 릴레이 X3이 여자되어 자기유지되고, 전자접촉기 MC2가 소자되어 컨베이어 M2가 먼저 정지하며 램프 RL2가 소등된다. 동시에 플리커 릴레이 FR이 여자되어 FR의 설정시간(0.5초) 간격으로 램프 WL이 점멸한다.", "② 이 상태에서 리밋 스위치 LS1이 감지(컨베이어 M1 위 제품 없음)되면 릴레이 X2가 여자되어 릴레이 X1, 전자접촉기 MC1, 타이머 T가 소자되고, 이어서 릴레이 X3, 플리커 릴레이 FR이 소자되어 모든 컨베이어가 정지하고 램프 GL이 점등된다.", "③ 릴레이 X1이 동작하지 않을 때 PB2를 누르거나, 릴레이 X3이 동작하지 않을 때 LS1이 감지되어도 아무 동작도 하지 않는다.", "라) 푸시버튼 스위치 PB0을 누르면 모든 동작이 정지된다.", "마) 운전 중 과부하에 의해 EOCR이 동작하면 제어회로 전원이 차단되어 전동기가 정지하고 램프 YL이 점등된다. EOCR을 리셋하면 초기 상태로 복귀한다."],
+  blanks:[{l0: 5, l1: 8, p0: 0, p1: 1}],build:()=>EXAMPLES[12][1]()},
+ {id:"q26",title:"예상 ⑦ 셀렉터 S1·S2 + 리밋 정지 + 운전 시간 경보",grade:"ind",level:3,note:"SS·LS1·LS2·X1·X2·X3·T·FR·MC1·MC2·BZ",
+  spec:["가) 배선용 차단기 MCCB를 통해 전원을 투입하면 EOCR에 전원이 공급되고 램프 GL이 점등된다.", "나) S1 운전 — 셀렉터 스위치 SS가 M(S1) 위치일 때", "① 푸시버튼 스위치 PB1을 누르면 릴레이 X1이 여자되어 자기유지되고 전자접촉기 MC1이 여자되어 전동기 M1이 회전한다. 동시에 릴레이 X3과 타이머 T가 여자되어 램프 RL이 점등되고 램프 GL은 소등된다.", "② 운전 중 리밋 스위치 LS1이 감지되면 릴레이 X1, 전자접촉기 MC1, 릴레이 X3, 타이머 T가 소자되어 정지하고 램프 RL은 소등, 램프 GL은 점등된다.", "다) S2 운전 — 셀렉터 스위치 SS가 A(S2) 위치일 때", "① 푸시버튼 스위치 PB2를 누르면 릴레이 X2가 여자되어 자기유지되고 전자접촉기 MC2가 여자되어 전동기 M2가 회전하며, 나)의 ①과 같이 릴레이 X3·타이머 T가 여자된다.", "② 운전 중 리밋 스위치 LS2가 감지되면 나)의 ②와 같이 정지한다.", "라) 운전 시간 경보 — 운전을 시작한 뒤 타이머 T의 설정시간(5초)이 지나도 리밋 스위치가 감지되지 않으면 플리커 릴레이 FR이 여자되어 FR의 설정시간(0.5초) 간격으로 램프 WL과 부저 BZ가 교대로 동작한다(램프 WL이 먼저). 리밋 스위치가 감지되어 정지하면 경보도 멈춘다.", "마) 운전 중 셀렉터 스위치 SS의 위치를 바꾸면 운전 중인 전동기는 정지한다.", "바) 푸시버튼 스위치 PB0을 누르면 모든 동작이 정지된다.", "사) 운전 중 과부하에 의해 EOCR이 동작하면 제어회로 전원이 차단되어 전동기가 정지하고 램프 YL이 점등된다. EOCR을 리셋하면 초기 상태로 복귀한다."],
+  blanks:[{l0: 6, l1: 10, p0: 0, p1: 1}],build:()=>EXAMPLES[13][1]()},
+ {id:"q27",title:"예상 ⑧ EOCR 경보·경보 정지 + 순차 기동",grade:"ind",level:3,note:"EOCR 경보 회로(FR·X3·BZ), X1·X2·T·MC1·MC2",
+  spec:["가) 배선용 차단기 MCCB를 통해 전원을 투입하면 EOCR에 전원이 공급되고 램프 GL이 점등된다.", "나) 푸시버튼 스위치 PB1을 누르면 릴레이 X1이 여자되어 자기유지되고, 전자접촉기 MC1이 여자되어 전동기 M1이 회전하며 램프 RL1이 점등, 램프 GL이 소등된다. 동시에 타이머 T가 여자되고, 설정시간(3초)이 지나면 전자접촉기 MC2가 여자되어 전동기 M2가 회전하고 램프 RL2가 점등된다.", "다) 운전 중 푸시버튼 스위치 PB2를 누르면 릴레이 X2가 여자되어 자기유지되고 전자접촉기 MC2가 소자되어 전동기 M2만 정지하며 램프 RL2가 소등된다. 릴레이 X1이 소자되면 릴레이 X2도 소자된다.", "라) 푸시버튼 스위치 PB0을 누르면 모든 동작이 정지된다.", "마) EOCR 경보", "① 운전 중 과부하에 의해 EOCR이 동작하면 제어회로 전원이 차단되어 전동기가 모두 정지하고, 플리커 릴레이 FR이 여자되어 FR의 설정시간(0.5초) 간격으로 램프 YL이 점멸하며 부저 BZ가 울린다.", "② 경보 중 푸시버튼 스위치 PB3을 누르면 릴레이 X3이 여자되어 자기유지되고 부저 BZ는 정지한다(램프 YL은 계속 점멸).", "③ EOCR을 리셋하면 릴레이 X3, 플리커 릴레이 FR이 소자되고 초기 상태로 복귀한다."],
+  blanks:[{l0: 1, l1: 5, p0: 1, p1: 2}, {l0: 9, l1: 11, p0: 0, p1: 1}],build:()=>EXAMPLES[14][1]()},
+ {id:"q28",title:"예상 ⑨ 배수 펌프 2단 운전 (FLS)",grade:"ind",level:3,note:"FLS·X1·X2·X3·T·MC1·MC2·BZ",
+  spec:["가) 배선용 차단기 MCCB를 통해 전원을 투입하면 EOCR에 전원이 공급된다.", "나) 푸시버튼 스위치 PB1을 누르면 릴레이 X1이 여자되어 자기유지되고 플로트리스 스위치 FLS에 전원이 공급된다. 수위가 낮으면 램프 GL이 점등된다.", "다) 배수 운전", "① 수위가 올라가 전극 E1에 도달하면 릴레이 X2와 타이머 T가 여자되고, 전자접촉기 MC1이 여자되어 배수 펌프 M1이 운전되며 램프 RL1이 점등, 램프 GL은 소등된다.", "② 타이머 T의 설정시간(5초)이 지나도 수위가 내려가지 않으면 릴레이 X3이 여자되어 전자접촉기 MC2가 여자(보조 펌프 M2 운전, 램프 RL2 점등)되고 부저 BZ가 울린다.", "③ 수위가 전극 E2 아래로 내려가면 릴레이 X2·X3, 타이머 T, 전자접촉기 MC1·MC2가 소자되어 펌프가 정지하고 램프 RL1·RL2가 소등, 부저 BZ가 정지하며 램프 GL이 점등된다.", "라) 푸시버튼 스위치 PB0을 누르면 모든 동작이 정지된다.", "마) 운전 중 과부하에 의해 EOCR이 동작하면 제어회로 전원이 차단되어 전동기가 정지하고 램프 YL이 점등된다. EOCR을 리셋하면 초기 상태로 복귀한다."],
+  blanks:[{l0: 4, l1: 6, p0: 0, p1: 1}, {l0: 8, l1: 10, p0: 0, p1: 0}],build:()=>EXAMPLES[15][1]()},
+ {id:"q29",title:"예상 ⑩ 셀렉터 촌동·연속 + 역전 지연",grade:"ind",level:3,note:"SS·X1·X2·X3·T(c접점)·FR·MC1·MC2",
+  spec:["가) 배선용 차단기 MCCB를 통해 전원을 투입하면 EOCR에 전원이 공급되고 램프 GL이 점등된다.", "나) 정회전 운전", "① 셀렉터 스위치 SS가 M(촌동) 위치일 때 푸시버튼 스위치 PB1을 누르고 있는 동안만 릴레이 X1, 전자접촉기 MC1이 여자되어 전동기 M1이 회전하고 램프 RL1이 점등된다(PB1에서 손을 떼면 정지).", "② 셀렉터 스위치 SS가 A(연속) 위치일 때 푸시버튼 스위치 PB1을 누르면 릴레이 X1이 여자되어 자기유지되고 전동기 M1이 연속 운전한다.", "다) 역회전 운전 (지연 기동)", "① 릴레이 X1이 동작하지 않을 때 푸시버튼 스위치 PB2를 누르면 릴레이 X2가 여자되어 자기유지되고 타이머 T가 여자된다.", "② 타이머 T의 설정시간 동안 릴레이 X3과 플리커 릴레이 FR이 여자되어 FR의 설정시간(0.5초) 간격으로 램프 WL이 점멸하고 램프 GL은 소등된다.", "③ 타이머 T의 설정시간(3초)이 지나면 릴레이 X3, 플리커 릴레이 FR이 소자되고, 전자접촉기 MC2가 여자되어 전동기 M2가 회전하며 램프 RL2가 점등된다.", "라) 릴레이 X1과 X2는 서로 인터록되어 한쪽이 동작 중이면 다른 쪽은 동작하지 않는다.", "마) 푸시버튼 스위치 PB0을 누르면 모든 동작이 정지된다.", "바) 운전 중 과부하에 의해 EOCR이 동작하면 제어회로 전원이 차단되어 전동기가 정지하고 램프 YL이 점등된다. EOCR을 리셋하면 초기 상태로 복귀한다."],
+  blanks:[{l0: 2, l1: 3, p0: 0, p1: 2}, {l0: 6, l1: 8, p0: 2, p1: 2}],build:()=>EXAMPLES[16][1]()},
+ {id:"q30",title:"예상 ⑪ 급수 + 밸브(LS) 확인 + 이상 경보",grade:"ind",level:3,note:"FLS·LS1·X1·X2·X3·T·MC1·MC2·BZ, PB2 경보 해제",
+  spec:["가) 배선용 차단기 MCCB를 통해 전원을 투입하면 EOCR에 전원이 공급된다.", "나) 푸시버튼 스위치 PB1을 누르면 릴레이 X1이 여자되어 자기유지되고 플로트리스 스위치 FLS에 전원이 공급된다.", "다) 급수 운전", "① 수위가 전극 E2 아래이면 릴레이 X2와 타이머 T가 여자되고, 이때 리밋 스위치 LS1(밸브 열림 확인)이 감지된 상태이면 전자접촉기 MC1이 여자되어 급수 펌프 M1이 운전되고 램프 RL1이 점등된다.", "② 타이머 T의 설정시간(5초) 안에 수위가 전극 E1에 도달하면 릴레이 X2, 타이머 T, 전자접촉기 MC1이 소자되어 펌프가 정지하고 램프 RL1은 소등, 램프 GL(만수)이 점등된다.", "라) 급수 이상 경보", "① 타이머 T의 설정시간(5초)이 지나도 만수가 되지 않으면(밸브가 닫혀 있는 경우 포함) 릴레이 X3이 여자되어 자기유지되고, 전자접촉기 MC1이 소자되어 펌프 M1이 정지하며, 전자접촉기 MC2가 여자되어 보조 펌프 M2가 운전되고 램프 RL2가 점등, 부저 BZ가 울린다.", "② 푸시버튼 스위치 PB2를 누르면 릴레이 X3이 소자되어 경보가 해제된다. 단, 수위가 계속 낮아 타이머 T가 동작 중이면 다시 경보가 동작한다.", "마) 푸시버튼 스위치 PB0을 누르면 모든 동작이 정지된다.", "바) 운전 중 과부하에 의해 EOCR이 동작하면 제어회로 전원이 차단되어 전동기가 정지하고 램프 YL이 점등된다. EOCR을 리셋하면 초기 상태로 복귀한다."],
+  blanks:[{l0: 7, l1: 9, p0: 0, p1: 2}],build:()=>EXAMPLES[17][1]()}
 ];
 // ==QZ_END==
 // ───────────── 시작 ─────────────
@@ -4160,7 +4319,24 @@ function lyWarnings(st){const w=[],P=st.P,by=id=>P.inner.find(d=>d.id===id);
   return w}
 
 // ── 화면 ──
-function lyRender(){if(PN.view!=="layout")return;const st=lyState();LY.cur=st;
+// 배치도 확대·축소(2026-11-18 사용자 요청): 오른쪽 아래 막대(－·%·＋·맞춤·폭 맞춤), Ctrl+휠(마우스 위치 기준), 빈 곳 끌어 이동. 30~300%, seqsim.lyzoom
+LY.zoom=(()=>{const v=+pnStore.get("seqsim.lyzoom");return v>=.3&&v<=3?v:1})();
+function lyZoomTo(z,cx,cy){const box=$("lyPages");z=Math.max(.3,Math.min(3,+z.toFixed(3)));if(z===LY.zoom){lyZoomUI();return}
+  const r=box.getBoundingClientRect(),px=cx==null?box.clientWidth/2:cx-r.left,py=cy==null?box.clientHeight/2:cy-r.top,
+    fx=(box.scrollLeft+px)/Math.max(1,box.scrollWidth),fy=(box.scrollTop+py)/Math.max(1,box.scrollHeight);
+  LY.zoom=z;pnStore.set("seqsim.lyzoom",z);lyRender();box.scrollLeft=fx*box.scrollWidth-px;box.scrollTop=fy*box.scrollHeight-py}
+function lyZoomUI(){const e=$("lyZp");if(e)e.textContent=Math.round(LY.zoom*100)+"%"}
+function lyFit(widthOnly){const box=$("lyPages"),w=(box.clientWidth-34)/(595*1.25),h=(box.clientHeight-34)/(842*1.25);lyZoomTo(widthOnly?w:Math.min(w,h));if(!widthOnly)box.scrollTop=0}
+$("lyZi").onclick=()=>lyZoomTo(LY.zoom*1.15);$("lyZo").onclick=()=>lyZoomTo(LY.zoom/1.15);$("lyZp").onclick=()=>lyZoomTo(1);
+$("lyZf").onclick=()=>lyFit(false);$("lyZw").onclick=()=>lyFit(true);
+$("lyPages").addEventListener("wheel",e=>{if(!(e.ctrlKey||e.metaKey))return;e.preventDefault();lyZoomTo(LY.zoom*Math.exp(-e.deltaY*.0015),e.clientX,e.clientY)},{passive:false});
+// 빈 곳(기구·구멍·단자대가 아닌 곳)을 끌면 화면 이동
+$("lyPages").addEventListener("pointerdown",e=>{if(e.button!==0&&e.button!==1)return;if(e.button===0&&e.target.closest(".lydev,.lyhole,.lytb"))return;
+  const box=$("lyPages"),sx=e.clientX,sy=e.clientY,l0=box.scrollLeft,t0=box.scrollTop;let mv=false;
+  const move=ev=>{if(!mv&&Math.hypot(ev.clientX-sx,ev.clientY-sy)<4)return;mv=true;box.classList.add("lypan");box.scrollLeft=l0-(ev.clientX-sx);box.scrollTop=t0-(ev.clientY-sy)};
+  const up=()=>{box.classList.remove("lypan");removeEventListener("pointermove",move);removeEventListener("pointerup",up)};
+  addEventListener("pointermove",move);addEventListener("pointerup",up)});
+function lyRender(){if(PN.view!=="layout")return;const st=lyState();LY.cur=st;lyZoomUI();
   const z=LY.zoom,wpx=Math.round(595*z*1.25);
   $("lyPages").innerHTML=`<div class="lypage"><svg id="lyP1" viewBox="0 0 595 842" width="${wpx}" xmlns="http://www.w3.org/2000/svg">${lyPage1(st)}</svg></div>`+
     `<div class="lypage"><svg id="lyP2" viewBox="0 0 595 842" width="${wpx}" xmlns="http://www.w3.org/2000/svg">${lyPage2(st,true)}</svg></div>`;
@@ -4208,7 +4384,6 @@ function lySide(){const W=LY.widths,ind=lyInd();
     <label class="lyt">자격종목<input id="lyKind" value="${escH(LY.title.kind)}" maxlength="20"></label><label class="lyt">과제명<input id="lyTask" value="${escH(LY.title.task)}" maxlength="40"></label>
     <h3>저장</h3>
     <div class="pvbar"><button class="btn primary" id="lyPdf" style="min-width:0">PDF (2쪽)</button><button class="btn" id="lyJ1">JPG 1쪽</button><button class="btn" id="lyJ2">JPG 2쪽</button></div>
-    <div class="pvbar"><button class="btn" id="lyZo" aria-label="축소">－</button><button class="btn" id="lyZi" aria-label="확대">＋</button></div>
     <details class="lywd"${LY.wopen?" open":""}><summary>기구 폭 (mm)</summary>
     <div class="lyw"><label>MCCB<input type="number" data-w="mccb" value="${W.mccb}" min="10" max="150"></label><label>EOCR·MC (12P)<input type="number" data-w="p12" value="${W.p12}" min="10" max="150"></label>
       <label>8P 소켓<input type="number" data-w="p8" value="${W.p8}" min="10" max="150"></label><label>퓨즈홀더 F<input type="number" data-w="f" value="${W.f}" min="10" max="150"></label></div></details>`;
@@ -4219,7 +4394,6 @@ function lySide(){const W=LY.widths,ind=lyInd();
   $("lyUndo").onclick=()=>{if(!LY.undo.length){lyHint("되돌릴 것이 없습니다.");return}LY.saved=JSON.parse(LY.undo.pop());lySave();lyRender()};
   document.querySelectorAll("[data-w]").forEach(i=>i.onchange=()=>{const v=Math.round(+i.value);if(!(v>=10&&v<=150)){i.value=LY.widths[i.dataset.w];lyHint("기구 폭은 10~150 mm로 적어 주세요.",true);return}LY.widths[i.dataset.w]=v;lySave();lyRender()});
   $("lyKind").oninput=e=>{LY.title.kind=e.target.value;lySave();lyRender()};$("lyTask").oninput=e=>{LY.title.task=e.target.value;lySave();lyRender()};
-  $("lyZi").onclick=()=>{LY.zoom=Math.min(2,+(LY.zoom+.15).toFixed(2));lyRender()};$("lyZo").onclick=()=>{LY.zoom=Math.max(.5,+(LY.zoom-.15).toFixed(2));lyRender()};
   $("lyPdf").onclick=()=>lyExport("pdf");$("lyJ1").onclick=()=>lyExport(1);$("lyJ2").onclick=()=>lyExport(2)}
 // 도면 종류 바꾸기: 제목줄이 그 종류의 기본값이면 새 종류의 기본값으로 바꿈(직접 고친 제목은 그대로). 배치는 종류별로 따로 기억.
 function lySetGrade(g){g=g==="ind"?"ind":"func";if(g===LY.grade)return;const old=LY_GRADE[LY.grade],nw=LY_GRADE[g];
