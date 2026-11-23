@@ -776,6 +776,8 @@ function build(lines,pos,fn){const c=new Circuit(lines,pos);
   const bus=(s,k,tag)=>c.bus.set(s,{k,tag});fn(put,wire,link,bus,pos-1);return c.bus.has(-1)?Circuit.from(c.toJSON()):c}
 // 산업기사 예상문제용 EOCR·PB0 머리(줄 0: EOCR 코일, 줄 1: THR a → YL, PB0은 줄 1·2 사이 모선)
 const indEocr=(put,wire,link,bus,Z)=>{bus(0,"THR_B","EOCR");bus(1,"PB_B","PB0");wire(0,0,Z-1);put(0,Z,"COIL","EOCR");link([0,1]);put(1,1,"THR_A","EOCR");wire(1,2,Z-1);put(1,Z,"LAMP","YL")};
+const LAMPS=(put,wire,link,l,Z)=>{put(l,0,"FA","FR");wire(l,1,Z-1);put(l,Z,"LAMP","WL");put(l+1,0,"A","MC1");wire(l+1,1,Z-1);put(l+1,Z,"LAMP","RL1");
+  put(l+2,0,"A","MC2");wire(l+2,1,Z-1);put(l+2,Z,"LAMP","RL2");put(l+3,0,"B","MC1");put(l+3,1,"B","MC2");wire(l+3,2,Z-1);put(l+3,Z,"LAMP","GL")};
 const EXAMPLES=[
  ["① 연습 도면 (X1·X2·MC1·MC2·T1·T2)",()=>build(12,5,(put,wire,link,bus,Z)=>{
    bus(0,"THR_B","EOCR");bus(1,"PB_B","PB0");
@@ -913,7 +915,71 @@ const EXAMPLES=[
   put(4,0,"A","X1");put(4,1,"B","FLS");wire(4,2,Z-1);put(4,Z,"COIL","X2");link([4,Z]);put(5,Z,"TIMER","T",5);link([4,1],[5,1]);put(6,1,"A","FLS");wire(6,2,Z-1);put(6,Z,"LAMP","GL");
   put(7,0,"B","X3");put(7,1,"A","X2");wire(7,2,Z-1);put(7,Z,"COIL","MC1");
   put(8,0,"TA","T");put(9,0,"A","X3");link([8,1]);put(8,1,"PB_B","PB2");wire(8,2,Z-1);put(8,Z,"COIL","X3");link([8,Z],[9,Z]);put(9,Z,"COIL","MC2");put(10,Z,"BZ","BZ");
-  put(11,0,"A","MC1");wire(11,1,Z-1);put(11,Z,"LAMP","RL1");put(12,0,"A","MC2");wire(12,1,Z-1);put(12,Z,"LAMP","RL2")}),{grade:"ind"}]];
+  put(11,0,"A","MC1");wire(11,1,Z-1);put(11,Z,"LAMP","RL1");put(12,0,"A","MC2");wire(12,1,Z-1);put(12,Z,"LAMP","RL2")}),{grade:"ind"}],
+// 과정평가형 고난도 1~10
+["고난도 1 순차 기동·역순 정지",()=>build(13,6,(put,wire,link,bus,Z)=>{indEocr(put,wire,link,bus,Z);
+  put(2,0,"PB_A","PB1");put(3,0,"A","X1");link([2,1]);put(2,1,"TB","T");wire(2,2,Z-1);put(2,Z,"COIL","X1");link([2,Z]);put(3,Z,"COIL","MC1");
+  put(4,0,"A","X1");put(4,1,"PB_A","PB2");put(5,1,"A","X2");link([4,1],[5,1],[4,2]);put(4,2,"B","X3");put(4,3,"LS_B","LS2");wire(4,4,Z-1);put(4,Z,"COIL","X2");link([4,Z]);put(5,Z,"COIL","MC2");
+  put(6,1,"LS_A","LS1");put(7,1,"A","X3");link([6,1],[6,2]);put(6,2,"PB_B","PB1");wire(6,3,Z-1);put(6,Z,"COIL","X3");link([6,Z],[7,Z]);put(7,Z,"TIMER","T",3);put(8,Z,"FR","FR",1);
+  LAMPS(put,wire,link,9,Z)}),{grade:"ind",grp:"hard",spec:["가) MCCB를 통해 전원을 투입하면, 전자식과전류계전기 EOCR에 전원이 공급되고 램프 GL이 점등된다.","나) 전동기 M1 운전",{"text":"(1) 푸시버튼 스위치 PB1을 누르면 릴레이 X1, 전자접촉기 MC1이 여자되어 전동기 M1이 회전하고, 램프 RL1이 점등, 램프 GL이 소등된다.","level":1},{"text":"(2) PB1에서 손을 떼어도 운전 상태가 유지된다.","level":1},"다) 전동기 M2 운전",{"text":"(1) 전동기 M1이 회전하는 중 푸시버튼 스위치 PB2를 누르면 릴레이 X2, 전자접촉기 MC2가 여자되어 전동기 M2가 회전하고, 램프 RL2가 점등된다.","level":1},{"text":"(2) PB2에서 손을 떼어도 운전 상태가 유지된다.","level":1},{"text":"(3) 전동기 M1이 정지한 상태에서는 PB2를 눌러도 동작하지 않는다.","level":1},{"text":"(4) 리밋스위치 LS2가 감지되면 X2, MC2가 소자되어 전동기 M2가 정지하고, 램프 RL2가 소등된다.","level":1},"라) 역순 정지",{"text":"(1) 전동기 M1이 회전하는 중 리밋스위치 LS1이 감지되면 릴레이 X3, 타이머 T, 플리커릴레이 FR이 여자되어 램프 WL이 FR의 설정시간 간격으로 점멸하고, X2, MC2가 소자되어 전동기 M2가 정지하며 램프 RL2가 소등된다.","level":1},{"text":"(2) LS1의 감지가 해제되어도 X3, T, FR의 여자 상태는 유지되며, 이 동안에는 PB2를 눌러도 전동기 M2가 기동하지 않는다.","level":1},{"text":"(3) 타이머 T의 설정시간 t초 후, X1, MC1이 소자되어 전동기 M1이 정지하고 램프 RL1은 소등, 램프 GL은 점등되며, X3, T, FR이 소자되어 램프 WL이 소등된다.","level":1},"마) 역순 정지 취소",{"text":"(1) 라)의 동작 중 T의 설정시간이 경과하기 전에 PB1을 누르면 X3, T, FR이 소자되어 램프 WL이 소등되고, 전동기 M1은 계속 회전한다.","level":1},"바) 정지 동작 푸시버튼 스위치 PB0를 누르면 제어회로의 전원이 차단되어 모든 전자접촉기, 릴레이, 타이머, 플리커릴레이가 소자되며, 전동기 M1, M2가 정지하고 초기 상태로 복귀한다.","사) EOCR 동작 사항",{"text":"(1) 전동기가 운전하는 중 전동기의 과부하로 과전류가 흐르면, 전자식과전류계전기 EOCR이 동작되어 제어회로 전원이 차단되고 전동기는 정지하며, 램프 YL이 점등된다.","level":1},{"text":"(2) 전자식과전류계전기 EOCR을 리셋(RESET)하면 제어회로는 초기 상태로 복귀된다.","level":1}]}],
+["고난도 2 리밋 왕복 자동 반복",()=>build(14,6,(put,wire,link,bus,Z)=>{indEocr(put,wire,link,bus,Z);
+  put(2,0,"PB_A","PB1");put(3,0,"A","X3");link([2,1]);put(2,1,"PB_B","PB2");wire(2,2,Z-1);put(2,Z,"COIL","X3");
+  put(4,0,"A","X3");put(4,1,"B","X2");wire(4,2,Z-1);put(4,Z,"COIL","X1");link([4,Z]);put(5,Z,"COIL","MC1");
+  put(6,0,"LS_A","LS1");put(6,1,"A","X1");put(7,0,"A","X2");put(7,1,"WIRE");link([6,2]);put(6,2,"LS_B","LS2");wire(6,3,Z-1);put(6,Z,"COIL","X2");
+  link([6,3],[7,3],[8,3]);wire(7,3,Z-1);put(7,Z,"TIMER","T",3);put(8,3,"TA","T");wire(8,4,Z-1);put(8,Z,"COIL","MC2");put(9,3,"TB","T");wire(9,4,Z-1);put(9,Z,"FR","FR",1);
+  LAMPS(put,wire,link,10,Z)}),{grade:"ind",grp:"hard",spec:["가) MCCB를 통해 전원을 투입하면, 전자식과전류계전기 EOCR에 전원이 공급되고 램프 GL이 점등된다.","나) 왕복 운전 시작",{"text":"(1) 푸시버튼 스위치 PB1을 누르면 릴레이 X3가 여자되어 운전 상태가 기억되고, 릴레이 X1, 전자접촉기 MC1이 여자되어 전동기 M1이 회전하며, 램프 RL1이 점등, 램프 GL이 소등된다.","level":1},{"text":"(2) PB1에서 손을 떼어도 X3의 여자 상태가 유지된다.","level":1},"다) 정지 대기 및 전동기 M2 운전",{"text":"(1) 전동기 M1이 회전하는 중 리밋스위치 LS1이 감지되면 릴레이 X2, 타이머 T, 플리커릴레이 FR이 여자되고, X1, MC1이 소자되어 전동기 M1이 정지하며, 램프 RL1은 소등, 램프 GL은 점등, 램프 WL은 FR의 설정시간 간격으로 점멸한다.","level":1},{"text":"(2) LS1의 감지가 해제되어도 X2, T의 여자 상태는 유지된다.","level":1},{"text":"(3) 타이머 T의 설정시간 t초 후, FR이 소자되어 램프 WL이 소등되고, 전자접촉기 MC2가 여자되어 전동기 M2가 회전하며, 램프 RL2가 점등, 램프 GL이 소등된다.","level":1},"라) 반복 운전",{"text":"(1) 전동기 M2가 회전하는 중 리밋스위치 LS2가 감지되면 X2, T, MC2가 소자되어 전동기 M2가 정지하고, X1, MC1이 여자되어 전동기 M1이 다시 회전한다.","level":1},{"text":"(2) 이후 나)~라)의 동작이 반복된다.","level":1},{"text":"(3) 전동기 M1이 정지한 상태에서는 LS1이 감지되어도 동작하지 않는다.","level":1},"마) 정지 예약",{"text":"(1) 푸시버튼 스위치 PB2를 누르면 릴레이 X3가 소자된다.","level":1},{"text":"(2) 전동기 M1이 회전하는 중이었다면 X1, MC1이 즉시 소자되어 전동기 M1이 정지한다.","level":1},{"text":"(3) 다)의 동작 중이었다면 동작이 계속되고, LS2가 감지되어 전동기 M2가 정지한 후 전동기 M1은 다시 회전하지 않는다.","level":1},"바) 정지 동작 푸시버튼 스위치 PB0를 누르면 제어회로의 전원이 차단되어 모든 전자접촉기, 릴레이, 타이머, 플리커릴레이가 소자되며, 전동기 M1, M2가 정지하고 초기 상태로 복귀한다.","사) EOCR 동작 사항",{"text":"(1) 전동기가 운전하는 중 전동기의 과부하로 과전류가 흐르면, 전자식과전류계전기 EOCR이 동작되어 제어회로 전원이 차단되고 전동기는 정지하며, 램프 YL이 점등된다.","level":1},{"text":"(2) 전자식과전류계전기 EOCR을 리셋(RESET)하면 제어회로는 초기 상태로 복귀된다.","level":1}]}],
+["고난도 3 중첩 전환",()=>build(13,6,(put,wire,link,bus,Z)=>{indEocr(put,wire,link,bus,Z);
+  put(2,0,"PB_A","PB1");put(2,1,"WIRE");put(3,0,"A","X1");put(3,1,"TB","T");link([2,2]);put(2,2,"LS_B","LS1");wire(2,3,Z-1);put(2,Z,"COIL","X1");link([2,Z]);put(3,Z,"COIL","MC1");
+  put(4,0,"PB_A","PB2");put(5,0,"A","X2");link([4,1]);put(4,1,"PB_B","PB1");put(4,2,"LS_B","LS2");wire(4,3,Z-1);put(4,Z,"COIL","X2");link([4,Z]);put(5,Z,"COIL","MC2");
+  put(6,0,"A","X1");put(6,1,"A","X2");wire(6,2,Z-1);put(6,Z,"COIL","X3");link([6,Z]);put(7,Z,"TIMER","T",3);
+  put(8,0,"A","X3");wire(8,1,Z-1);put(8,Z,"FR","FR",1);
+  LAMPS(put,wire,link,9,Z)}),{grade:"ind",grp:"hard",spec:["가) MCCB를 통해 전원을 투입하면, 전자식과전류계전기 EOCR에 전원이 공급되고 램프 GL이 점등된다.","나) 전동기 M1 운전",{"text":"(1) 푸시버튼 스위치 PB1을 누르면 릴레이 X1, 전자접촉기 MC1이 여자되어 전동기 M1이 회전하고, 램프 RL1이 점등, 램프 GL이 소등된다.","level":1},{"text":"(2) PB1에서 손을 떼어도 운전 상태가 유지되며, 리밋스위치 LS1이 감지되면 X1, MC1이 소자되어 전동기 M1이 정지한다.","level":1},"다) 전동기 M2 운전",{"text":"(1) 푸시버튼 스위치 PB2를 누르면 릴레이 X2, 전자접촉기 MC2가 여자되어 전동기 M2가 회전하고, 램프 RL2가 점등, 램프 GL이 소등된다.","level":1},{"text":"(2) PB2에서 손을 떼어도 운전 상태가 유지되며, 리밋스위치 LS2가 감지되면 X2, MC2가 소자되어 전동기 M2가 정지한다.","level":1},"라) 중첩 전환 (M1 → M2)",{"text":"(1) 전동기 M1이 회전하는 중 PB2를 누르면 다)의 동작과 함께 릴레이 X3, 타이머 T, 플리커릴레이 FR이 여자되어 전동기 M1, M2가 동시에 회전하고, 램프 WL이 FR의 설정시간 간격으로 점멸한다.","level":1},{"text":"(2) 타이머 T의 설정시간 t초 후, X1, MC1이 소자되어 전동기 M1이 정지하고 램프 RL1이 소등되며, X3, T, FR이 소자되어 램프 WL이 소등된다. (전동기 M2는 계속 회전한다.)","level":1},"마) 전환 취소 및 후입력 동작",{"text":"(1) 라)의 동작 중 T의 설정시간이 경과하기 전에 PB1을 누르면 X2, MC2가 소자되어 전동기 M2가 정지하고, X3, T, FR이 소자되어 램프 WL이 소등되며, 전동기 M1은 계속 회전한다.","level":1},{"text":"(2) 전동기 M2만 회전하는 중 PB1을 누르면 X2, MC2가 즉시 소자되어 전동기 M2가 정지하고, 나)의 동작이 된다. (중첩 운전 없이 바로 전환된다.)","level":1},"바) 정지 동작 푸시버튼 스위치 PB0를 누르면 제어회로의 전원이 차단되어 모든 전자접촉기, 릴레이, 타이머, 플리커릴레이가 소자되며, 전동기 M1, M2가 정지하고 초기 상태로 복귀한다.","사) EOCR 동작 사항",{"text":"(1) 전동기가 운전하는 중 전동기의 과부하로 과전류가 흐르면, 전자식과전류계전기 EOCR이 동작되어 제어회로 전원이 차단되고 전동기는 정지하며, 램프 YL이 점등된다.","level":1},{"text":"(2) 전자식과전류계전기 EOCR을 리셋(RESET)하면 제어회로는 초기 상태로 복귀된다.","level":1}]}],
+["고난도 4 교번·고정 운전 전환",()=>build(14,6,(put,wire,link,bus,Z)=>{indEocr(put,wire,link,bus,Z);
+  put(2,0,"PB_A","PB1");put(3,0,"A","X1");link([2,1]);put(2,1,"LS_B","LS1");link([2,2],[3,2],[4,2],[5,2],[6,2],[7,2],[8,2]);
+  put(2,2,"TB","T");wire(2,3,Z-1);put(2,Z,"COIL","X1");
+  put(3,2,"B","X2");wire(3,3,Z-1);put(3,Z,"FR","FR",1);
+  put(4,2,"FA","FR");wire(4,3,Z-1);put(4,Z,"COIL","MC2");put(5,2,"FB","FR");wire(5,3,Z-1);put(5,Z,"COIL","MC1");
+  put(6,2,"PB_A","PB2");put(7,2,"A","X3");link([6,3]);wire(6,3,Z-1);put(6,Z,"COIL","X3");link([6,Z]);put(7,Z,"TIMER","T",3);
+  put(8,2,"LS_A","LS2");put(9,2,"A","X2");link([8,3]);put(8,3,"PB_B","PB2");wire(8,4,Z-1);put(8,Z,"COIL","X2");
+  put(10,0,"A","X3");wire(10,1,Z-1);put(10,Z,"LAMP","WL");put(11,0,"A","MC1");wire(11,1,Z-1);put(11,Z,"LAMP","RL1");
+  put(12,0,"A","MC2");wire(12,1,Z-1);put(12,Z,"LAMP","RL2");put(13,0,"B","MC1");put(13,1,"B","MC2");wire(13,2,Z-1);put(13,Z,"LAMP","GL")}),{grade:"ind",grp:"hard",spec:["가) MCCB를 통해 전원을 투입하면, 전자식과전류계전기 EOCR에 전원이 공급되고 램프 GL이 점등된다.","나) 교번 운전",{"text":"(1) 푸시버튼 스위치 PB1을 누르면 릴레이 X1, 플리커릴레이 FR이 여자되고, FR의 설정시간 간격으로 전자접촉기 MC1(전동기 M1 회전, 램프 RL1 점등)과 전자접촉기 MC2(전동기 M2 회전, 램프 RL2 점등)가 교대로 여자된다. (MC1이 먼저 여자된다.)","level":1},{"text":"(2) PB1에서 손을 떼어도 운전 상태가 유지된다.","level":1},"다) M1 고정 운전",{"text":"(1) 나)의 동작 중 리밋스위치 LS2가 감지되면 릴레이 X2가 여자되고 FR이 소자되어 교번 운전이 멈추며, MC1이 여자되어 전동기 M1만 연속 회전한다.","level":1},{"text":"(2) LS2의 감지가 해제되어도 X2의 여자 상태는 유지된다.","level":1},"라) 정지 예약",{"text":"(1) 나) 또는 다)의 동작 중 푸시버튼 스위치 PB2를 누르면 릴레이 X3, 타이머 T가 여자되어 램프 WL이 점등된다.","level":1},{"text":"(2) 이때 X2가 여자되어 있었다면 X2가 소자되어 FR이 다시 여자되고 교번 운전이 재개된다.","level":1},{"text":"(3) 타이머 T의 설정시간 t초 후, X1, FR, MC1(또는 MC2), X3, T가 모두 소자되어 전동기가 정지하고, 램프 WL은 소등, 램프 GL은 점등된다.","level":1},"마) 비상 정지",{"text":"(1) 운전 중 리밋스위치 LS1이 감지되면 모든 릴레이와 전자접촉기가 소자되어 즉시 정지하고, 램프 GL이 점등된다.","level":1},"바) 정지 동작 푸시버튼 스위치 PB0를 누르면 제어회로의 전원이 차단되어 모든 전자접촉기, 릴레이, 타이머, 플리커릴레이가 소자되며, 전동기 M1, M2가 정지하고 초기 상태로 복귀한다.","사) EOCR 동작 사항",{"text":"(1) 전동기가 운전하는 중 전동기의 과부하로 과전류가 흐르면, 전자식과전류계전기 EOCR이 동작되어 제어회로 전원이 차단되고 전동기는 정지하며, 램프 YL이 점등된다.","level":1},{"text":"(2) 전자식과전류계전기 EOCR을 리셋(RESET)하면 제어회로는 초기 상태로 복귀된다.","level":1}]}],
+["고난도 5 예약 기동",()=>build(13,6,(put,wire,link,bus,Z)=>{indEocr(put,wire,link,bus,Z);
+  put(2,0,"B","X2");put(2,1,"PB_A","PB1");put(3,1,"A","X1");put(4,1,"PB_A","PB2");put(5,1,"A","X3");link([2,1],[3,1],[4,1],[2,2],[4,2]);
+  put(2,2,"LS_B","LS1");wire(2,3,Z-1);put(2,Z,"COIL","X1");link([2,Z]);put(3,Z,"COIL","MC1");
+  wire(4,2,Z-1);put(4,Z,"COIL","X3");put(5,2,"B","X1");wire(5,3,Z-1);put(5,Z,"TIMER","T",3);link([5,Z]);put(6,Z,"FR","FR",1);
+  put(7,0,"TA","T");put(8,0,"A","X2");link([7,1]);put(7,1,"LS_B","LS2");wire(7,2,Z-1);put(7,Z,"COIL","X2");link([7,Z]);put(8,Z,"COIL","MC2");
+  LAMPS(put,wire,link,9,Z)}),{grade:"ind",grp:"hard",spec:["가) MCCB를 통해 전원을 투입하면, 전자식과전류계전기 EOCR에 전원이 공급되고 램프 GL이 점등된다.","나) 전동기 M1 운전",{"text":"(1) 푸시버튼 스위치 PB1을 누르면 릴레이 X1, 전자접촉기 MC1이 여자되어 전동기 M1이 회전하고, 램프 RL1이 점등, 램프 GL이 소등된다.","level":1},{"text":"(2) PB1에서 손을 떼어도 운전 상태가 유지되며, 리밋스위치 LS1이 감지되면 X1, MC1이 소자되어 전동기 M1이 정지한다.","level":1},"다) 전동기 M2 지연 기동",{"text":"(1) 전동기 M1이 정지한 상태에서 푸시버튼 스위치 PB2를 누르면 릴레이 X3, 타이머 T, 플리커릴레이 FR이 여자되어 램프 WL이 FR의 설정시간 간격으로 점멸한다.","level":1},{"text":"(2) 타이머 T의 설정시간 t초 후, 릴레이 X2, 전자접촉기 MC2가 여자되어 전동기 M2가 회전하고 램프 RL2가 점등, 램프 GL이 소등되며, X3, T, FR이 소자되어 램프 WL이 소등된다.","level":1},{"text":"(3) 리밋스위치 LS2가 감지되면 X2, MC2가 소자되어 전동기 M2가 정지한다.","level":1},"라) 전동기 M2 예약",{"text":"(1) 전동기 M1이 회전하는 중 PB2를 누르면 릴레이 X3만 여자되어 M2 기동이 예약된다.","level":1},{"text":"(2) 이후 LS1이 감지되어 전동기 M1이 정지하면 T, FR이 여자되고, 다)의 (1)~(2) 동작이 이어진다.","level":1},{"text":"(3) 다)의 (1) 동작 중(램프 WL 점멸 중) PB1을 누르면 나)의 동작이 되고 T, FR은 소자되나 예약(X3)은 유지된다.","level":1},"마) 입력 무시",{"text":"(1) 전동기 M2가 회전하는 동안에는 PB1, PB2를 눌러도 동작하지 않는다.","level":1},"바) 정지 동작 푸시버튼 스위치 PB0를 누르면 제어회로의 전원이 차단되어 모든 전자접촉기, 릴레이, 타이머, 플리커릴레이가 소자되며, 전동기 M1, M2가 정지하고 초기 상태로 복귀한다.","사) EOCR 동작 사항",{"text":"(1) 전동기가 운전하는 중 전동기의 과부하로 과전류가 흐르면, 전자식과전류계전기 EOCR이 동작되어 제어회로 전원이 차단되고 전동기는 정지하며, 램프 YL이 점등된다.","level":1},{"text":"(2) 전자식과전류계전기 EOCR을 리셋(RESET)하면 제어회로는 초기 상태로 복귀된다.","level":1}]}],
+["고난도 6 순환 운전",()=>build(15,6,(put,wire,link,bus,Z)=>{indEocr(put,wire,link,bus,Z);
+  put(2,0,"PB_A","PB1");put(3,0,"A","X3");link([2,1]);put(2,1,"PB_B","PB2");wire(2,2,Z-1);put(2,Z,"COIL","X3");
+  put(4,0,"B","X2");put(4,1,"A","X3");put(5,1,"A","X1");link([4,1],[4,2]);wire(4,2,Z-1);put(4,Z,"COIL","X1");link([4,Z],[5,Z],[6,Z]);put(5,Z,"COIL","MC1");put(6,Z,"TIMER","T",3);put(7,Z,"FR","FR",1);
+  put(8,0,"TA","T");put(8,1,"WIRE");put(9,0,"LS_A","LS1");put(9,1,"A","X1");put(10,0,"A","X2");put(10,1,"WIRE");link([8,2],[9,2]);
+  put(8,2,"LS_B","LS2");wire(8,3,Z-1);put(8,Z,"COIL","X2");link([8,Z]);put(9,Z,"COIL","MC2");
+  LAMPS(put,wire,link,11,Z)}),{grade:"ind",grp:"hard",spec:["가) MCCB를 통해 전원을 투입하면, 전자식과전류계전기 EOCR에 전원이 공급되고 램프 GL이 점등된다.","나) 순환 운전 시작 (M1 단계)",{"text":"(1) 푸시버튼 스위치 PB1을 누르면 릴레이 X3가 여자되어 순환 운전이 기억되고, 릴레이 X1, 전자접촉기 MC1, 타이머 T, 플리커릴레이 FR이 여자되어 전동기 M1이 회전하며, 램프 RL1이 점등, 램프 GL이 소등, 램프 WL이 FR의 설정시간 간격으로 점멸한다.","level":1},{"text":"(2) PB1에서 손을 떼어도 운전 상태가 유지된다.","level":1},"다) M2 단계",{"text":"(1) 타이머 T의 설정시간 t초 후, 릴레이 X2, 전자접촉기 MC2가 여자되어 전동기 M2가 회전하고 램프 RL2가 점등되며, X1, MC1, T, FR이 소자되어 전동기 M1이 정지하고 램프 RL1, WL이 소등된다.","level":1},{"text":"(2) 나)의 동작 중 리밋스위치 LS1이 감지되면 T의 설정시간을 기다리지 않고 즉시 다)의 (1) 동작이 된다.","level":1},"라) 반복",{"text":"(1) 전동기 M2가 회전하는 중 리밋스위치 LS2가 감지되면 X2, MC2가 소자되어 전동기 M2가 정지하고, X3가 여자되어 있으면 나)의 동작이 다시 시작된다.","level":1},{"text":"(2) 이후 나)~라)의 동작이 반복된다.","level":1},"마) 정지 예약",{"text":"(1) 운전 중 푸시버튼 스위치 PB2를 누르면 릴레이 X3가 소자되고, 진행 중인 단계는 계속된다.","level":1},{"text":"(2) 이후 LS2가 감지되어 전동기 M2가 정지하면 나)의 동작이 다시 시작되지 않고 램프 GL이 점등된다.","level":1},"바) 정지 동작 푸시버튼 스위치 PB0를 누르면 제어회로의 전원이 차단되어 모든 전자접촉기, 릴레이, 타이머, 플리커릴레이가 소자되며, 전동기 M1, M2가 정지하고 초기 상태로 복귀한다.","사) EOCR 동작 사항",{"text":"(1) 전동기가 운전하는 중 전동기의 과부하로 과전류가 흐르면, 전자식과전류계전기 EOCR이 동작되어 제어회로 전원이 차단되고 전동기는 정지하며, 램프 YL이 점등된다.","level":1},{"text":"(2) 전자식과전류계전기 EOCR을 리셋(RESET)하면 제어회로는 초기 상태로 복귀된다.","level":1}]}],
+["고난도 7 지연 정지·후행 운전",()=>build(13,6,(put,wire,link,bus,Z)=>{indEocr(put,wire,link,bus,Z);
+  put(2,0,"PB_A","PB1");put(3,0,"A","X1");link([2,1]);put(2,1,"LS_B","LS1");link([2,2],[3,2],[4,2]);
+  put(2,2,"TB","T");wire(2,3,Z-1);put(2,Z,"COIL","X1");wire(3,2,Z-1);put(3,Z,"COIL","MC1");
+  put(4,2,"PB_A","PB2");put(5,2,"A","X2");link([4,3]);put(4,3,"PB_B","PB1");wire(4,4,Z-1);put(4,Z,"COIL","X2");link([4,Z],[5,Z]);put(5,Z,"TIMER","T",3);put(6,Z,"FR","FR",1);
+  put(7,0,"A","X2");put(8,0,"A","X3");link([7,1]);put(7,1,"LS_B","LS2");wire(7,2,Z-1);put(7,Z,"COIL","X3");link([7,Z]);put(8,Z,"COIL","MC2");
+  LAMPS(put,wire,link,9,Z)}),{grade:"ind",grp:"hard",spec:["가) MCCB를 통해 전원을 투입하면, 전자식과전류계전기 EOCR에 전원이 공급되고 램프 GL이 점등된다.","나) 전동기 M1 운전",{"text":"(1) 푸시버튼 스위치 PB1을 누르면 릴레이 X1, 전자접촉기 MC1이 여자되어 전동기 M1이 회전하고, 램프 RL1이 점등, 램프 GL이 소등된다.","level":1},{"text":"(2) PB1에서 손을 떼어도 운전 상태가 유지되며, 리밋스위치 LS1이 감지되면 즉시 정지한다.","level":1},"다) 지연 정지 및 후행 운전",{"text":"(1) 전동기 M1이 회전하는 중 푸시버튼 스위치 PB2를 누르면 릴레이 X2, 타이머 T, 플리커릴레이 FR이 여자되어 램프 WL이 FR의 설정시간 간격으로 점멸하고, 릴레이 X3, 전자접촉기 MC2가 여자되어 전동기 M2가 회전하며 램프 RL2가 점등된다.","level":1},{"text":"(2) PB2에서 손을 떼어도 운전 상태가 유지된다.","level":1},{"text":"(3) 타이머 T의 설정시간 t초 후, X1, MC1이 소자되어 전동기 M1이 정지하고 램프 RL1이 소등되며, X2, T, FR이 소자되어 램프 WL이 소등된다. (전동기 M2는 계속 회전한다.)","level":1},{"text":"(4) 전동기 M1이 정지한 상태에서는 PB2를 눌러도 동작하지 않는다.","level":1},"라) 지연 정지 취소",{"text":"(1) 다)의 동작 중 T의 설정시간이 경과하기 전에 PB1을 누르면 X2, T, FR이 소자되어 램프 WL이 소등되고, 전동기 M1, M2는 계속 회전한다.","level":1},"마) 전동기 M2 정지",{"text":"(1) 전동기 M1이 정지한 상태에서 리밋스위치 LS2가 감지되면 X3, MC2가 소자되어 전동기 M2가 정지하고, 램프 RL2는 소등, 램프 GL은 점등된다.","level":1},"바) 정지 동작 푸시버튼 스위치 PB0를 누르면 제어회로의 전원이 차단되어 모든 전자접촉기, 릴레이, 타이머, 플리커릴레이가 소자되며, 전동기 M1, M2가 정지하고 초기 상태로 복귀한다.","사) EOCR 동작 사항",{"text":"(1) 전동기가 운전하는 중 전동기의 과부하로 과전류가 흐르면, 전자식과전류계전기 EOCR이 동작되어 제어회로 전원이 차단되고 전동기는 정지하며, 램프 YL이 점등된다.","level":1},{"text":"(2) 전자식과전류계전기 EOCR을 리셋(RESET)하면 제어회로는 초기 상태로 복귀된다.","level":1}]}],
+["고난도 8 주기 운전",()=>build(15,6,(put,wire,link,bus,Z)=>{indEocr(put,wire,link,bus,Z);
+  put(2,0,"PB_A","PB1");put(3,0,"A","X1");link([2,1],[3,1],[4,1]);wire(2,1,Z-1);put(2,Z,"COIL","X1");wire(3,1,Z-1);put(3,Z,"COIL","MC1");
+  put(4,1,"A","X2");wire(4,2,Z-1);put(4,Z,"FR","FR",1);put(5,1,"B","X2");put(5,2,"B","X3");wire(5,3,Z-1);put(5,Z,"TIMER","T",3);
+  put(6,0,"TA","T");put(7,0,"PB_A","PB2");put(8,0,"A","X2");link([6,1],[7,1]);put(6,1,"LS_B","LS2");wire(6,2,Z-1);put(6,Z,"COIL","X2");link([6,Z]);put(7,Z,"COIL","MC2");
+  put(9,0,"LS_A","LS1");put(10,0,"A","X3");link([9,1]);put(9,1,"PB_B","PB2");wire(9,2,Z-1);put(9,Z,"COIL","X3");
+  LAMPS(put,wire,link,11,Z)}),{grade:"ind",grp:"hard",spec:["가) MCCB를 통해 전원을 투입하면, 전자식과전류계전기 EOCR에 전원이 공급되고 램프 GL이 점등된다.","나) 전동기 M1 운전",{"text":"(1) 푸시버튼 스위치 PB1을 누르면 릴레이 X1, 전자접촉기 MC1, 타이머 T가 여자되어 전동기 M1이 회전하고, 램프 RL1이 점등, 램프 GL이 소등된다.","level":1},{"text":"(2) PB1에서 손을 떼어도 운전 상태가 유지되며, 전동기 M1은 PB0를 누를 때까지 계속 회전한다.","level":1},"다) 전동기 M2 주기 운전",{"text":"(1) 타이머 T의 설정시간 t초 후, 릴레이 X2, 전자접촉기 MC2가 여자되어 전동기 M2가 회전하고 램프 RL2가 점등되며, 플리커릴레이 FR이 여자되어 램프 WL이 FR의 설정시간 간격으로 점멸하고, T는 소자된다.","level":1},{"text":"(2) 리밋스위치 LS2가 감지되면 X2, MC2, FR이 소자되어 전동기 M2가 정지하고 램프 RL2, WL이 소등되며, T가 다시 여자된다.","level":1},{"text":"(3) 이후 다)의 (1)~(2) 동작이 반복된다.","level":1},"라) 주기 운전 중지",{"text":"(1) 리밋스위치 LS1이 감지되면 릴레이 X3가 여자되어 T가 여자되지 않으므로 전동기 M2의 주기 운전이 중지된다. (전동기 M2가 회전 중이면 LS2가 감지될 때까지 계속 회전한다.)","level":1},{"text":"(2) LS1의 감지가 해제되어도 X3의 여자 상태는 유지된다.","level":1},"마) 전동기 M2 즉시 운전",{"text":"(1) 푸시버튼 스위치 PB2를 누르면 X3가 소자되고, X2, MC2가 즉시 여자되어 전동기 M2가 회전한다. (전동기 M1이 정지한 상태에서도 동작한다.)","level":1},{"text":"(2) PB2에서 손을 떼어도 운전 상태가 유지되며, LS2가 감지되면 전동기 M2가 정지한다.","level":1},"바) 정지 동작 푸시버튼 스위치 PB0를 누르면 제어회로의 전원이 차단되어 모든 전자접촉기, 릴레이, 타이머, 플리커릴레이가 소자되며, 전동기 M1, M2가 정지하고 초기 상태로 복귀한다.","사) EOCR 동작 사항",{"text":"(1) 전동기가 운전하는 중 전동기의 과부하로 과전류가 흐르면, 전자식과전류계전기 EOCR이 동작되어 제어회로 전원이 차단되고 전동기는 정지하며, 램프 YL이 점등된다.","level":1},{"text":"(2) 전자식과전류계전기 EOCR을 리셋(RESET)하면 제어회로는 초기 상태로 복귀된다.","level":1}]}],
+["고난도 9 기동 순서 감시",()=>build(13,6,(put,wire,link,bus,Z)=>{indEocr(put,wire,link,bus,Z);
+  put(2,0,"PB_A","PB1");put(3,0,"A","X1");link([2,1]);put(2,1,"B","X3");put(2,2,"LS_B","LS1");wire(2,3,Z-1);put(2,Z,"COIL","X1");link([2,Z]);put(3,Z,"COIL","MC1");
+  put(4,0,"A","X2");put(4,1,"WIRE");put(5,0,"PB_A","PB2");put(5,1,"A","X1");put(6,1,"B","X1");link([5,1],[4,2],[6,2]);put(7,0,"A","X3");put(7,1,"WIRE");
+  put(4,2,"LS_B","LS2");wire(4,3,Z-1);put(4,Z,"COIL","X2");link([4,Z]);put(5,Z,"COIL","MC2");
+  put(6,2,"B","X2");link([6,3],[7,3]);put(6,3,"TB","T");wire(6,4,Z-1);put(6,Z,"COIL","X3");wire(7,3,Z-1);put(7,Z,"TIMER","T",3);wire(8,3,Z-1);put(8,Z,"FR","FR",1);
+  LAMPS(put,wire,link,9,Z)}),{grade:"ind",grp:"hard",spec:["가) MCCB를 통해 전원을 투입하면, 전자식과전류계전기 EOCR에 전원이 공급되고 램프 GL이 점등된다.","나) 전동기 M1 운전",{"text":"(1) 푸시버튼 스위치 PB1을 누르면 릴레이 X1, 전자접촉기 MC1이 여자되어 전동기 M1이 회전하고, 램프 RL1이 점등, 램프 GL이 소등된다.","level":1},{"text":"(2) PB1에서 손을 떼어도 운전 상태가 유지되며, 리밋스위치 LS1이 감지되면 X1, MC1이 소자되어 전동기 M1이 정지한다.","level":1},"다) 전동기 M2 운전",{"text":"(1) 전동기 M1이 회전하는 중 푸시버튼 스위치 PB2를 누르면 릴레이 X2, 전자접촉기 MC2가 여자되어 전동기 M2가 회전하고, 램프 RL2가 점등된다.","level":1},{"text":"(2) PB2에서 손을 떼어도 운전 상태가 유지되며, 이후 전동기 M1이 정지하여도 전동기 M2는 계속 회전한다.","level":1},{"text":"(3) 리밋스위치 LS2가 감지되면 X2, MC2가 소자되어 전동기 M2가 정지한다.","level":1},"라) 기동 순서 위반 경보",{"text":"(1) 전동기 M1, M2가 모두 정지한 상태에서 PB2를 누르면 전동기 M2는 기동하지 않고, 릴레이 X3, 타이머 T, 플리커릴레이 FR이 여자되어 램프 WL이 FR의 설정시간 간격으로 점멸한다.","level":1},{"text":"(2) PB2에서 손을 떼어도 경보 상태가 유지되며, 경보 중에는 PB1을 눌러도 전동기 M1이 기동하지 않는다.","level":1},{"text":"(3) 타이머 T의 설정시간 t초 후, X3, T, FR이 소자되어 램프 WL이 소등되고 경보가 해제된다.","level":1},{"text":"(4) 전동기 M2만 회전하는 중에는 PB2를 눌러도 동작하지 않는다.","level":1},"마) 정지 동작 푸시버튼 스위치 PB0를 누르면 제어회로의 전원이 차단되어 모든 전자접촉기, 릴레이, 타이머, 플리커릴레이가 소자되며, 전동기 M1, M2가 정지하고 초기 상태로 복귀한다.","바) EOCR 동작 사항",{"text":"(1) 전동기가 운전하는 중 전동기의 과부하로 과전류가 흐르면, 전자식과전류계전기 EOCR이 동작되어 제어회로 전원이 차단되고 전동기는 정지하며, 램프 YL이 점등된다.","level":1},{"text":"(2) 전자식과전류계전기 EOCR을 리셋(RESET)하면 제어회로는 초기 상태로 복귀된다.","level":1}]}],
+["고난도 10 공정 순서 감시",()=>build(14,6,(put,wire,link,bus,Z)=>{indEocr(put,wire,link,bus,Z);
+  put(2,0,"PB_A","PB1");put(3,0,"A","X1");link([2,1]);put(2,1,"B","X2");wire(2,2,Z-1);put(2,Z,"COIL","X1");link([2,Z]);put(3,Z,"COIL","MC1");
+  put(4,0,"LS_A","LS1");put(5,0,"A","X3");link([4,1]);put(4,1,"PB_B","PB1");wire(4,2,Z-1);put(4,Z,"COIL","X3");
+  put(6,0,"A","X2");put(6,1,"WIRE");put(7,0,"LS_A","LS2");put(7,1,"A","X3");put(8,1,"B","X3");put(9,0,"A","T");put(9,1,"WIRE");link([7,1],[6,2],[8,2]);
+  put(6,2,"PB_B","PB2");wire(6,3,Z-1);put(6,Z,"COIL","X2");link([6,Z]);put(7,Z,"COIL","MC2");
+  put(8,2,"TB","T");wire(8,3,Z-1);put(8,Z,"TIMER","T",3);link([8,Z]);put(9,Z,"FR","FR",1);
+  LAMPS(put,wire,link,10,Z)}),{grade:"ind",grp:"hard",spec:["가) MCCB를 통해 전원을 투입하면, 전자식과전류계전기 EOCR에 전원이 공급되고 램프 GL이 점등된다.","나) 전동기 M1 운전",{"text":"(1) 푸시버튼 스위치 PB1을 누르면 릴레이 X1, 전자접촉기 MC1이 여자되어 전동기 M1이 회전하고, 램프 RL1이 점등, 램프 GL이 소등된다.","level":1},{"text":"(2) PB1에서 손을 떼어도 운전 상태가 유지된다.","level":1},{"text":"(3) PB1을 누르면 릴레이 X3는 소자된다. (1단계 감지 기억 초기화)","level":1},"다) 1단계 감지",{"text":"(1) 리밋스위치 LS1이 감지되면 릴레이 X3가 여자되고, LS1의 감지가 해제되어도 X3의 여자 상태는 유지된다.","level":1},"라) 정상 순서 (2단계)",{"text":"(1) X3가 여자된 상태에서 리밋스위치 LS2가 감지되면 릴레이 X2, 전자접촉기 MC2가 여자되어 전동기 M2가 회전하고 램프 RL2가 점등되며, X1, MC1이 소자되어 전동기 M1이 정지하고 램프 RL1이 소등된다.","level":1},{"text":"(2) LS2의 감지가 해제되어도 전동기 M2의 운전 상태는 유지된다.","level":1},{"text":"(3) 푸시버튼 스위치 PB2를 누르면 X2, MC2가 소자되어 전동기 M2가 정지하고, 램프 RL2는 소등, 램프 GL은 점등된다.","level":1},"마) 순서 이상 경보",{"text":"(1) X3가 소자된 상태에서 리밋스위치 LS2가 감지되면 전동기 M2는 기동하지 않고, 타이머 T, 플리커릴레이 FR이 여자되어 램프 WL이 FR의 설정시간 간격으로 점멸한다.","level":1},{"text":"(2) LS2의 감지가 해제되어도 경보 상태가 유지되며, 타이머 T의 설정시간 t초 후 T, FR이 소자되어 램프 WL이 소등된다. (전동기 M1의 운전 상태는 변하지 않는다.)","level":1},"바) 정지 동작 푸시버튼 스위치 PB0를 누르면 제어회로의 전원이 차단되어 모든 전자접촉기, 릴레이, 타이머, 플리커릴레이가 소자되며, 전동기 M1, M2가 정지하고 초기 상태로 복귀한다.","사) EOCR 동작 사항",{"text":"(1) 전동기가 운전하는 중 전동기의 과부하로 과전류가 흐르면, 전자식과전류계전기 EOCR이 동작되어 제어회로 전원이 차단되고 전동기는 정지하며, 램프 YL이 점등된다.","level":1},{"text":"(2) 전자식과전류계전기 EOCR을 리셋(RESET)하면 제어회로는 초기 상태로 복귀된다.","level":1}]}]];
 
 // ───────────── 동작 사항 자동 작성 (공개문제 형식) ─────────────
 // 회로를 실제로 조작해 보며(시뮬레이션) 결과를 문장으로 만듦
@@ -1499,7 +1565,7 @@ function syncPreset(kind,tag,p){for(const v of circ.cells.values())if(v.k===kind
 
 function fileDialog(){const json=JSON.stringify(circ.toJSON()),hasOld=!!store.get("seqsim.v1");
   modal(`<h2>파일·예제</h2>
-    <div class="sec" style="border:0;padding:0"><label>예제 불러오기<select id="exSel"><optgroup label="연습 예제">${EXAMPLES.map((e,i)=>(e[2]||{}).grade==="ind"?"":`<option value="${i}">${e[0]}</option>`).join("")}</optgroup><optgroup label="전기공사산업기사 예상문제">${EXAMPLES.map((e,i)=>(e[2]||{}).grade==="ind"?`<option value="${i}">${e[0]}</option>`:"").join("")}</optgroup></select></label>
+    <div class="sec" style="border:0;padding:0"><label>예제 불러오기<select id="exSel"><optgroup label="연습 예제">${EXAMPLES.map((e,i)=>(e[2]||{}).grade==="ind"?"":`<option value="${i}">${e[0]}</option>`).join("")}</optgroup><optgroup label="전기공사산업기사 예상문제">${EXAMPLES.map((e,i)=>(e[2]||{}).grade==="ind"&&!(e[2]||{}).grp?`<option value="${i}">${e[0]}</option>`:"").join("")}</optgroup><optgroup label="과정평가형 고난도">${EXAMPLES.map((e,i)=>(e[2]||{}).grp==="hard"?`<option value="${i}">${e[0]}</option>`:"").join("")}</optgroup></select></label>
       <div class="row left"><button class="btn" id="exGo">예제 열기</button><button class="btn" id="newGo">새 도면</button>
       ${hasOld?'<button class="btn" id="oldGo">이전 버전 작업 열기</button>':""}</div></div>
     <div class="sec"><label>도면 크기<span style="display:flex;gap:8px;align-items:center;font-weight:400;flex-wrap:wrap">
@@ -1515,7 +1581,7 @@ function fileDialog(){const json=JSON.stringify(circ.toJSON()),hasOld=!!store.ge
     <div class="row"><button class="btn" id="xGo">닫기</button></div>`,(ov,close)=>{
     const q=s=>ov.querySelector(s);
     q("#exGo").onclick=()=>{const i=+q("#exSel").value,g=(EXAMPLES[i][2]||{}).grade;setCircuit(EXAMPLES[i][1](),EXAMPLES[i][0]);   // 산업기사 예상문제를 열면 배치도도 산업기사 양식으로
-      if(g==="ind"&&typeof lySetGrade==="function"&&LY.grade!=="ind"){lySetGrade("ind");setHint("전기공사산업기사 예상문제입니다. 배치도 도면 종류도 전기공사산업기사로 바꿨습니다.")}close()};
+      if(g==="ind"&&typeof lySetGrade==="function"&&LY.grade!=="ind"){lySetGrade("ind");setHint(((EXAMPLES[i][2]||{}).grp==="hard"?"과정평가형 고난도 문제입니다.":"전기공사산업기사 예상문제입니다.")+" 배치도 도면 종류도 전기공사산업기사로 바꿨습니다.")}close()};
     q("#newGo").onclick=()=>{close();setTimeout(newDrawingDialog,0)};
     if(hasOld)q("#oldGo").onclick=()=>{try{setCircuit(Circuit.from(JSON.parse(store.get("seqsim.v1")).circ),"이전 작업");close()}catch(e){}};
     q("#mainOn").onchange=e=>setMain(e.target.checked);
@@ -1669,7 +1735,7 @@ ${SIMPLE?`<tr><td>도면칸 확장</td><td>'도면칸 확장'을 고르고 회�
       <tr><td>컨트롤 박스</td><td>전기기능사는 언제나 <b>2구 박스 4개</b>. PB는 둘씩, 셀렉터 스위치는 한 박스, 램프·부저는 둘씩 넣고 남는 구멍과 빈 박스는 <b>CAP(홀마개)</b>. 묶음이 4개를 넘으면 구멍을 차례로 채워 섞어 담습니다. 빈 박스(CAP만)로 가는 배관은 전선이 없어 TB 번호를 쓰지 않습니다. 구멍을 끌어 다른 구멍에 놓으면 서로 바뀝니다</td></tr>
       <tr><td>J박스 위치</td><td>오른쪽형(기능사 2·10번)과 왼쪽형(기능사 1·9번) 중 고릅니다</td></tr>
       <tr><td>아래 단자대 옮기기</td><td>1쪽 아래의 TB2·TB3·TB4를 끌어 다른 단자대 위에 놓으면 서로 자리를 바꿉니다(단자대끼리만, 컨트롤 박스 자리는 그대로). 제어반 결선의 TB6 번호(배관 순서)와 이어 둔 배선도 함께 따라 바뀝니다</td></tr>
-      <tr><td>전기공사산업기사</td><td>제목줄이 '전기공사산업기사 / (2과제) 전기 설비의 배선 및 배관 공사'로 바뀝니다(직접 고친 제목은 그대로).<br>· <b>배관도</b>: 위쪽은 기능사처럼 J 방향에 따라 좌우가 바뀌고, 아래쪽은 언제나 왼쪽부터 <b>④ 금속관 → TB2</b>(왼쪽) · TB4 · TB3(오른쪽) · 위로 올라가 <b>오른쪽 가운데 상자</b>입니다.<br>· <b>상자</b>: 언제나 <b>3구 2개 + 2구 2개</b>(4개 모두 그림). 셀렉터는 한 상자, PB는 셋씩, 표시 기구는 3개까지 한 상자(넘으면 나눠 담음)로 묶은 뒤 기구가 많은 상자부터 3구를 줍니다. 기구가 모자라 남는 구멍과 빈 상자는 <b>CAP(홀마개)</b>로 채웁니다.<br>· <b>제어판</b>: 1줄 MCCB·EOCR·F + 타이머·플리커·FLS, 2줄 릴레이 + MC (한 줄 5개).<br>· 단자대 번호 규칙·배선 연동은 기능사와 같습니다(아래 배관 왼쪽부터 TB2 1번·TB4 7번·TB3 11번·오른쪽 가운데 상자 17번부터). 배치는 도면 종류마다 따로 기억합니다</td></tr>
+      <tr><td>전기공사산업기사</td><td>제목줄이 '전기공사산업기사 / (2과제) 전기 설비의 배선 및 배관 공사'로 바뀝니다(직접 고친 제목은 그대로).<br>· <b>배관도</b>: 위쪽은 기능사처럼 J 방향에 따라 좌우가 바뀌고, 아래쪽은 언제나 왼쪽부터 <b>④ 금속관 → TB2</b>(왼쪽) · TB4 · TB3(오른쪽) · 위로 올라가 <b>오른쪽 가운데 상자</b>입니다.<br>· <b>치수</b>: 산업기사 2과제 기준 도면 그대로 — 배관 끝은 치수점(아래 ±550, 위 TB1 케이블은 맨 위 50 치수점)에 맞추고 단자대는 배관 끝에서 50 떨어져 놓습니다. 작은 치수(제어함 옆 → 위 배관 100, 아래 ④ 배관 50, TB1~TB4 앞 50, 제어함 귀퉁이 연장선)도 그립니다.<br>· <b>상자</b>: 언제나 <b>3구 2개 + 2구 2개</b>(4개 모두 그림). 셀렉터는 한 상자, PB는 셋씩, 표시 기구는 3개까지 한 상자(넘으면 나눠 담음)로 묶은 뒤 기구가 많은 상자부터 3구를 줍니다. 기구가 모자라 남는 구멍과 빈 상자는 <b>CAP(홀마개)</b>로 채웁니다.<br>· <b>제어판</b>: 1줄 MCCB·EOCR·F + 타이머·플리커·FLS, 2줄 릴레이 + MC (한 줄 5개).<br>· 단자대 번호 규칙·배선 연동은 기능사와 같습니다(아래 배관 왼쪽부터 TB2 1번·TB4 7번·TB3 11번·오른쪽 가운데 상자 17번부터). 배치는 도면 종류마다 따로 기억합니다</td></tr>
       <tr><td>TB4</td><td>리밋 스위치가 있으면 'LS1, LS2', 플로트레스가 있으면 '플로트레스' 단자대로 표시. 둘 다 없으면 뺍니다</td></tr>
       <tr><td>되돌리기</td><td>'자동 배치로'는 처음 규칙대로, '되돌리기'(${K_("Ctrl")}+${K_("Z")})는 직전 변경만 되돌립니다</td></tr>
       <tr><td>저장</td><td>PDF(2쪽) 또는 쪽별 JPG. 제목줄의 자격종목·과제명은 왼쪽에서 고칩니다</td></tr></table>`],
@@ -1714,7 +1780,7 @@ ${SIMPLE?`<tr><td>도면칸 확장</td><td>'도면칸 확장'을 고르고 회�
     <table class="htab"><tr><th>버튼</th><th>하는 일</th></tr>
       <tr><td>새 도면</td><td>지금 도면을 도면 파일(.json)·JPG·PDF로 저장하고 새로 시작할지, 저장하지 않고 시작할지 고릅니다</td></tr>
       <tr><td>도면 저장</td><td>인쇄용(흰 바탕·검은 선)으로 제목과 함께 JPG 또는 PDF로 저장. '기구 단자 번호 넣기'를 고르면 접점·코일 끝에 단자 번호도 넣음(기본은 넣지 않음)</td></tr>
-      <tr><td>파일·예제</td><td>예제 도면 열기, 도면 크기 바꾸기, 도면 데이터 복사, 저장해 둔 도면 파일(.json) 다시 불러오기</td></tr>
+      <tr><td>파일·예제</td><td>예제 도면 열기(연습 예제 · 전기공사산업기사 예상문제 · <b>과정평가형 고난도 1~10</b>), 도면 크기 바꾸기, 도면 데이터 복사, 저장해 둔 도면 파일(.json) 다시 불러오기</td></tr>
     </table>
     <p class="hnote">작업 내용은 이 브라우저에 자동으로 저장됩니다. 다른 PC로 옮기려면 도면 파일(.json)로 저장해 두세요.</p>`]];
   if(OFFLINE){const c=S.find(x=>x[0]==="claude");c[1]="동작사항·회로 틀";c[2]=`
@@ -4259,31 +4325,31 @@ function lyPipeSVG(st,ox,oy,k){const sg=LY.jside==="left"?-1:1,X=x=>ox+sg*x*k,Y=
   // 배관 (위)
   const top=-210,yT=-610;
   s+=lyL([[X(-100),Y(top)],[X(-100),Y(yT)],[X(-500),Y(yT)],[X(-500),Y(top)]],W);
-  s+=lyL([[X(0),Y(top)],[X(0),Y(ind?-628:-660)]],W);
+  s+=lyL([[X(0),Y(top)],[X(0),Y(-660)]],W);
   s+=lyL([[X(100),Y(top)],[X(100),Y(yT)],[X(750),Y(yT)],[X(750),Y(top)]],W);
   s+=lyL([[X(450),Y(yT)],[X(450),Y(top)]],W);
   s+=`<circle cx="${X(450)}" cy="${Y(yT)}" r="${30*k}" fill="#fff" stroke="#000" stroke-width="2"/>`+lyT(X(450),Y(yT)+4.4,"J",12,{w:800});
   const nTop=[[-100,"①"],[0,"③"],[100,"②"],[450,"①"],[750,"②"]];for(const[x,n]of nTop)s+=cnum(X(x),Y(-410),n);
   // 배관 (아래)
   // 기능사는 공개문제 018 치수 그대로(2026-11-23 사용자 지시): 배관 끝 = 치수점, 단자대는 배관 끝에서 50 떨어짐, 오른쪽 아래 상자 아랫면 = 제어함 아랫면
-  const bot=210,lowTop=ind?40:210-bhOf(box.boxes.B4),B4Y=60;
+  const bot=210,lowTop=ind?40:210-bhOf(box.boxes.B4),B4Y=40;
   if(!ind){
     s+=lyL([[X(-150),Y(bot)],[X(-150),Y(610)],[X(-550),Y(610)],[X(-550),Y(lowTop+bhOf(box.boxes.B4))]],W);   // 018: 아래 상자는 아래 치수 끝(550) 줄에 맞춤 — 가로 400
     s+=lyL([[X(-50),Y(bot)],[X(-50),Y(710)],[X(-550),Y(710)]],W);
     if(P.tb4)s+=lyL([[X(50),Y(bot)],[X(50),Y(710)]],W);
     s+=lyL([[X(150),Y(bot)],[X(150),Y(610)],[X(550),Y(610)]],W);
     for(const[x,n]of[[-150,"①"],[-50,"②"],...(P.tb4?[[50,"①"]]:[]),[150,"②"]])s+=cnum(X(x),Y(410),n)}
-  else{   // 산업기사: 아래쪽은 좌우형과 상관없이 같음 — ④ 금속관 TB2(왼쪽) · TB4 · TB3(오른쪽) · 오른쪽 가운데 상자 B4
-    s+=lyL([[XN(-150),Y(bot)],[XN(-150),Y(610)],[XN(-520),Y(610)]],W);
-    if(P.tb4)s+=lyL([[XN(-50),Y(bot)],[XN(-50),Y(700)]],W);
-    s+=lyL([[XN(50),Y(bot)],[XN(50),Y(710)],[XN(520),Y(710)]],W);
+  else{   // 산업기사(2과제 기준 도면, 2026-11-23): 아래쪽은 좌우형과 상관없이 같음 — ④ 금속관 TB2(왼쪽) · TB4 · TB3(오른쪽) · 오른쪽 가운데 상자 B4. 배관 끝 = 치수점, 단자대는 50 떨어짐
+    s+=lyL([[XN(-150),Y(bot)],[XN(-150),Y(610)],[XN(-550),Y(610)]],W);
+    if(P.tb4)s+=lyL([[XN(-50),Y(bot)],[XN(-50),Y(710)]],W);
+    s+=lyL([[XN(50),Y(bot)],[XN(50),Y(710)],[XN(550),Y(710)]],W);
     if(box.boxes.B4)s+=lyL([[XN(150),Y(bot)],[XN(150),Y(610)],[XN(550),Y(610)],[XN(550),Y(B4Y+bhOf(box.boxes.B4))]],W);
     const nb=sg>0?["④","①","②","①"]:["④","②","①","②"];
     [[-150,nb[0]],...(P.tb4?[[-50,nb[1]]]:[]),[50,nb[2]],...(box.boxes.B4?[[150,nb[3]]]:[])].forEach(([x,n])=>{s+=cnum(XN(x),Y(410),n)})}
   // 단자대
   LY.pgeo={items:[],tbs:[]};const tbH=(x,y,lab,above)=>lyR(x-30*k,y-12*k,60*k,24*k,1.5)+lyL([[x-22*k,y-3.5*k],[x+22*k,y-3.5*k]],1)+lyL([[x-22*k,y+3.5*k],[x+22*k,y+3.5*k]],1)+lyT(x,above?y-12*k-5:y+12*k+11,lab,8.5,{w:600});
   const tbV=(x,y,lab,side)=>lyR(x-12*k,y-30*k,24*k,60*k,1.5)+lyL([[x-3.5*k,y-22*k],[x-3.5*k,y+22*k]],1)+lyL([[x+3.5*k,y-22*k],[x+3.5*k,y+22*k]],1)+lyT(x+side*(12*k+6),y+3,lab,8.5,{w:600,a:side>0?"start":"end"});
-  s+=tbH(X(0),Y(ind?-668:-722),"TB1",true);
+  s+=tbH(X(0),Y(-722),"TB1",true);
   // 아래 단자대: 자리(기본 주인 이름)마다 st.tb에 따라 실제 TB 이름을 적고, 끌어서 다른 TB와 맞바꿈
   LY.pgeo.tbs=[];const TBn=n=>(st.tb&&st.tb[n])||n;
   const tbG=(slot,x,y,svg,vert)=>{const drag=LY.drag&&LY.drag.tb===slot;LY.pgeo.tbs.push({slot,x,y,r:34*k+8});
@@ -4291,8 +4357,8 @@ function lyPipeSVG(st,ox,oy,k){const sg=LY.jside==="left"?-1:1,X=x=>ox+sg*x*k,Y=
   if(!ind){const sR=sg>0?"TB2":"TB3",sL=sg>0?"TB3":"TB2";   // 기능사 기본: TB3 왼쪽, TB2 오른쪽
     s+=tbG(sR,X(612),Y(610),tbV(X(612),Y(610),TBn(sR),sg),1);s+=tbG(sL,X(-612),Y(710),tbV(X(-612),Y(710),TBn(sL),-sg),1);
     if(P.tb4)s+=tbG("TB4",X(50),Y(772),tbH(X(50),Y(772),TBn("TB4"),false),0)}
-  else{s+=tbG("TB2",XN(-550),Y(610),tbV(XN(-550),Y(610),TBn("TB2"),-1),1);s+=tbG("TB3",XN(550),Y(710),tbV(XN(550),Y(710),TBn("TB3"),1),1);   // 산업기사 기본: TB2(금속관) 왼쪽, TB3 오른쪽
-    if(P.tb4)s+=tbG("TB4",XN(-50),Y(745),tbH(XN(-50),Y(745),TBn("TB4"),false),0)}
+  else{s+=tbG("TB2",XN(-612),Y(610),tbV(XN(-612),Y(610),TBn("TB2"),-1),1);s+=tbG("TB3",XN(612),Y(710),tbV(XN(612),Y(710),TBn("TB3"),1),1);   // 산업기사 기본: TB2(금속관) 왼쪽, TB3 오른쪽
+    if(P.tb4)s+=tbG("TB4",XN(-50),Y(772),tbH(XN(-50),Y(772),TBn("TB4"),false),0)}
   // 컨트롤 박스
   LY.pgeo.items=[];
   for(const[b,[bx,where]]of Object.entries(LY_BOXPOS)){const items=box.boxes[b];if(!items)continue;
@@ -4310,7 +4376,7 @@ function lyPipeSVG(st,ox,oy,k){const sg=LY.jside==="left"?-1:1,X=x=>ox+sg*x*k,Y=
       s+=lyT(labLeft?x-bw/2*k-4:x+bw/2*k+4,cy+3.2,t,8.5,{a:labLeft?"end":"start",w:600})})}
   // 치수 (위·아래 가로, 왼쪽 세로)
   const tm=[-500,-100,0,100,450,750].map(v=>X(v)).sort((a,b)=>a-b),bm=[-550,-150,-50,50,150,550].map(v=>X(v)).sort((a,b)=>a-b);
-  s+=lyDims(tm,Y(ind?-770:-830),true,k);s+=lyDims(bm,Y(ind?820:870),true,k,true,{below:true});
+  s+=lyDims(tm,Y(-830),true,k);s+=lyDims(bm,Y(870),true,k,true,{below:true});
   const lx=Math.min(...tm,...bm)-62;s+=lyDims([-660,-610,-210,210,610,710].map(Y),lx,false,k);
   [-660,-610,-210,210,610,710].forEach(v=>{s+=lyL([[lx-8,Y(v)],[lx+8,Y(v)]],0.8)});
   if(!ind){   // 018의 작은 치수: 제어함 옆면 → 위 배관 100, 아래 배관 50, 단자대 앞 50, 제어함 네 귀퉁이 연장선
@@ -4322,6 +4388,16 @@ function lyPipeSVG(st,ox,oy,k){const sg=LY.jside==="left"?-1:1,X=x=>ox+sg*x*k,Y=
     s+=lyDims(srt([X(-550),X(-600)]),Y(710+48),true,k,true,{...o,below:true});
     if(P.tb4)s+=lyDims([Y(710),Y(760)],X(50)+sg*42*k,false,k,true,{...o,right:sg>0});
     const L=Math.min(X(-200),X(200)),R=Math.max(X(-200),X(200));
+    for(const y of[-210,210])s+=lyL([[L-75*k,Y(y)],[L-30*k,Y(y)]],0.8)+lyL([[R+30*k,Y(y)],[R+75*k,Y(y)]],0.8)}
+  else{   // 산업기사 2과제 기준 도면의 작은 치수: 제어함 옆면 → 위 왼쪽 배관 100(J 반대쪽), 아래 ④ 배관 50, TB1·TB2·TB3·TB4 앞 50, 네 귀퉁이 연장선
+    const o={size:8},srt=a=>a.sort((p,q)=>p-q);
+    s+=lyDims(srt([X(-200),X(-100)]),Y(-245),true,k,true,o);
+    s+=lyDims([XN(-200),XN(-150)],Y(245),true,k,true,{...o,below:true});
+    s+=lyDims([Y(-722+12),Y(-660)],X(0)+sg*42*k,false,k,true,{...o,right:sg>0});
+    s+=lyDims([XN(-600),XN(-550)],Y(610+48),true,k,true,{...o,below:true});
+    s+=lyDims([XN(550),XN(600)],Y(710+48),true,k,true,{...o,below:true});
+    if(P.tb4)s+=lyDims([Y(710),Y(760)],XN(-50)-42*k,false,k,true,{...o,right:false});
+    const L=X(-200)<X(200)?X(-200):X(200),R=Math.max(X(-200),X(200));
     for(const y of[-210,210])s+=lyL([[L-75*k,Y(y)],[L-30*k,Y(y)]],0.8)+lyL([[R+30*k,Y(y)],[R+75*k,Y(y)]],0.8)}
   return s}
 
@@ -4485,6 +4561,3 @@ try{const v=localStorage.getItem("seqsim.view");if(v==="layout"||v==="panel")set
 
 
 
-
-<script>if("serviceWorker" in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
-</body></html>
