@@ -1803,7 +1803,7 @@ ${SIMPLE?`<tr><td>도면칸 확장</td><td>'도면칸 확장'을 고르고 회�
   ["file","저장·불러오기",`
     <table class="htab"><tr><th>버튼</th><th>하는 일</th></tr>
       <tr><td>새 도면</td><td>지금 도면을 도면 파일(.json)·JPG·PDF로 저장하고 새로 시작할지, 저장하지 않고 시작할지 고릅니다</td></tr>
-      <tr><td>도면 저장</td><td>인쇄용(흰 바탕·검은 선)으로 제목과 함께 JPG 또는 PDF로 저장. '기구 단자 번호 넣기'를 고르면 접점·코일 끝에 단자 번호도 넣음(기본은 넣지 않음). 바로 아래 <b>시험지 한 세트 PDF (4쪽)</b>는 배관도·제어판 배치도+범례·시퀀스도·동작사항을 시험지 양식(제목줄 포함)으로 한 파일에 저장 — 동작사항은 예제·빈칸 문제의 원래 글이 있고 도면을 고치지 않았으면 그 글, 아니면 '동작사항 확인'으로 만든 글</td></tr>
+      <tr><td>도면 저장</td><td>인쇄용(흰 바탕·검은 선)으로 제목과 함께 JPG 또는 PDF로 저장. '기구 단자 번호 넣기'를 고르면 접점·코일 끝에 단자 번호도 넣음(기본은 넣지 않음). 바로 아래 <b>시험지 한 세트 PDF (4쪽)</b>는 배관도·제어판 배치도+범례·시퀀스도·동작사항을 시험지 양식(제목줄 포함)으로 한 파일에 저장 — 동작사항은 예제·빈칸 문제의 원래 글이 있고 도면을 고치지 않았으면 그 글, 아니면 '동작사항 확인'으로 만든 글. <b>빈칸 문제를 푸는 중</b>에 누르면 시퀀스도는 빈칸이 표시된 깨끗한 문제지로, 배관도·제어판과 동작사항은 지워진 부분까지 들어간 원래 도면 기준으로 나옵니다</td></tr>
       <tr><td>파일·예제</td><td>예제 도면 열기(연습 예제 · 전기공사산업기사 예상문제 · <b>과정평가형 고난도 1~10</b>), 도면 크기 바꾸기, 도면 데이터 복사, 저장해 둔 도면 파일(.json) 다시 불러오기</td></tr>
     </table>
     <p class="hnote">작업 내용은 이 브라우저에 자동으로 저장됩니다. 다른 PC로 옮기려면 도면 파일(.json)로 저장해 두세요.</p>`]];
@@ -3057,6 +3057,7 @@ function qzStart(p,keepCirc){const ans=p.build?p.build():Circuit.from(p.answer);
   QZ.on=true;QZ.blanks=p.blanks.map(r=>({...r}));QZ.outKey=qzOutKey(qzMask(ans,p.blanks),p.blanks);QZ.good=JSON.stringify(circ.toJSON());
   if(keepCirc){const sb=keepCirc.blanks;if(Array.isArray(sb)&&sb.length===p.blanks.length&&qzOutKey(circ,sb)!==QZ.outKey){QZ.blanks=sb.map(r=>({...r}));QZ.outKey=qzOutKey(circ,QZ.blanks)}
     if(qzOutKey(circ,QZ.blanks)!==QZ.outKey){QZ.on=false;return false}}
+  if(!keepCirc&&p.grade==="ind"&&typeof lySetGrade==="function")lySetGrade("ind");   // 산업기사형 문제는 배치도·시험지도 산업기사 양식으로
   if(typeof setView==="function")setView("seq");qzBar();qzMsg(keepCirc?"풀던 문제를 이어서 합니다.":"빈칸을 채운 뒤 '채점'을 누르세요. '▶ 동작 시작'으로 직접 시험해 봐도 됩니다.");qzSave();draw();
   $("sheetwrap").scrollLeft=0;return true}
 function qzEnd(){QZ.on=false;QZ.prob=null;QZ.ans=null;qzStore.set(null);qzBar();draw();setHint("빈칸 문제를 끝냈습니다. 지금 도면은 그대로 남아 있어 자유롭게 고칠 수 있습니다.")}
@@ -4586,7 +4587,8 @@ async function lyExport(what){const base=((name&&!/^(새 도면|불러온 도면
 
 // ── 시험지 한 세트(사용자 요청 2026-11-24): 1) 배관 및 기구 배치도 2) 제어판 내부 기구 배치도+범례 3) 시퀀스 회로도 4) 동작 사항 ──
 // 쪽 순서·제목은 공개문제 018·산업기사 2과제와 같게. 동작사항은 예제·빈칸 문제의 원래 글이 있고 도면이 그대로면 그 글, 아니면 자동 동작사항
-function lySetSpec(){const cur=JSON.stringify(circ.toJSON()),lv=s=>typeof s==="string"?{text:s,level:/^\s*[①-⑳]/.test(s)?1:0}:s;
+function lySetSpec(){if(typeof QZ!=="undefined"&&QZ.on&&QZ.spec&&QZ.spec.length)return{items:QZ.spec,src:"빈칸 문제"};   // 빈칸 문제: 지워진 부분까지 들어간 원래 동작사항 (2026-11-24)
+  const cur=JSON.stringify(circ.toJSON()),lv=s=>typeof s==="string"?{text:s,level:/^\s*[①-⑳]/.test(s)?1:0}:s;
   const srcs=[...EXAMPLES.map(e=>[e[1],(e[2]||{}).spec]),...(typeof QZ_PROBS!=="undefined"?QZ_PROBS.map(q=>[q.build,q.spec]):[])];
   for(const[fn,spec]of srcs){if(!spec||!spec.length)continue;try{if(JSON.stringify(fn().toJSON())===cur)return{items:spec.map(lv),src:"원문"}}catch(e){}}
   let d;try{d=describeCircuit(circ)}catch(e){d={items:[],error:"동작 사항을 만들 수 없습니다."}}
@@ -4614,7 +4616,12 @@ async function lySpecCanvases(){const sc=3.5,{items}=lySetSpec(),pages=[];try{aw
 async function lyExportSet(){const base=((name&&!/^(새 도면|불러온 도면|t)$/.test(name)?name.replace(/^[①-⑳]\s*/,"")+" ":"")+"시험지").replace(/[\\/:*?"<>|]+/g,"_").slice(0,60);
   const hint=(m,e)=>(PN.view==="layout"?lyHint:setHint)(m,e);hint("시험지 한 세트를 만드는 중입니다…");
   try{let jsPDF;try{jsPDF=await loadJsPdf()}catch(e){throw{code:"pdf_load"}}
-    const pages=[await lyCanvas(1),await lyCanvas(2),await lySeqCanvas(),...await lySpecCanvases()];
+    // 빈칸 문제를 푸는 중이면: 배관도·제어판은 정답 도면 기준(지워진 기구도 들어감), 시퀀스도는 깨끗한 빈칸 문제지, 동작사항은 원래 글
+    const qz=typeof QZ!=="undefined"&&QZ.on&&QZ.ans&&QZ.prob,keep=circ,keepB=qz?QZ.blanks:null;let pages;
+    try{if(qz)circ=QZ.ans;const p1=await lyCanvas(1),p2=await lyCanvas(2);
+      if(qz){circ=qzMask(QZ.ans,QZ.prob.blanks);QZ.blanks=QZ.prob.blanks.map(r=>({...r}))}
+      const p3=await lySeqCanvas();circ=keep;if(qz)QZ.blanks=keepB;pages=[p1,p2,p3,...await lySpecCanvases()]}
+    finally{circ=keep;if(qz)QZ.blanks=keepB;if(typeof resize==="function"){resize();draw()}}
     const doc=new jsPDF({orientation:"portrait",unit:"pt",format:"a4"});
     pages.forEach((c,i)=>{const land=c.width>c.height;if(i)doc.addPage("a4",land?"landscape":"portrait");doc.addImage(c.toDataURL("image/jpeg",0.95),"JPEG",0,0,land?841.89:595.28,land?595.28:841.89)});
     doc.setProperties({title:base});const blob=doc.output("blob"),file=base+".pdf";
