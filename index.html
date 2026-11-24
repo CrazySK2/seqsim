@@ -525,7 +525,7 @@ table.nett td.chain{font-family:var(--mono);font-size:12px;line-height:1.7}
         <button class="btn" id="btnSaveSeq" title="지금 도면을 파일(.seq.json)로 저장해 두었다가 나중에 다시 열 수 있습니다">도면 파일 저장 (.seq.json)</button>
         <button class="btn" id="btnOpenSeq" title="저장해 둔 도면 파일(.seq.json)을 엽니다">도면 파일 열기</button>
         <button class="btn" id="btnImport" title="종이 도면 사진·PDF를 Claude가 읽어 도면으로 바꿉니다">이미지·PDF 도면 읽기</button>
-        <button class="btn" id="btnExport" title="도면을 JPG 이미지나 PDF로 저장합니다">도면 저장 (JPG·PDF)</button></div></div>
+        <button class="btn" id="btnExport" title="도면을 JPG 이미지나 PDF로 저장합니다">도면 저장 (JPG·PDF)</button><button class="btn" id="btnSet" title="배관도·제어판 배치도+범례·시퀀스도·동작사항 네 쪽을 시험지 양식 PDF 한 파일로 저장합니다">시험지 한 세트 PDF (4쪽)</button></div></div>
     <div class="dd seqonly" id="ddMake"><button class="btn" type="button" title="도면 만들기 (회로 틀·동작사항→도면·수정 요청)" aria-haspopup="true" aria-expanded="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.6L19 9.5l-5.2 1.9L12 17l-1.8-5.6L5 9.5l5.2-1.9zM19 15l.9 2.6L22 18.5l-2.1.9L19 22l-.9-2.6-2.1-.9 2.1-.9z"/></svg><span>도면 만들기</span><b class="caret">▾</b></button>
       <div class="ddm" hidden>
         <button class="btn" id="btnTpl" title="회로를 한 줄씩 적어 도면을 자동으로 그립니다(AI 없이 동작)">회로 틀로 만들기</button>
@@ -748,6 +748,7 @@ class Sim{
       for(const k of on){const v=cells.get(k);if(g[v.k])g[v.k].add(v.tag)}
       const same=eq(g.COIL,this.coil)&&eq(g.TIMER,this.tcoil)&&eq(g.FR,this.frcoil)&&eq(g.CNT,this.ccoil)&&eq(g.CRST,this.crst)&&eq(g.FLS,this.flscoil);
       for(const t of g.FR)if(!this.frcoil.has(t)){this.frphase[t]=0;this.frout[t]=false}
+      for(const t of this.tcoil)if(!g.TIMER.has(t))this.tacc[t]=0;   // 타이머 코일이 소자되면 그 자리에서 시간 초기화(T1·T2 반복 회로가 멈추던 문제 — 2026-11-24)
       this.coil=g.COIL;this.tcoil=g.TIMER;this.frcoil=g.FR;this.ccoil=g.CNT;this.crst=g.CRST;
       // FLS: 전원이 있을 때 수위가 E1에 닿으면 동작, E2 아래로 내려가면 복귀, 그 사이는 그대로 유지
       const fo=JSON.stringify(this.flsOn);
@@ -1009,7 +1010,7 @@ const sig=m=>[...m].map(([k,v])=>k+"="+v).join("|");
 function diffOut(a,b){const d=[];for(const[k,v]of b)if(a.get(k)!==v)d.push({key:k,from:a.get(k),to:v});return d}
 // 문장 조립: 같은 동사끼리 묶고 "~되고, ~되며 … ~된다."로 이어 붙임
 const VERB={flson:["동작하고","동작한다"],flsoff:["복귀하고","복귀한다"],on:["여자되고","여자된다"],off:["소자되고","소자된다"],lon:["점등되고","점등된다"],loff:["소등되고","소등된다"],
-  bon:["울리고","울린다"],boff:["정지하고","정지한다"],blink:["점멸하고","점멸한다"],alt:["교대로 점멸하고","교대로 점멸한다"],
+  bon:["울리고","울린다"],boff:["정지하고","정지한다"],blink:["점멸하고","점멸한다"],alt:["교대로 점멸하고","교대로 점멸한다"],altrun:["교대로 동작하고","교대로 동작한다"],bzblink:["울렸다 멈췄다를 반복하고","울렸다 멈췄다를 반복한다"],runblink:["동작과 정지를 반복하고","동작과 정지를 반복한다"],
   hold:["여자되어 자기유지되고","여자되어 자기유지된다"],cnt:["동작하고","동작한다"],cntoff:["복귀하고","복귀한다"]};
 function clauses(diff,OUT,opts={}){const g={flson:[],flsoff:[],hold:[],on:[],blink:[],lon:[],bon:[],cnt:[],off:[],loff:[],boff:[],cntoff:[]};let altPair=null;
   const blinkKeys=diff.filter(d=>d.to==="blink").map(d=>d.key);
@@ -1028,15 +1029,20 @@ function clauses(diff,OUT,opts={}){const g={flson:[],flsoff:[],hold:[],on:[],bli
   // 플리커: 여자 후 설정시간이 지나야 접점이 처음 바뀜 → "b쪽이 먼저 점등되고, FR의 설정시간(t초) 간격으로 … 교대로 점멸" (2026-11-12 사용자 지적)
   const fr=opts.phase&&opts.phase.fr||[],frTxt=!fr.length?"":fr.length===1?`플리커 릴레이 ${fr[0][0]}의 설정시간(${fr[0][1]}초) 간격으로 `:`플리커 릴레이 ${fr.map(([t,p])=>`${t}(${p}초)`).join("·")}의 설정시간 간격으로 `;
   if(altPair){const nm=altPair.map(k=>{const o=OUT.get(k);return outName(o.k,o.t)}),first=altPair.filter(k=>opts.phase.get(k)).map(k=>{const o=OUT.get(k);return outName(o.k,o.t)});
-    const pair=nm.slice(0,-1).map(n=>jo(n,"과")).concat(jo(nm[nm.length-1],"이")).join(" ");
-    parts.push([(fr.length&&first.length?`${first.map((n,i)=>i===first.length-1?jo(n,"이"):n).join(", ")} 먼저 ${first.every(n=>/^램프/.test(n))?"점등되고":"동작하고"}, `:"")+frTxt+pair,"alt"])}
+    // 두 무리(먼저 켜지는 쪽 / 나중 쪽)로 나눠 "A·B와 C·D가 교대로" — 전자접촉기·램프가 섞이면 '동작' (2026-11-24)
+    const second=altPair.filter(k=>!opts.phase.get(k)).map(k=>{const o=OUT.get(k);return outName(o.k,o.t)});
+    const lampOnly=nm.every(n=>/^램프/.test(n));
+    const pair=first.length&&second.length?jo(first.join("·"),"과")+" "+jo(second.join("·"),"이"):nm.slice(0,-1).map(n=>jo(n,"과")).concat(jo(nm[nm.length-1],"이")).join(" ");
+    parts.push([(fr.length&&first.length?`${first.map((n,i)=>i===first.length-1?jo(n,"이"):n).join(", ")} 먼저 ${first.every(n=>/^램프/.test(n))?"점등되고":first.every(n=>/^부저/.test(n))?"울리고":"동작하고"}, `:"")+frTxt+pair,lampOnly?"alt":"altrun"])}
   if(g.blink.length&&fr.length){const keys=diff.filter(d=>d.to==="blink").map(d=>d.key),onNow=keys.some(k=>opts.phase&&opts.phase.get(k));
-    const nm=g.blink.slice(0,-1).concat(jo(g.blink[g.blink.length-1],"이"));const lamps=g.blink.every(n=>/^램프/.test(n));
-    parts.push([onNow?frTxt+nm.join(", "):(fr.length===1?`플리커 릴레이 ${fr[0][0]}의 설정시간(${fr[0][1]}초)이 지나면 `:"플리커 릴레이의 설정시간이 지나면 ")+nm.join(", ")+(lamps?" 점등되고,":" 동작하고,")+" 그 뒤 설정시간 간격으로","blink"]);g.blink=[]}
+    const nm=g.blink.slice(0,-1).concat(jo(g.blink[g.blink.length-1],"이"));const lamps=g.blink.every(n=>/^램프/.test(n)),bz=g.blink.every(n=>/^부저/.test(n));
+    // 부저는 '점멸'이 아니라 '울렸다 멈췄다'(단속) — 2026-11-24
+    parts.push([onNow?frTxt+nm.join(", "):(fr.length===1?`플리커 릴레이 ${fr[0][0]}의 설정시간(${fr[0][1]}초)이 지나면 `:"플리커 릴레이의 설정시간이 지나면 ")+nm.join(", ")+(lamps?" 점등되고,":bz?" 울리고,":" 동작하고,")+" 그 뒤 설정시간 간격으로",lamps?"blink":bz?"bzblink":"runblink"]);g.blink=[]}
   add(g.blink,"blink");add(g.lon,"lon");add(g.bon,"bon");add(g.cnt,"cnt");add(g.off,"off");add(g.loff,"loff","은");add(g.boff,"boff","은");add(g.cntoff,"cntoff","은");
   return parts}
 function sentence(head,parts,tail){if(!parts.length)return head+(tail||" 회로의 상태는 변하지 않는다.");
-  return head+" "+parts.map(([s,v],i)=>{const last=i===parts.length-1;let w=VERB[v][last?1:0];
+  const cont=tail&&tail.startsWith(", ");   // 뒤에 말이 더 이어지면 마지막 동사도 '~되고' 꼴로
+  return head+" "+parts.map(([s,v],i)=>{const last=i===parts.length-1;let w=VERB[v][last&&!cont?1:0];
     if(!last&&parts.length>=3&&i===parts.length-2)w=w.replace(/고$/,"며");return s+" "+w}).join(", ")+(tail?tail:".")}
 
 function describeCircuit(C){
@@ -1046,7 +1052,10 @@ function describeCircuit(C){
   const ins=new Map();for(const v of order){if(!(PUSH.has(v.k)||TOGGLE.has(v.k)||TRIP.has(v.k)))continue;const e=ins.get(v.tag)||{tag:v.tag,kinds:new Set()};e.kinds.add(v.k);ins.set(v.tag,e)}
   const pbs=[...ins.values()].filter(e=>[...e.kinds].some(k=>PUSH.has(k)));
   const starts=pbs.filter(e=>e.kinds.has("PB_A")), stops=pbs.filter(e=>!e.kinds.has("PB_A"));
-  const toggles=[...ins.values()].filter(e=>[...e.kinds].some(k=>TOGGLE.has(k)));
+  // 리밋 스위치는 '감지되면'(잠깐 눌렸다 복귀)으로 다룸 — 계속 눌린 채로 두면 다음 문장이 실제와 달라짐 (2026-11-24 사용자 지적)
+  const isLS=e=>[...e.kinds].some(k=>k==="LS_A"||k==="LS_B");
+  const toggles=[...ins.values()].filter(e=>!isLS(e)&&[...e.kinds].some(k=>TOGGLE.has(k)));
+  const lss=[...ins.values()].filter(isLS);
   const flsTags=[...new Set([...C.cells.values()].filter(v=>v.k==="FLS").map(v=>v.tag))];
   const trips=[...ins.values()].filter(e=>[...e.kinds].some(k=>TRIP.has(k)));
   const selector=t=>{const e=ins.get(t);return e.kinds.has("SW_A")&&e.kinds.has("SW_B")};
@@ -1069,26 +1078,32 @@ function describeCircuit(C){
     else if(a.type==="toggle"){s.inputs[a.tag]=!s.inputs[a.tag];runFor(s,0.2)}
     else if(a.type==="trip"){s.trips[a.tag]=!s.trips[a.tag];runFor(s,0.2)}
     else if(a.type==="level"){s.level[a.tag]=a.value;runFor(s,0.2)}
-    const after=snapOut(s,OUT);return{before,during,after,diff:diffOut(before,after),ddiff:during?diffOut(before,during):[]}};
+    const after=snapOut(s,OUT),diff=diffOut(before,after);
+    // 자기유지 판단은 조작 직후 상태에서 해야 함(타이머가 다 돈 뒤에 하면 이미 꺼진 코일을 '자기유지'로 잘못 적음 — 2026-11-24 고침)
+    const hold=new Set();if(a.type==="press")for(const d of diff){const o=OUT.get(d.key);if(d.to!=="on"||o.k!=="COIL"||!selfHoldTags.has(o.t))continue;
+      const c=cloneSim(s);c.forceOpenA=new Set([o.t]);c.solve();if(!c.coil.has(o.t))hold.add(d.key)}
+    return{before,during,after,diff,ddiff:during?diffOut(before,during):[],hold}};
   // 타이머·카운터가 다 돌 때까지 기다리며 생기는 일
-  const settleTimed=(s,base)=>{const ev=[];let prev=base,elapsed=0;
+  const settleTimed=(s,base)=>{const ev=[];let prev=base,elapsed=0,rep=null;const hist=[sig(base)];   // 같은 상태로 돌아오면 '반복'으로 보고 멈춤 (2026-11-24)
     for(let guard=0;guard<8;guard++){
       const pending=()=>[...s.tcoil].some(t=>!s.tDone(t));
       const cntPending=()=>s.frcoil.size&&Object.keys(s.cp).some(t=>(s.count[t]||0)<s.cp[t]);
       if(!pending()&&!cntPending())break;
       const accBefore={...s.tacc},cntBefore={...s.count};let cause=null,t=0;
-      while(t<120){const ab={...s.tacc};s.step(0.05);t+=0.05;elapsed+=0.05;
-        const nd=Object.keys(s.tacc).find(x=>(x in s.tp)&&s.tacc[x]>=s.tp[x]-1e-9&&(ab[x]||0)<s.tp[x]-1e-9);if(nd){cause=`타이머 ${nd}의 설정시간(${s.tp[nd]}초)이 지나면`;break}
+      while(t<120){const ab={...s.tacc},tb=new Set(s.tcoil);s.step(0.05);t+=0.05;elapsed+=0.05;
+        // 설정시간이 다 된 타이머: 걸음 전에 여자 중이었고 이번 걸음에 설정시간을 넘김(다 되자마자 소자돼 시간이 0으로 돌아가도 잡힘)
+        const nd=[...tb].find(x=>(x in s.tp)&&(ab[x]||0)<s.tp[x]-1e-9&&(ab[x]||0)+0.05>=s.tp[x]-1e-9);if(nd){cause=`타이머 ${nd}의 설정시간(${s.tp[nd]}초)이 지나면`;break}
         const nc=Object.keys(s.cp).find(x=>(s.count[x]||0)>=s.cp[x]&&(cntBefore[x]||0)<s.cp[x]);if(nc){cause=`카운터 ${nc}의 계수값이 설정값(${s.cp[nc]}회)에 도달하면`;break}
         if(!pending()&&!cntPending())break}
       if(!cause)break;runFor(s,0.2);const now=snapOut(s,OUT),d=diffOut(prev,now);
-      ev.push({cause,diff:d,phase:now.phase});prev=now}
-    return{ev,last:prev,elapsed}};
+      ev.push({cause,diff:d,phase:now.phase});prev=now;
+      const j=hist.indexOf(sig(now));if(j>=0&&ev.length>1){rep=j;break}hist.push(sig(now))}
+    return{ev,last:prev,elapsed,rep}};
   const blinkBefore=snap=>new Set([...snap].filter(([k,v])=>v==="blink").map(([k])=>k));
   // 한 조작의 결과를 문장으로
   const describeAct=(s,a,res,prefix="")=>{
     let head;
-    if(a.type==="press")head=`${prefix}${jo(inName("PB_A",a.tag),"을")} 누르면`;
+    if(a.type==="press")head=a.ls?`${prefix}${jo("리밋 스위치 "+a.tag,"이")} 감지되면`:`${prefix}${jo(inName("PB_A",a.tag),"을")} 누르면`;
     else if(a.type==="level")head=a.value>=2?`${prefix}수위가 올라가 ${flsTags.length>1?a.tag+"의 ":""}전극 E1에 도달하면`:`${prefix}수위가 내려가 ${flsTags.length>1?a.tag+"의 ":""}전극 E2 아래로 떨어지면`;
     else if(a.type==="toggle"){const k=togKind(a.tag),on=s.inputs[a.tag];
       head=selector(a.tag)?`${prefix}${jo("셀렉터 스위치 "+a.tag,"을")} ${on?"A(자동)":"M(수동)"} 위치로 전환하면`:
@@ -1096,13 +1111,13 @@ function describeCircuit(C){
     // 누르는 동안만 동작(촌동)
     if(a.type==="press"&&!res.diff.length&&res.ddiff.length){
       const pp=clauses(res.ddiff,OUT,{phase:res.during.phase});
-      return sentence(`${prefix}${jo(inName("PB_A",a.tag),"을")} 누르고 있는 동안`,pp,", 손을 떼면 원래 상태로 복귀한다.")}
-    const hold=new Set();if(a.type==="press")for(const d of res.diff){const o=OUT.get(d.key);if(d.to!=="on"||o.k!=="COIL"||!selfHoldTags.has(o.t))continue;
-      const c=cloneSim(s);c.forceOpenA=new Set([o.t]);c.solve();if(!c.coil.has(o.t))hold.add(d.key)}
-    return sentence(head,clauses(res.diff,OUT,{hold,phase:res.after.phase}))};
-  const subEvents=ev=>{ev.forEach((e,i)=>{const pp=clauses(e.diff,OUT,{phase:e.phase});if(pp.length)push(`${sub[i]||"·"} `+sentence(e.cause,pp),1)})};
+      return a.ls?sentence(`${prefix}${jo("리밋 스위치 "+a.tag,"이")} 감지되어 있는 동안`,pp,", 리밋 스위치가 복귀하면 원래 상태로 돌아간다."):
+        sentence(`${prefix}${jo(inName("PB_A",a.tag),"을")} 누르고 있는 동안`,pp,", 손을 떼면 원래 상태로 복귀한다.")}
+    return sentence(head,clauses(res.diff,OUT,{hold:res.hold,phase:res.after.phase}))};
+  const subEvents=(ev,rep)=>{ev.forEach((e,i)=>{const pp=clauses(e.diff,OUT,{phase:e.phase});if(pp.length)push(`${sub[i]||"·"} `+sentence(e.cause,pp),1)});
+    if(rep!=null&&ev.length>1)items.push({text:`※ 이후 ${sub[rep]}~${sub[ev.length-1]}의 동작을 반복한다.`,level:1})};
   // 기동 순서 찾기: 아직 해 보지 않은 조작 중 출력이 바뀌는 첫 번째를 고름
-  const actions=[...starts.map(e=>({type:"press",tag:e.tag})),...toggles.map(e=>({type:"toggle",tag:e.tag})),
+  const actions=[...starts.map(e=>({type:"press",tag:e.tag})),...toggles.map(e=>({type:"toggle",tag:e.tag})),...lss.map(e=>({type:"press",tag:e.tag,ls:true})),
     ...flsTags.flatMap(t=>[{type:"level",tag:t,value:2},{type:"level",tag:t,value:0}])];
   const ak=a=>a.tag+a.type+(a.value??"");
   const effect0=new Map();for(const a of actions){const c=cloneSim(s0),r=act(c,a);effect0.set(ak(a),r.diff.length||r.ddiff.length?r:null)}
@@ -1118,7 +1133,7 @@ function describeCircuit(C){
         if(n>richCount){richCount=n;richest=cloneSim(s);richSetup=chainActs.slice()}}
       const tm=settleTimed(s,res.after);
       push(`(${++no}) `+describeAct(s,a,res,chain>0&&steps===0?"초기 상태에서 ":""),0,{...a,value:val,wait:0});
-      const stepIdx=script.length-1;subEvents(tm.ev);
+      const stepIdx=script.length-1;subEvents(tm.ev,tm.rep);
       if(a.type==="level"&&a.value>=2&&s.relayOn(a.tag)){const c=cloneSim(s);c.level[a.tag]=1;runFor(c,0.2);
         if(c.relayOn(a.tag))items.push({text:`※ 수위가 E1 아래로 내려가도 E2보다 높으면 ${jo(outName("FLS",a.tag),"은")} 동작을 유지한다.`,level:1})}
       script[stepIdx].wait=Math.min(90,tm.ev.length?tm.elapsed+1.5:1.2);
@@ -1134,13 +1149,19 @@ function describeCircuit(C){
         script.push({type:"press",tag:b.tag,wait:1,item:items.length-1})}
       // 다음 조작
       a=null;const cand=[...actions.filter(c=>!(c.type==="toggle"&&s.inputs[c.tag])),...actions.filter(c=>c.type==="toggle"&&s.inputs[c.tag])];
-      for(const c of cand){if(usedChain.has(akey(s,c)))continue;const cl=cloneSim(s),r=act(cl,c);if(!r.diff.length)continue;
-        settleTimed(cl,r.after);const sg=sig(snapOut(cl,OUT))+JSON.stringify(cl.inputs);if(visited.has(sg)&&c.type!=="level")continue;a=c;break}
+      for(const c of cand){if(usedChain.has(akey(s,c)))continue;const cl=cloneSim(s),r=act(cl,c),only=c.ls&&!r.diff.length&&r.ddiff.length;if(!r.diff.length&&!only)continue;
+        settleTimed(cl,r.after);const sg=sig(snapOut(cl,OUT))+JSON.stringify(cl.inputs);if(visited.has(sg)&&c.type!=="level"&&!only)continue;a=c;break}
       steps++}
     // 정지
     if(!stopDone){for(const e of stops){const c=cloneSim(chainRich||s),r=act(c,{type:"press",tag:e.tag});if(!r.diff.length)continue;
         const back=sig(r.after)===sig(snap0);const offs=clauses(r.diff,OUT,{});
-        push(`(${++no}) `+(back?`동작 중 ${jo(inName("PB_B",e.tag),"을")} 누르면 모든 동작이 정지되고 초기 상태로 복귀한다.`:sentence(`동작 중 ${jo(inName("PB_B",e.tag),"을")} 누르면`,offs)),0,{type:"press",tag:e.tag,wait:1.2,setup:chainActs.slice(0,chainRichAt)});
+        // 누르는 동안은 다 멈추지만 손을 떼면 다시 도는 회로(셀렉터 A·수위 등) — 그대로 적음 (2026-11-24)
+        const holdStop=!back&&r.during&&sig(r.during)===sig(snap0);
+        const whyS=[...toggles.filter(t=>selector(t.tag)&&c.inputs[t.tag]).map(t=>jo("셀렉터 스위치 "+t.tag,"이")+" A(자동) 위치에 있으므로"),...flsTags.filter(t=>(c.level[t]||0)>=1).map(()=>"수위가 높은 상태이므로")];
+        const txtS=back?`동작 중 ${jo(inName("PB_B",e.tag),"을")} 누르면 모든 동작이 정지되고 초기 상태로 복귀한다.`:
+          holdStop?sentence(`동작 중 ${jo(inName("PB_B",e.tag),"을")} 누르고 있는 동안에는 모든 동작이 정지되고, 손을 떼면${whyS.length?" "+whyS.join(", ")+",":""}`,clauses(diffOut(r.during,r.after),OUT,{phase:r.after.phase})):
+          sentence(`동작 중 ${jo(inName("PB_B",e.tag),"을")} 누르면`,offs);
+        push(`(${++no}) `+txtS,0,{type:"press",tag:e.tag,wait:1.2,setup:chainActs.slice(0,chainRichAt)});
         stopDone=true;break}}}
   // EOCR(과부하) 동작·복귀
   for(const e of trips){const base=richest||cloneSim(s0);const c=cloneSim(base),before=snapOut(c,OUT),r=act(c,{type:"trip",tag:e.tag});if(!r.diff.length)continue;
@@ -1149,9 +1170,12 @@ function describeCircuit(C){
     const rest=allStop?r.diff.filter(d=>d.to!=="off"):r.diff;const pp=clauses(rest,OUT,{phase:r.after.phase});
     const head=`운전 중 과부하에 의해 ${jo(e.tag,"이")} 동작(트립)하면`;
     push(`(${++no}) `+(allStop?(pp.length?sentence(head+" 모든 동작이 정지되고,",pp):head+" 모든 동작이 정지된다."):sentence(head,pp)),0,{type:"trip",tag:e.tag,value:true,wait:1.5,setup:richSetup});
+    {const si=script.length-1,tmT=settleTimed(c,r.after);subEvents(tmT.ev,tmT.rep);if(tmT.ev.length)script[si].wait=Math.min(90,tmT.elapsed+1.5)}   // 트립 뒤 타이머(부저 정지 등)도 적음
     const r2=act(c,{type:"trip",tag:e.tag});const back=sig(r2.after)===sig(snap0);
     const pp2=clauses(r2.diff,OUT,{phase:r2.after.phase}),offs=pp2.filter(([x,v])=>v==="loff"||v==="boff"||v==="off");
-    push(`(${++no}) `+(back?`${jo(e.tag,"을")} 리셋하면 `+offs.map(([x,v])=>x+" "+VERB[v][0]+", ").join("")+"초기 상태로 복귀한다.":sentence(`${jo(e.tag,"을")} 리셋하면`,pp2)),0,{type:"trip",tag:e.tag,value:false,wait:1.2});
+    // 초기 상태로 안 돌아가는 까닭(셀렉터가 A에 있거나 수위가 높음)을 앞에 적어 줌 (2026-11-24)
+    const why=[...toggles.filter(t=>selector(t.tag)&&c.inputs[t.tag]).map(t=>jo("셀렉터 스위치 "+t.tag,"이")+" A(자동) 위치에 있으므로"),...flsTags.filter(t=>(c.level[t]||0)>=1).map(()=>"수위가 높은 상태이므로")];
+    push(`(${++no}) `+(back?`${jo(e.tag,"을")} 리셋하면 `+offs.map(([x,v])=>x+" "+VERB[v][0]+", ").join("")+"초기 상태로 복귀한다.":sentence(`${jo(e.tag,"을")} 리셋하면${why.length?" "+why.join(", ")+",":""}`,pp2)),0,{type:"trip",tag:e.tag,value:false,wait:1.2});
     break}
   return{items,script,error:null}
   function d0off(cur,o){return cur.get(o.k+":"+o.t)==="off"}}
@@ -1624,7 +1648,7 @@ function helpDialog(){
       <li><b>동작 시험</b> 위쪽 <b>▶ 동작 시작</b>을 누르고 PB·스위치를 눌러 봅니다. 아래 타임차트가 열려 ON/OFF가 기록됩니다(왼쪽 아래 '타임차트'로 접고 펼침).</li>
       <li><b>정리·저장</b> '동작사항 확인'으로 공개문제 형식의 동작 사항을 만들고, '파일 ▾ → 도면 저장'으로 JPG·PDF를 받습니다.</li>
       <li><b>빈칸 문제</b> 위쪽 '빈칸 문제'에서 시퀀스도 일부가 비어 있는 문제를 골라 동작사항대로 채우고 채점합니다. 지금 도면으로 문제를 만들어 훈련생에게 나눠 줄 수도 있습니다.</li>
-      <li><b>배치도</b> 위쪽 '배치도'로 바꾸면 이 시퀀스도의 기구로 시험지 형식의 배관 및 기구 배치도·제어판 내부 기구 배치도·범례를 그려 PDF·JPG로 저장합니다.</li>
+      <li><b>배치도</b> 위쪽 '배치도'로 바꾸면 이 시퀀스도의 기구로 시험지 형식의 배관 및 기구 배치도·제어판 내부 기구 배치도·범례를 그려 PDF·JPG로 저장합니다. <b>시험지 한 세트 PDF (4쪽)</b>는 1) 배관 및 기구 배치도 2) 제어판 내부 기구 배치도+범례 3) 시퀀스 회로도(가로) 4) 동작 사항을 한 파일로 묶습니다.</li>
       <li><b>제어반 결선</b> 위쪽 '제어반 결선'으로 바꾸면 왼쪽 시퀀스도에서 한 점을 누를 때 같은 전위가 강조되고, 오른쪽 제어판 내부에서 그 단자들을 차례로 눌러 전선을 잇습니다. 채점·결선표·결선도 저장도 됩니다.</li>
     </ol>
     <p class="hnote">잘못했을 때는 언제든 ${K_("Ctrl")}+${K_("Z")} 또는 '되돌리기'로 되돌릴 수 있습니다.</p>`],
@@ -1703,7 +1727,7 @@ ${SIMPLE?`<tr><td>도면칸 확장</td><td>'도면칸 확장'을 고르고 회�
   ["claude","동작사항·Claude",`
     <table class="htab"><tr><th>버튼</th><th>하는 일</th></tr>
       <tr><td>회로 틀로 만들기</td><td>회로를 한 줄씩(조건 접점 → 출력) 적으면 세로형 도면을 자동으로 그립니다. 자기유지·정역·타이머 순차·리밋 왕복·플리커·FLS 예시 틀 제공. <b>AI 없이 동작</b>합니다</td></tr>
-      <tr><td>동작사항 확인</td><td>지금 도면을 실제로 조작해 보고 큐넷 공개문제 형식의 동작 사항을 만듭니다. 「순서대로 재생」으로 도면에서 그 순서대로 확인</td></tr>
+      <tr><td>동작사항 확인</td><td>지금 도면을 실제로 조작해 보고 큐넷 공개문제 형식의 동작 사항을 만듭니다. 리밋 스위치는 '감지되면(잠깐 눌렸다 복귀)'으로, 타이머로 되풀이되는 동작은 '①~②를 반복한다'로, 누르는 동안만 멈추는 정지 버튼이나 EOCR 리셋 뒤 다시 도는 까닭(셀렉터 A 위치·수위)도 함께 적습니다. 「순서대로 재생」으로 도면에서 그 순서대로 확인</td></tr>
       <tr><td>동작사항→도면</td><td>동작 사항을 적으면 Claude가 시퀀스도를 설계하고 시뮬레이터로 시험해 맞춘 뒤 그려 줍니다. 부품 구성(기기 개수·접점 수·회로선/단 수·추가 조건)도 지정 가능. 「내용 지우기」로 이전 동작 사항을 비움</td></tr>
       <tr><td>도면 수정 요청</td><td>만든 도면이 원하는 동작과 다르거나 접점 수가 넘을 때 추가 요구사항을 적어 고칩니다</td></tr>
       <tr><td>도면 파일 저장·열기</td><td><b>파일 ▾ → 도면 파일 저장 (.seq.json)</b>(또는 Ctrl+S)으로 지금 시퀀스도를 파일로 저장하고, <b>파일 ▾ → 도면 파일 열기</b>로 다시 엽니다. 다른 PC·휴대폰으로 옮길 때도 이 파일을 쓰면 됩니다</td></tr>
@@ -1728,14 +1752,14 @@ ${SIMPLE?`<tr><td>도면칸 확장</td><td>'도면칸 확장'을 고르고 회�
       <tr><td>2쪽</td><td><b>제어판 내부 기구 배치도</b>(세로 치수 50·95·130·95·50, TB5·TB6)와 <b>범례</b> 표</td></tr></table>
     <table class="htab"><tr><th>규칙</th><th>방법</th></tr>
       <tr><td>제어판 자동 배치</td><td>1줄은 MCCB·EOCR·F 다음 8P 기구(릴레이·플리커·타이머·FLS 순), 남은 8P 기구와 MC1·MC2는 2줄. 한 줄에 5개까지</td></tr>
-      <tr><td>가로 간격</td><td>줄마다 양 끝 기구의 바깥 끝선이 제어판 끝에서 50 mm, 안쪽 기구는 같은 간격. 기구 폭은 왼쪽 맨 아래 '▸ 기구 폭'을 눌러 펼쳐서 바꿉니다</td></tr>
+      <tr><td>제어판 배치</td><td>위에서부터 1열 TB5·4열 TB6 고정, MCCB·EOCR·퓨즈(F) 3개는 늘 2열에서 <b>붙어서 한 덩어리</b>로, MC1·MC2 2개는 늘 3열에서 한 덩어리로 다닙니다. 덩어리 안의 순서와 덩어리가 놓이는 자리(왼쪽·가운데·오른쪽)는 섞입니다. 나머지 8P 베이스(릴레이·타이머·플리커·FLS)는 2·3열 상관없이 섞어서 덩어리 앞뒤에 놓습니다(한 줄 5개까지, 문제마다 다르게). <b>8P 다시 섞기</b>를 누르면 새로 섞고, '되돌리기'로 앞 배치로 돌아갑니다. 끌어서 직접 옮길 수도 있습니다</td></tr><tr><td>아래 상자</td><td>배관도의 아래쪽 컨트롤 박스는 끝단 기준으로 아랫면을 제어함 아랫면에 맞춥니다(기능사·산업기사 모두)</td></tr><tr><td>가로 간격</td><td>줄마다 양 끝 기구의 바깥 끝선이 제어판 끝에서 50 mm, 안쪽 기구는 같은 간격. 기구 폭은 왼쪽 맨 아래 '▸ 기구 폭'을 눌러 펼쳐서 바꿉니다</td></tr>
       <tr><td>기구 모양</td><td>8P·12P 기구는 소켓 모양에 단자번호(8P 윗줄 6·5·4·3·아랫줄 7·8·1·2, 12P 1~6·7~12)와 홈 방향 ▲, MCCB는 위·아래 L1·L2·L3, 퓨즈는 위·아래 L1·L3 단자. TB5·TB6은 10P 단자대 두 개를 이어 붙인 모양에 1~10·11~20 번호</td></tr>
       <tr><td>순서 바꾸기</td><td>2쪽의 기구를 끌어 다른 자리·다른 줄로 옮깁니다. 간격은 자동으로 다시 맞춰집니다</td></tr>
       <tr><td>도면 크기</td><td>배치도 오른쪽 아래 막대에서 <b>－ / ＋</b>로 줄이거나 키우고(30~300%), 가운데 %를 누르면 100%, <b>맞춤</b>은 한 쪽 전체가 화면에 보이게, <b>폭 맞춤</b>은 도면 폭을 화면 폭에 맞춥니다. Ctrl+마우스 휠로 마우스 위치를 중심으로 확대·축소하고, 빈 곳을 끌면 도면이 움직입니다. 정한 크기는 기억됩니다</td></tr>
       <tr><td>컨트롤 박스</td><td>전기기능사는 언제나 <b>2구 박스 4개</b>. PB는 둘씩, 셀렉터 스위치는 한 박스, 램프·부저는 둘씩 넣고 남는 구멍과 빈 박스는 <b>CAP(홀마개)</b>. 묶음이 4개를 넘으면 구멍을 차례로 채워 섞어 담습니다. 빈 박스(CAP만)로 가는 배관은 전선이 없어 TB 번호를 쓰지 않습니다. 구멍을 끌어 다른 구멍에 놓으면 서로 바뀝니다</td></tr>
       <tr><td>J박스 위치</td><td>오른쪽형(기능사 2·10번)과 왼쪽형(기능사 1·9번) 중 고릅니다</td></tr>
       <tr><td>아래 단자대 옮기기</td><td>1쪽 아래의 TB2·TB3·TB4를 끌어 다른 단자대 위에 놓으면 서로 자리를 바꿉니다(단자대끼리만, 컨트롤 박스 자리는 그대로). 제어반 결선의 TB6 번호(배관 순서)와 이어 둔 배선도 함께 따라 바뀝니다</td></tr>
-      <tr><td>전기공사산업기사</td><td>제목줄이 '전기공사산업기사 / (2과제) 전기 설비의 배선 및 배관 공사'로 바뀝니다(직접 고친 제목은 그대로).<br>· <b>배관도</b>: 위쪽은 기능사처럼 J 방향에 따라 좌우가 바뀌고, 아래쪽은 언제나 왼쪽부터 <b>④ 금속관 → TB2</b>(왼쪽) · TB4 · TB3(오른쪽) · 위로 올라가 <b>오른쪽 가운데 상자</b>입니다.<br>· <b>치수</b>: 산업기사 2과제 기준 도면 그대로 — 배관 끝은 치수점(아래 ±550, 위 TB1 케이블은 맨 위 50 치수점)에 맞추고 단자대는 배관 끝에서 50 떨어져 놓습니다. 작은 치수(제어함 옆 → 위 배관 100, 아래 ④ 배관 50, TB1~TB4 앞 50, 제어함 귀퉁이 연장선)도 그립니다.<br>· <b>상자</b>: 언제나 <b>3구 2개 + 2구 2개</b>(4개 모두 그림). 셀렉터는 한 상자, PB는 셋씩, 표시 기구는 3개까지 한 상자(넘으면 나눠 담음)로 묶은 뒤 기구가 많은 상자부터 3구를 줍니다. 기구가 모자라 남는 구멍과 빈 상자는 <b>CAP(홀마개)</b>로 채웁니다.<br>· <b>제어판</b>: 1줄 MCCB·EOCR·F + 타이머·플리커·FLS, 2줄 릴레이 + MC (한 줄 5개).<br>· 단자대 번호 규칙·배선 연동은 기능사와 같습니다(아래 배관 왼쪽부터 TB2 1번·TB4 7번·TB3 11번·오른쪽 가운데 상자 17번부터). 배치는 도면 종류마다 따로 기억합니다</td></tr>
+      <tr><td>전기공사산업기사</td><td>제목줄이 '전기공사산업기사 / (2과제) 전기 설비의 배선 및 배관 공사'로 바뀝니다(직접 고친 제목은 그대로).<br>· <b>배관도</b>: 위쪽은 기능사처럼 J 방향에 따라 좌우가 바뀌고, 아래쪽은 언제나 왼쪽부터 <b>④ 금속관 → TB2</b>(왼쪽) · TB4 · TB3(오른쪽) · 위로 올라가 <b>오른쪽 가운데 상자</b>입니다.<br>· <b>치수</b>: 산업기사 2과제 기준 도면 그대로 — 배관 끝은 치수점(아래 ±550, 위 TB1 케이블은 맨 위 50 치수점)에 맞추고 단자대는 배관 끝에서 50 떨어져 놓습니다. 작은 치수(제어함 옆 → 위 배관 100, 아래 ④ 배관 50, TB1~TB4 앞 50, 제어함 귀퉁이 연장선)도 그립니다.<br>· <b>상자</b>: 언제나 <b>3구 2개 + 2구 2개</b>(4개 모두 그림). 셀렉터는 한 상자, PB는 셋씩, 표시 기구는 3개까지 한 상자(넘으면 나눠 담음)로 묶은 뒤 기구가 많은 상자부터 3구를 줍니다. 기구가 모자라 남는 구멍과 빈 상자는 <b>CAP(홀마개)</b>로 채웁니다.<br>· <b>제어판</b>: 기능사와 같은 규칙(아래 '제어판 배치').<br>· 단자대 번호 규칙·배선 연동은 기능사와 같습니다(아래 배관 왼쪽부터 TB2 1번·TB4 7번·TB3 11번·오른쪽 가운데 상자 17번부터). 배치는 도면 종류마다 따로 기억합니다</td></tr>
       <tr><td>TB4</td><td>리밋 스위치가 있으면 'LS1, LS2', 플로트레스가 있으면 '플로트레스' 단자대로 표시. 둘 다 없으면 뺍니다</td></tr>
       <tr><td>되돌리기</td><td>'자동 배치로'는 처음 규칙대로, '되돌리기'(${K_("Ctrl")}+${K_("Z")})는 직전 변경만 되돌립니다</td></tr>
       <tr><td>저장</td><td>PDF(2쪽) 또는 쪽별 JPG. 제목줄의 자격종목·과제명은 왼쪽에서 고칩니다</td></tr></table>`],
@@ -1779,14 +1803,14 @@ ${SIMPLE?`<tr><td>도면칸 확장</td><td>'도면칸 확장'을 고르고 회�
   ["file","저장·불러오기",`
     <table class="htab"><tr><th>버튼</th><th>하는 일</th></tr>
       <tr><td>새 도면</td><td>지금 도면을 도면 파일(.json)·JPG·PDF로 저장하고 새로 시작할지, 저장하지 않고 시작할지 고릅니다</td></tr>
-      <tr><td>도면 저장</td><td>인쇄용(흰 바탕·검은 선)으로 제목과 함께 JPG 또는 PDF로 저장. '기구 단자 번호 넣기'를 고르면 접점·코일 끝에 단자 번호도 넣음(기본은 넣지 않음)</td></tr>
+      <tr><td>도면 저장</td><td>인쇄용(흰 바탕·검은 선)으로 제목과 함께 JPG 또는 PDF로 저장. '기구 단자 번호 넣기'를 고르면 접점·코일 끝에 단자 번호도 넣음(기본은 넣지 않음). 바로 아래 <b>시험지 한 세트 PDF (4쪽)</b>는 배관도·제어판 배치도+범례·시퀀스도·동작사항을 시험지 양식(제목줄 포함)으로 한 파일에 저장 — 동작사항은 예제·빈칸 문제의 원래 글이 있고 도면을 고치지 않았으면 그 글, 아니면 '동작사항 확인'으로 만든 글</td></tr>
       <tr><td>파일·예제</td><td>예제 도면 열기(연습 예제 · 전기공사산업기사 예상문제 · <b>과정평가형 고난도 1~10</b>), 도면 크기 바꾸기, 도면 데이터 복사, 저장해 둔 도면 파일(.json) 다시 불러오기</td></tr>
     </table>
     <p class="hnote">작업 내용은 이 브라우저에 자동으로 저장됩니다. 다른 PC로 옮기려면 도면 파일(.json)로 저장해 두세요.</p>`]];
   if(OFFLINE){const c=S.find(x=>x[0]==="claude");c[1]="동작사항·회로 틀";c[2]=`
     <table class="htab"><tr><th>버튼</th><th>하는 일</th></tr>
       <tr><td>회로 틀로 만들기</td><td>회로를 한 줄씩(조건 접점 → 출력) 적으면 세로형 도면을 자동으로 그립니다. 자기유지·정역·타이머 순차·리밋 왕복·플리커·FLS 예시 틀을 골라 고쳐 쓰면 편합니다</td></tr>
-      <tr><td>동작사항 확인</td><td>지금 도면을 실제로 조작해 보고 큐넷 공개문제 형식의 동작 사항을 만듭니다. 「순서대로 재생」으로 도면에서 그 순서대로 확인</td></tr>
+      <tr><td>동작사항 확인</td><td>지금 도면을 실제로 조작해 보고 큐넷 공개문제 형식의 동작 사항을 만듭니다. 리밋 스위치는 '감지되면(잠깐 눌렸다 복귀)'으로, 타이머로 되풀이되는 동작은 '①~②를 반복한다'로, 누르는 동안만 멈추는 정지 버튼이나 EOCR 리셋 뒤 다시 도는 까닭(셀렉터 A 위치·수위)도 함께 적습니다. 「순서대로 재생」으로 도면에서 그 순서대로 확인</td></tr>
       <tr><td>도면 파일 저장·열기</td><td><b>파일 ▾ → 도면 파일 저장 (.seq.json)</b>(Ctrl+S)으로 저장하고 <b>도면 파일 열기</b>로 다시 엽니다</td></tr>
       <tr><td>이미지·PDF 도면 읽기</td><td>도면 이미지·PDF를 도면 뒤에 반투명하게 깔아 줍니다. 원본을 보면서 따라 그리세요</td></tr>
     </table>
@@ -3373,7 +3397,7 @@ const QZ_PROBS=[
    put(14,0,"A","MC2");wire(14,1,Z-1);put(14,Z,"LAMP","RL2")})},
  // 2026-11-18 산업기사 예상문제 10종(예제 '예상 ②~⑪'과 같은 회로)
  {id:"q21",title:"예상 ② 셀렉터 수동·자동 급수 (FLS)",grade:"ind",level:3,note:"SS·FLS·PB0~PB2·X1·X2·X3·T·MC1·MC2·BZ",
-  spec:["가) 배선용 차단기 MCCB를 통해 전원을 투입하면 EOCR에 전원이 공급된다.", "나) 수동 운전 — 셀렉터 스위치 SS가 수동(M) 위치일 때", "① 푸시버튼 스위치 PB1을 누르면 릴레이 X1이 여자되어 자기유지되고, 전자접촉기 MC1이 여자되어 펌프 M1이 운전되며 램프 RL1이 점등된다.", "② 운전 중 푸시버튼 스위치 PB2(수동 정지)나 PB0을 누르거나 셀렉터 스위치 SS를 자동(A) 위치로 바꾸면 릴레이 X1이 소자되어 펌프 M1이 정지하고 램프 RL1이 소등된다.", "다) 자동 운전 — 셀렉터 스위치 SS가 자동(A) 위치일 때", "① 릴레이 X2가 여자되고 플로트리스 스위치 FLS에 전원이 공급된다.", "② 수위가 전극 E2 아래로 내려가면 릴레이 X3과 타이머 T가 여자되어 전자접촉기 MC1이 여자(펌프 M1 운전, 램프 RL1 점등)되고 램프 WL이 점등된다.", "③ 타이머 T의 설정시간(5초)이 지나도 만수가 되지 않으면 전자접촉기 MC2가 여자되어 보조 펌프 M2가 함께 운전되고 부저 BZ가 울린다.", "④ 수위가 전극 E1에 도달하면 릴레이 X3, 타이머 T, 전자접촉기 MC1·MC2가 소자되어 펌프가 정지하고 램프 RL1·WL이 소등, 부저 BZ가 정지하며 램프 GL(만수 표시)이 점등된다.", "⑤ 셀렉터 스위치 SS를 수동(M) 위치로 바꾸면 자동 운전은 정지된다.", "라) 푸시버튼 스위치 PB0을 누르면 모든 동작이 정지된다.", "마) 운전 중 과부하에 의해 EOCR이 동작하면 제어회로 전원이 차단되어 전동기가 정지하고 램프 YL이 점등된다. EOCR을 리셋하면 초기 상태로 복귀한다."],
+  spec:["가) 배선용 차단기 MCCB를 통해 전원을 투입하면 EOCR에 전원이 공급된다.", "나) 수동 운전 — 셀렉터 스위치 SS가 수동(M) 위치일 때", "① 푸시버튼 스위치 PB1을 누르면 릴레이 X1이 여자되어 자기유지되고, 전자접촉기 MC1이 여자되어 펌프 M1이 운전되며 램프 RL1이 점등된다.", "② 운전 중 푸시버튼 스위치 PB2(수동 정지)나 PB0을 누르거나 셀렉터 스위치 SS를 자동(A) 위치로 바꾸면 릴레이 X1이 소자되어 펌프 M1이 정지하고 램프 RL1이 소등된다.", "다) 자동 운전 — 셀렉터 스위치 SS가 자동(A) 위치일 때", "① 릴레이 X2가 여자되고 플로트리스 스위치 FLS에 전원이 공급된다.", "② 수위가 전극 E2 아래로 내려가면 릴레이 X3과 타이머 T가 여자되어 전자접촉기 MC1이 여자(펌프 M1 운전, 램프 RL1 점등)되고 램프 WL이 점등된다.", "③ 타이머 T의 설정시간(5초)이 지나도 만수가 되지 않으면 전자접촉기 MC2가 여자되어 보조 펌프 M2가 함께 운전되고 부저 BZ가 울린다.", "④ 수위가 전극 E1에 도달하면 릴레이 X3, 타이머 T, 전자접촉기 MC1·MC2가 소자되어 펌프가 정지하고 램프 RL1·WL이 소등, 부저 BZ가 정지하며 램프 GL(만수 표시)이 점등된다.", "⑤ 셀렉터 스위치 SS를 수동(M) 위치로 바꾸면 자동 운전은 정지된다.", "라) 푸시버튼 스위치 PB0을 누르고 있는 동안에는 모든 동작이 정지된다. 단, 셀렉터 스위치 SS가 자동(A) 위치이면 손을 뗀 뒤 수위에 따라 다시 자동 운전한다.", "마) 운전 중 과부하에 의해 EOCR이 동작하면 제어회로 전원이 차단되어 전동기가 정지하고 램프 YL이 점등된다. EOCR을 리셋하면 초기 상태로 복귀한다."],
   blanks:[{l0: 6, l1: 8, p0: 0, p1: 1}],build:()=>EXAMPLES[8][1]()},
  {id:"q22",title:"예상 ③ 리밋 스위치 연속 왕복 (방향 기억)",grade:"ind",level:3,note:"LS1 a·LS2 a, PB0~PB2, X1·X2·X3·T(c접점)·FR·MC1·MC2·BZ",
   spec:["가) 배선용 차단기 MCCB를 통해 전원을 투입하면 EOCR에 전원이 공급되고 램프 GL이 점등된다.", "나) 푸시버튼 스위치 PB1을 누르면 릴레이 X1이 여자되어 자기유지되고, 전자접촉기 MC1이 여자되어 전동기 M1(전진)이 운전되며 램프 RL1이 점등, 램프 GL은 소등된다.", "다) 전진 중 리밋 스위치 LS1이 감지되면 릴레이 X3이 여자되어 자기유지(방향 기억)되고 타이머 T, 플리커 릴레이 FR이 여자된다. 전자접촉기 MC1이 소자되어 전진이 정지하고 램프 RL1은 소등, 램프 GL은 점등되며, FR의 설정시간(0.5초) 간격으로 부저 BZ가 단속적으로 울린다.", "라) 타이머 T의 설정시간(2초)이 지나면 플리커 릴레이 FR이 소자되어 부저 BZ가 정지하고, 전자접촉기 MC2가 여자되어 전동기 M2(후진)가 운전되며 램프 RL2가 점등, 램프 GL은 소등된다.", "마) 전진 운전 중 푸시버튼 스위치 PB2를 누르면 리밋 스위치 LS1이 감지된 것과 같이 다)·라)의 동작(정지 대기 후 후진)을 한다.", "바) 후진 중 리밋 스위치 LS2가 감지되면 릴레이 X2가 여자되어 릴레이 X3, 타이머 T가 소자되고, 전자접촉기 MC2가 소자, 전자접촉기 MC1이 여자되어 다시 전진한다. 이후 PB0을 누를 때까지 다)~바)를 반복한다.", "사) 푸시버튼 스위치 PB0을 누르면 모든 동작이 정지된다.", "아) 운전 중 과부하에 의해 EOCR이 동작하면 제어회로 전원이 차단되어 전동기가 정지하고 램프 YL이 점등된다. EOCR을 리셋하면 초기 상태로 복귀한다."],
@@ -3382,7 +3406,7 @@ const QZ_PROBS=[
   spec:["가) 배선용 차단기 MCCB를 통해 전원을 투입하면 EOCR에 전원이 공급되고 램프 GL이 점등된다.", "나) 푸시버튼 스위치 PB1을 누르면 릴레이 X1이 여자되어 자기유지되고, 전자접촉기 MC1이 여자되어 전동기 M1이 회전하며, 램프 RL1이 점등되고 램프 GL은 소등된다. 전동기 M1 운전 중 리밋 스위치 LS1이 감지되면 릴레이 X1, 전자접촉기 MC1이 소자되어 전동기 M1이 정지하고 램프 RL1은 소등, 램프 GL은 점등된다.", "다) 후입력 우선", "① 전동기 M1 운전 중 푸시버튼 스위치 PB2를 누르면 릴레이 X1이 소자되어 전동기 M1이 정지하고, 릴레이 X2가 여자되어 자기유지되며 전자접촉기 MC2가 여자되어 전동기 M2가 회전하고 램프 RL2가 점등된다. 이때 타이머 T가 여자된다. 전동기 M2 운전 중 리밋 스위치 LS2가 감지되면 릴레이 X2, 타이머 T, 전자접촉기 MC2가 소자되어 전동기 M2가 정지하고 램프 RL2는 소등, 램프 GL은 점등된다.", "② 반대로 릴레이 X2가 동작 중일 때 푸시버튼 스위치 PB1을 누르면 릴레이 X2가 소자되고 릴레이 X1이 동작한다(나중에 누른 쪽이 우선).", "라) 한시 정지 경보", "① 타이머 T의 설정시간(5초)이 지나면 전자접촉기 MC2가 소자되어 전동기 M2가 정지하고 램프 RL2는 소등, 램프 GL은 점등된다.", "② 동시에 릴레이 X3과 플리커 릴레이 FR이 여자되어 FR의 설정시간(0.5초) 간격으로 램프 WL과 부저 BZ가 교대로 동작한다(램프 WL이 먼저).", "③ 경보 중 푸시버튼 스위치 PB1을 누르면 릴레이 X2·X3, 타이머 T, 플리커 릴레이 FR이 소자되어 경보가 멈추고 나)와 같이 전동기 M1이 운전된다.", "마) 푸시버튼 스위치 PB0을 누르면 모든 동작이 정지된다.", "바) 운전 중 과부하에 의해 EOCR이 동작하면 제어회로 전원이 차단되어 전동기가 정지하고 램프 YL이 점등된다. EOCR을 리셋하면 초기 상태로 복귀한다."],
   blanks:[{l0: 2, l1: 5, p0: 1, p1: 1}, {l0: 6, l1: 7, p0: 1, p1: 1}],build:()=>EXAMPLES[10][1]()},
  {id:"q24",title:"예상 ⑤ 3입력 우선순위 + 자동 전환",grade:"ind",level:3,note:"PB1>PB2>LS2 우선순위, LS1(X1 정지), X1·X2·X3·T·FR·MC1·MC2",
-  spec:["가) 배선용 차단기 MCCB를 통해 전원을 투입하면 EOCR에 전원이 공급된다.", "나) 우선순위 운전 (X1 > X2 > X3)", "① 푸시버튼 스위치 PB1을 누르면 릴레이 X1이 여자되어 자기유지되고 전자접촉기 MC1이 여자되어 전동기 M1이 회전하며 램프 RL1이 점등된다. 릴레이 X2나 X3이 동작 중일 때 PB1을 누르면 X2·X3은 소자되고 X1이 동작한다. X1이 동작 중일 때는 PB2·PB3을 눌러도 동작하지 않는다. 릴레이 X1에 의해 전동기 M1이 운전 중일 때 리밋 스위치 LS1이 감지되면 릴레이 X1, 전자접촉기 MC1이 소자되어 정지한다.", "② 릴레이 X1이 동작하지 않을 때 푸시버튼 스위치 PB2를 누르면 릴레이 X2가 여자되어 자기유지되고 전자접촉기 MC2가 여자되어 전동기 M2가 회전하며 램프 RL2가 점등된다. 릴레이 X3이 동작 중일 때 PB2를 누르면 X3은 소자되고 X2가 동작한다. X2가 동작 중일 때는 PB3을 눌러도 동작하지 않는다.", "③ 릴레이 X1·X2가 모두 동작하지 않을 때 리밋 스위치 LS2가 감지되면 릴레이 X3이 여자되어 자기유지되고, 전자접촉기 MC1이 여자되어 전동기 M1이 회전하며 램프 RL1이 점등된다. 동시에 타이머 T와 플리커 릴레이 FR이 여자되어 FR의 설정시간(0.5초) 간격으로 램프 WL이 점멸한다.", "다) 자동 전환 — 릴레이 X3 동작 후 타이머 T의 설정시간(3초)이 지나면 릴레이 X2가 여자되어 자기유지되고 전자접촉기 MC2가 여자되어 전동기 M2가 회전하며 램프 RL2가 점등된다. 이때 릴레이 X3, 타이머 T, 플리커 릴레이 FR, 전자접촉기 MC1이 소자되어 전동기 M1이 정지하고 램프 RL1·WL이 소등된다.", "라) 푸시버튼 스위치 PB0을 누르면 모든 동작이 정지된다.", "마) 운전 중 과부하에 의해 EOCR이 동작하면 제어회로 전원이 차단되어 전동기가 정지하고 램프 YL이 점등된다. EOCR을 리셋하면 초기 상태로 복귀한다."],
+  spec:["가) 배선용 차단기 MCCB를 통해 전원을 투입하면 EOCR에 전원이 공급된다.", "나) 우선순위 운전 (X1 > X2 > X3)", "① 푸시버튼 스위치 PB1을 누르면 릴레이 X1이 여자되어 자기유지되고 전자접촉기 MC1이 여자되어 전동기 M1이 회전하며 램프 RL1이 점등된다. 릴레이 X2나 X3이 동작 중일 때 PB1을 누르면 X2·X3은 소자되고 X1이 동작한다. X1이 동작 중일 때는 PB2를 누르거나 리밋 스위치 LS2가 감지되어도 X2·X3은 동작하지 않는다. 릴레이 X1에 의해 전동기 M1이 운전 중일 때 리밋 스위치 LS1이 감지되면 릴레이 X1, 전자접촉기 MC1이 소자되어 정지한다.", "② 릴레이 X1이 동작하지 않을 때 푸시버튼 스위치 PB2를 누르면 릴레이 X2가 여자되어 자기유지되고 전자접촉기 MC2가 여자되어 전동기 M2가 회전하며 램프 RL2가 점등된다. 릴레이 X3이 동작 중일 때 PB2를 누르면 X3은 소자되고 X2가 동작한다. X2가 동작 중일 때는 리밋 스위치 LS2가 감지되어도 X3은 동작하지 않는다.", "③ 릴레이 X1·X2가 모두 동작하지 않을 때 리밋 스위치 LS2가 감지되면 릴레이 X3이 여자되어 자기유지되고, 전자접촉기 MC1이 여자되어 전동기 M1이 회전하며 램프 RL1이 점등된다. 동시에 타이머 T와 플리커 릴레이 FR이 여자되어 FR의 설정시간(0.5초) 간격으로 램프 WL이 점멸한다.", "다) 자동 전환 — 릴레이 X3 동작 후 타이머 T의 설정시간(3초)이 지나면 릴레이 X2가 여자되어 자기유지되고 전자접촉기 MC2가 여자되어 전동기 M2가 회전하며 램프 RL2가 점등된다. 이때 릴레이 X3, 타이머 T, 플리커 릴레이 FR, 전자접촉기 MC1이 소자되어 전동기 M1이 정지하고 램프 RL1·WL이 소등된다.", "라) 푸시버튼 스위치 PB0을 누르면 모든 동작이 정지된다.", "마) 운전 중 과부하에 의해 EOCR이 동작하면 제어회로 전원이 차단되어 전동기가 정지하고 램프 YL이 점등된다. EOCR을 리셋하면 초기 상태로 복귀한다."],
   blanks:[{l0: 4, l1: 8, p0: 0, p1: 2}],build:()=>EXAMPLES[11][1]()},
  {id:"q25",title:"예상 ⑥ 컨베이어 순차 기동·비움 후 정지",grade:"ind",level:3,note:"LS1·LS2·X1·X2·X3·T·FR·MC1·MC2",
   spec:["가) 배선용 차단기 MCCB를 통해 전원을 투입하면 EOCR에 전원이 공급되고 램프 GL이 점등된다.", "나) 순차 기동", "① 푸시버튼 스위치 PB1을 누르면 릴레이 X1이 여자되어 자기유지되고, 전자접촉기 MC1이 여자되어 컨베이어 M1이 운전되며 램프 RL1이 점등, 램프 GL은 소등된다. 동시에 타이머 T가 여자된다.", "② 타이머 T의 설정시간(3초)이 지나면 전자접촉기 MC2가 여자되어 컨베이어 M2가 운전되고 램프 RL2가 점등된다.", "③ 컨베이어 M2 운전 중 리밋 스위치 LS2가 감지되는 동안은 전자접촉기 MC2가 소자되어 컨베이어 M2가 정지하고, LS2가 복귀하면 다시 운전된다.", "다) 비움 후 정지", "① 운전 중 푸시버튼 스위치 PB2를 누르면 릴레이 X3이 여자되어 자기유지되고, 전자접촉기 MC2가 소자되어 컨베이어 M2가 먼저 정지하며 램프 RL2가 소등된다. 동시에 플리커 릴레이 FR이 여자되어 FR의 설정시간(0.5초) 간격으로 램프 WL이 점멸한다.", "② 이 상태에서 리밋 스위치 LS1이 감지(컨베이어 M1 위 제품 없음)되면 릴레이 X2가 여자되어 릴레이 X1, 전자접촉기 MC1, 타이머 T가 소자되고, 이어서 릴레이 X3, 플리커 릴레이 FR이 소자되어 모든 컨베이어가 정지하고 램프 GL이 점등된다.", "③ 릴레이 X1이 동작하지 않을 때 PB2를 누르거나, 릴레이 X3이 동작하지 않을 때 LS1이 감지되어도 아무 동작도 하지 않는다.", "라) 푸시버튼 스위치 PB0을 누르면 모든 동작이 정지된다.", "마) 운전 중 과부하에 의해 EOCR이 동작하면 제어회로 전원이 차단되어 전동기가 정지하고 램프 YL이 점등된다. EOCR을 리셋하면 초기 상태로 복귀한다."],
@@ -4161,14 +4185,14 @@ wrLoad();
 // 가로: 줄마다 양 끝 기구의 바깥 끝선이 제어판 끝에서 50 mm, 안쪽 기구는 같은 간격
 // 도면 종류(사용자 요청, 2026-11-12): func=전기기능사, ind=전기공사산업기사 — 산업기사는 3구·2구 상자, 오른쪽 가운데 상자, ④ 금속관(TB2)
 const LY_GRADE={func:{name:"전기기능사",kind:"전기기능사",task:"전기 설비의 배선 및 배관 공사"},ind:{name:"전기공사산업기사",kind:"전기공사산업기사",task:"(2과제) 전기 설비의 배선 및 배관 공사"}};
-const LY={grade:"func",jside:"right",title:{kind:"전기기능사",task:"전기 설비의 배선 및 배관 공사"},widths:{mccb:55,p12:72,p8:42,f:22},saved:{},undo:[],zoom:1,drag:null,cur:null};
+const LY={grade:"func",jside:"right",title:{kind:"전기기능사",task:"전기 설비의 배선 및 배관 공사"},widths:{mccb:55,p12:72,p8:42,f:22},saved:{},shuf:{},undo:[],zoom:1,drag:null,cur:null};
 const LY_W0={mccb:55,p12:72,p8:42,f:22};const LY_WV=3;   // 기구 폭 기본값 판(2: 10% 키움, 3: 12P 폭 15% 키움 — 2026-11-12)
 function lyLoad(){const s=pnStore.get("seqsim.layout");if(!s)return;
   if(s.title)Object.assign(LY.title,s.title);
   // 예전 판에 저장된 폭은 10% 키워서 이어 씀
   if(s.widths)for(const k in LY_W0){let v=+s.widths[k];if(!(v>=10&&v<=150))continue;if((s.wv||1)<2)v=v*1.1;if((s.wv||1)<3&&k==="p12")v=v*1.15;v=Math.round(v);LY.widths[k]=Math.min(150,v)}
-  LY.grade=s.grade==="ind"?"ind":"func";LY.jside=s.jside==="left"?"left":"right";LY.saved=s.saved&&typeof s.saved==="object"?s.saved:{}}
-function lySave(){const keys=Object.keys(LY.saved);if(keys.length>40)delete LY.saved[keys[0]];pnStore.set("seqsim.layout",{wv:LY_WV,grade:LY.grade,title:LY.title,widths:LY.widths,jside:LY.jside,saved:LY.saved})}
+  LY.grade=s.grade==="ind"?"ind":"func";LY.jside=s.jside==="left"?"left":"right";LY.saved=s.saved&&typeof s.saved==="object"?s.saved:{};LY.shuf=s.shuf&&typeof s.shuf==="object"?s.shuf:{}}
+function lySave(){const keys=Object.keys(LY.saved);if(keys.length>40)delete LY.saved[keys[0]];pnStore.set("seqsim.layout",{wv:LY_WV,grade:LY.grade,title:LY.title,widths:LY.widths,jside:LY.jside,saved:LY.saved,shuf:LY.shuf})}
 const lyNat=(a,b)=>a.localeCompare(b,undefined,{numeric:true});
 
 // ── 시퀀스도에서 기구 뽑기 ──
@@ -4188,15 +4212,19 @@ function lyParts(C){const cells=[...C.cells.values()],all=[...cells,...C.bus.val
 const lyInd=()=>LY.grade==="ind";
 const lySig=P=>(lyInd()?"ind|":"")+P.inner.map(d=>d.id).join(",")+"|"+[...P.pb,...P.ss,...P.lamp,...P.bz].join(",");
 
-// ── 제어판 내부 자동 배치: 1줄 MCCB·EOCR·F + 8P, 2줄 남은 8P + MC ──
-function lyAutoInner(P){const by=id=>P.inner.find(d=>d.id===id),p8=P.p8.map(d=>d.id),r1=["MCCB",...(P.eocr?["EOCR"]:[]),"F"];
-  if(lyInd()){   // 산업기사: 1줄 MCCB·EOCR·F + 타이머·플리커·FLS, 2줄 릴레이 + MC (한 줄 5개, 2줄이 넘치면 릴레이를 1줄로)
-    const other=P.p8.filter(d=>d.sub!=="relay").map(d=>d.id),rel=P.p8.filter(d=>d.sub==="relay").map(d=>d.id),mc=P.mc.map(t=>"mc:"+t);
-    while(r1.length<5&&other.length)r1.push(other.shift());
-    const r2=[...other,...rel,...mc];while(r1.length<5&&r2.length>5&&rel.length){const t=rel.shift();r2.splice(r2.indexOf(t),1);r1.push(t)}
-    return{r1,r2}}
-  while(r1.length<5&&p8.length)r1.push(p8.shift());
-  return{r1,r2:[...p8,...P.mc.map(t=>"mc:"+t)]}}
+// ── 제어판 내부 자동 배치 (사용자 규칙 2026-11-24) ──
+// 1열 TB5·4열 TB6 고정, 2열에는 MCCB·EOCR·퓨즈(F) 덩어리, 3열에는 MC1·MC2 덩어리가 늘 들어감(열 고정, 덩어리 자리·안 순서는 섞음),
+// 나머지 8P 베이스(릴레이·타이머·플리커·FLS)는 2·3열 상관없이 섞어 배치(한 줄 5개까지). 도면마다 정해진 순서로 섞이고 '8P 다시 섞기'로 바꿈
+function lyRand(seed){let x=2166136261>>>0;for(const ch of seed)x=Math.imul(x^ch.charCodeAt(0),16777619)>>>0;return()=>{x^=x<<13;x>>>=0;x^=x>>17;x^=x<<5;x>>>=0;return x/4294967296}}
+function lyAutoInner(P){const r1=["MCCB",...(P.eocr?["EOCR"]:[]),"F"],mc=P.mc.map(t=>"mc:"+t),p8=P.p8.map(d=>d.id);
+  const rnd=lyRand(lySig(P)+"#"+(typeof name==="string"?name:"")+"#"+(LY.shuf[lySig(P)]||0));   // 도면 이름도 넣어 문제마다 다르게
+  for(let i=p8.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[p8[i],p8[j]]=[p8[j],p8[i]]}
+  const cap1=Math.max(0,5-r1.length),cap2=Math.max(0,5-mc.length),lo=Math.max(0,p8.length-cap2),hi=Math.min(cap1,p8.length);
+  const k=lo<=hi?lo+Math.floor(rnd()*(hi-lo+1)):hi;
+  // 고정 기구는 한 덩어리로 붙어 다님: 2열 MCCB·EOCR·F 3개, 3열 MC1·MC2 2개 — 덩어리 안 순서와 덩어리 자리(8P 사이 어디든)는 랜덤 (사용자 지시 2026-11-24)
+  const mix=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+  const place=(blk,others)=>{const at=Math.floor(rnd()*(others.length+1));return[...others.slice(0,at),...mix(blk.slice()),...others.slice(at)]};
+  return{r1:place(r1,p8.slice(0,k)),r2:place(mc,p8.slice(k))}}
 // ── 컨트롤 박스 자동 채움: PB는 짝지어, SS는 한 박스(남는 구멍 CAP), 램프·부저는 짝지어 / 4박스에 안 들어가면 3구 박스 ──
 // 박스 자리: B1(J 없는 쪽 위) · B4(아래) · B2(J 바로 아래) · B3(J 끝)
 // 산업기사: 상자 4개(B1 J 없는 쪽 위·B2 J 아래·B3 J 끝·B4 오른쪽 가운데), 3구·2구를 섞어 씀
@@ -4242,7 +4270,8 @@ function lyState(){const P=lyParts(circ),sig=lySig(P),auto=lyAutoInner(P),ab=lyA
   if(sv&&sv.tb){const v=tbs.map(n=>sv.tb[n]);if(v.every(Boolean)&&[...v].sort().join()===[...tbs].sort().join())tbs.forEach((n,i)=>tb[n]=v[i])}
   return{P,sig,inner,box,tb,custom:!!sv}}
 function lyRemember(st){LY.saved[st.sig]={inner:st.inner,box:{cap:st.box.cap,boxes:st.box.boxes},tb:st.tb};lySave()}
-function lySnap(){LY.undo.push(JSON.stringify(LY.saved));if(LY.undo.length>60)LY.undo.shift()}
+function lyPopUndo(){const u=JSON.parse(LY.undo.pop());if(u&&u.saved&&u.shuf){LY.saved=u.saved;LY.shuf=u.shuf}else LY.saved=u}
+function lySnap(){LY.undo.push(JSON.stringify({saved:LY.saved,shuf:LY.shuf}));if(LY.undo.length>60)LY.undo.shift()}
 
 // ── 가로 위치 계산 (mm) ──
 function lySize(d){const W=LY.widths;return d.kind==="mccb"?[W.mccb,68]:d.kind==="p12"?[W.p12,Math.round(W.p12*0.974*1.4/1.15)]:d.kind==="f"?[W.f,53]:[W.p8,Math.round(W.p8/0.694)]}
@@ -4332,7 +4361,7 @@ function lyPipeSVG(st,ox,oy,k){const sg=LY.jside==="left"?-1:1,X=x=>ox+sg*x*k,Y=
   const nTop=[[-100,"①"],[0,"③"],[100,"②"],[450,"①"],[750,"②"]];for(const[x,n]of nTop)s+=cnum(X(x),Y(-410),n);
   // 배관 (아래)
   // 기능사는 공개문제 018 치수 그대로(2026-11-23 사용자 지시): 배관 끝 = 치수점, 단자대는 배관 끝에서 50 떨어짐, 오른쪽 아래 상자 아랫면 = 제어함 아랫면
-  const bot=210,lowTop=ind?40:210-bhOf(box.boxes.B4),B4Y=40;
+  const bot=210,lowTop=ind?40:210-bhOf(box.boxes.B4),B4Y=210-bhOf(box.boxes.B4);   // 아래 상자는 끝단 기준: 아랫면 = 제어함 아랫면(기능사·산업기사 모두, 2026-11-24)
   if(!ind){
     s+=lyL([[X(-150),Y(bot)],[X(-150),Y(610)],[X(-550),Y(610)],[X(-550),Y(lowTop+bhOf(box.boxes.B4))]],W);   // 018: 아래 상자는 아래 치수 끝(550) 줄에 맞춤 — 가로 400
     s+=lyL([[X(-50),Y(bot)],[X(-50),Y(710)],[X(-550),Y(710)]],W);
@@ -4434,7 +4463,7 @@ function lyLegendSVG(st,x0,y0,w){const{left,right}=lyLegend(st),n=Math.max(left.
   return{svg:s,h:rh*(n+1)}}
 
 // ── 페이지 (A4 595×842) ──
-function lyHeader(){const t=LY.title,x=40,w=515,y=36,h=34,c=[0,72,175,229,470,495,515];let s="";
+function lyHeader(W=515){const t=LY.title,x=40,w=W,y=36,h=34,f=W/515,c=[0,72,175,229,470,495,515].map((v,i)=>i===4?W-45:i===5?W-20:i===6?W:Math.round(v*(i<=3?f:1)*(i===3?1:1)));let s="";
   s+=lyR(x,y,w,h,1.2);for(let i=1;i<c.length-1;i++)s+=lyL([[x+c[i],y],[x+c[i],y+h]],1);
   const mid=(i)=>x+(c[i]+c[i+1])/2;
   s+=lyT(mid(0),y+21,"자격종목",10.5,{w:600})+lyT(mid(1),y+21,t.kind,11,{w:600})+lyT(mid(2),y+21,"과제명",10.5,{w:600});
@@ -4509,7 +4538,7 @@ $("lyPages").addEventListener("pointerdown",e=>{if(e.button!==0)return;const dev
   window.addEventListener("pointermove",mv);window.addEventListener("pointerup",up);window.addEventListener("pointercancel",up)});
 function lyHint(t,w){const h=$("lyHint");h.textContent=t||"";h.classList.toggle("warn",!!w)}
 window.addEventListener("keydown",e=>{if(PN.view!=="layout"||$("modalRoot").firstChild)return;const t=e.target;if(t&&(t.tagName==="INPUT"||t.tagName==="TEXTAREA"))return;
-  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="z"){e.preventDefault();if(!LY.undo.length){lyHint("되돌릴 것이 없습니다.");return}LY.saved=JSON.parse(LY.undo.pop());lySave();lyRender()}});
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="z"){e.preventDefault();if(!LY.undo.length){lyHint("되돌릴 것이 없습니다.");return}lyPopUndo();lySave();lyRender()}});
 
 // ── 왼쪽 설정 ──
 function lySide(){const W=LY.widths,ind=lyInd();
@@ -4517,11 +4546,11 @@ function lySide(){const W=LY.widths,ind=lyInd();
     <label class="lyr"><input type="radio" name="lyG" value="func"> 전기기능사</label><label class="lyr"><input type="radio" name="lyG" value="ind"> 전기공사산업기사</label>
     <h3>J박스 위치</h3>
     <label class="lyr"><input type="radio" name="lyJ" value="right"> 오른쪽형${ind?"":" (2·10번)"}</label><label class="lyr"><input type="radio" name="lyJ" value="left"> 왼쪽형${ind?"":" (1·9번)"}</label>
-    <div class="pvbar"><button class="btn" id="lyAuto">자동 배치로</button><button class="btn" id="lyUndo">되돌리기</button></div>
+    <div class="pvbar"><button class="btn" id="lyAuto">자동 배치로</button><button class="btn" id="lyShuf" title="제어판의 8P 베이스(릴레이·타이머·플리커·FLS)를 2·3열에 새로 섞어 놓습니다">8P 다시 섞기</button><button class="btn" id="lyUndo">되돌리기</button></div>
     <h3>제목줄</h3>
     <label class="lyt">자격종목<input id="lyKind" value="${escH(LY.title.kind)}" maxlength="20"></label><label class="lyt">과제명<input id="lyTask" value="${escH(LY.title.task)}" maxlength="40"></label>
     <h3>저장</h3>
-    <div class="pvbar"><button class="btn primary" id="lyPdf" style="min-width:0">PDF (2쪽)</button><button class="btn" id="lyJ1">JPG 1쪽</button><button class="btn" id="lyJ2">JPG 2쪽</button></div>
+    <div class="pvbar"><button class="btn primary" id="lySet" style="min-width:0;flex-basis:100%" title="배관도·제어판 배치도+범례·시퀀스도·동작사항을 시험지 양식 PDF 한 파일로 저장합니다">시험지 한 세트 PDF (4쪽)</button><button class="btn" id="lyPdf" style="min-width:0">PDF (2쪽)</button><button class="btn" id="lyJ1">JPG 1쪽</button><button class="btn" id="lyJ2">JPG 2쪽</button></div>
     <details class="lywd"${LY.wopen?" open":""}><summary>기구 폭 (mm)</summary>
     <div class="lyw"><label>MCCB<input type="number" data-w="mccb" value="${W.mccb}" min="10" max="150"></label><label>EOCR·MC (12P)<input type="number" data-w="p12" value="${W.p12}" min="10" max="150"></label>
       <label>8P 소켓<input type="number" data-w="p8" value="${W.p8}" min="10" max="150"></label><label>퓨즈홀더 F<input type="number" data-w="f" value="${W.f}" min="10" max="150"></label></div></details>`;
@@ -4529,20 +4558,21 @@ function lySide(){const W=LY.widths,ind=lyInd();
   document.querySelectorAll('input[name="lyJ"]').forEach(r=>{r.checked=r.value===LY.jside;r.onchange=()=>{LY.jside=r.value;lySave();lyRender()}});
   $("lySide").querySelector(".lywd").ontoggle=e=>{LY.wopen=e.target.open};
   $("lyAuto").onclick=()=>{const st=LY.cur||lyState();if(!LY.saved[st.sig]){lyHint("이미 자동 배치입니다.");return}lySnap();delete LY.saved[st.sig];lySave();lyRender();lyHint("자동 배치로 되돌렸습니다.")};
-  $("lyUndo").onclick=()=>{if(!LY.undo.length){lyHint("되돌릴 것이 없습니다.");return}LY.saved=JSON.parse(LY.undo.pop());lySave();lyRender()};
+  $("lyShuf").onclick=()=>{const st=LY.cur||lyState();lySnap();LY.shuf[st.sig]=(LY.shuf[st.sig]||0)+1;if(LY.saved[st.sig])delete LY.saved[st.sig].inner;lySave();lyRender();lyHint("8P 베이스를 새로 섞었습니다. 마음에 들 때까지 눌러 보세요.")};$("lyUndo").onclick=()=>{if(!LY.undo.length){lyHint("되돌릴 것이 없습니다.");return}lyPopUndo();lySave();lyRender()};
   document.querySelectorAll("[data-w]").forEach(i=>i.onchange=()=>{const v=Math.round(+i.value);if(!(v>=10&&v<=150)){i.value=LY.widths[i.dataset.w];lyHint("기구 폭은 10~150 mm로 적어 주세요.",true);return}LY.widths[i.dataset.w]=v;lySave();lyRender()});
   $("lyKind").oninput=e=>{LY.title.kind=e.target.value;lySave();lyRender()};$("lyTask").oninput=e=>{LY.title.task=e.target.value;lySave();lyRender()};
-  $("lyPdf").onclick=()=>lyExport("pdf");$("lyJ1").onclick=()=>lyExport(1);$("lyJ2").onclick=()=>lyExport(2)}
+  $("lySet").onclick=()=>lyExportSet();$("lyPdf").onclick=()=>lyExport("pdf");$("lyJ1").onclick=()=>lyExport(1);$("lyJ2").onclick=()=>lyExport(2)}
 // 도면 종류 바꾸기: 제목줄이 그 종류의 기본값이면 새 종류의 기본값으로 바꿈(직접 고친 제목은 그대로). 배치는 종류별로 따로 기억.
 function lySetGrade(g){g=g==="ind"?"ind":"func";if(g===LY.grade)return;const old=LY_GRADE[LY.grade],nw=LY_GRADE[g];
   if(!LY.title.kind||LY.title.kind===old.kind)LY.title.kind=nw.kind;if(!LY.title.task||LY.title.task===old.task)LY.title.task=nw.task;
   LY.grade=g;lySave();lySide();lyRender();lyHint(`${nw.name} 도면으로 바꿨습니다.`+(g==="ind"?" 3구·2구 상자, 오른쪽 가운데 상자, ④ 금속관(TB2)이 들어갑니다.":""))}
 // ── 저장: SVG → 그림 → JPG / PDF ──
-async function lyCanvas(n){const st=lyState(),body=n===1?lyPage1(st):lyPage2(st,false),sc=3.5;
-  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${595*sc}" height="${842*sc}" viewBox="0 0 595 842">${body}</svg>`;
+async function lyCanvas(n){const st=lyState();return lySvgCanvas(n===1?lyPage1(st):lyPage2(st,false))}
+async function lySvgCanvas(body,land){const sc=3.5,PW=land?842:595,PH=land?595:842;
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${PW*sc}" height="${PH*sc}" viewBox="0 0 ${PW} ${PH}">${body}</svg>`;
   const img=new Image(),url=URL.createObjectURL(new Blob([svg],{type:"image/svg+xml"}));
   await new Promise((ok,no)=>{img.onload=ok;img.onerror=no;img.src=url});
-  const c=document.createElement("canvas");c.width=595*sc;c.height=842*sc;const g=c.getContext("2d");g.fillStyle="#fff";g.fillRect(0,0,c.width,c.height);g.drawImage(img,0,0);URL.revokeObjectURL(url);return c}
+  const c=document.createElement("canvas");c.width=PW*sc;c.height=PH*sc;const g=c.getContext("2d");g.fillStyle="#fff";g.fillRect(0,0,c.width,c.height);g.drawImage(img,0,0);URL.revokeObjectURL(url);return c}
 async function lyExport(what){const base=((name&&!/^(새 도면|불러온 도면|t)$/.test(name)?name.replace(/^[①-⑳]\s*/,"")+" ":"")+"배치도").replace(/[\\/:*?"<>|]+/g,"_").slice(0,60);
   lyHint("파일을 만드는 중입니다…");
   try{let blob,file;
@@ -4554,7 +4584,44 @@ async function lyExport(what){const base=((name&&!/^(새 도면|불러온 도면
     lyHint("저장 확인 창이 뜨면 '저장'을 눌러 주세요.");await saveFile(file,blob);lyHint(`'${file}' 파일을 저장했습니다.`)}
   catch(e){const code=e&&e.code;lyHint(code==="declined"?"저장을 취소했습니다.":code==="pdf_load"?"PDF 도구를 불러오지 못했습니다. 인터넷 연결을 확인하거나 JPG로 저장해 주세요.":"저장하지 못했습니다. 다시 시도해 주세요.",code!=="declined")}}
 
+// ── 시험지 한 세트(사용자 요청 2026-11-24): 1) 배관 및 기구 배치도 2) 제어판 내부 기구 배치도+범례 3) 시퀀스 회로도 4) 동작 사항 ──
+// 쪽 순서·제목은 공개문제 018·산업기사 2과제와 같게. 동작사항은 예제·빈칸 문제의 원래 글이 있고 도면이 그대로면 그 글, 아니면 자동 동작사항
+function lySetSpec(){const cur=JSON.stringify(circ.toJSON()),lv=s=>typeof s==="string"?{text:s,level:/^\s*[①-⑳]/.test(s)?1:0}:s;
+  const srcs=[...EXAMPLES.map(e=>[e[1],(e[2]||{}).spec]),...(typeof QZ_PROBS!=="undefined"?QZ_PROBS.map(q=>[q.build,q.spec]):[])];
+  for(const[fn,spec]of srcs){if(!spec||!spec.length)continue;try{if(JSON.stringify(fn().toJSON())===cur)return{items:spec.map(lv),src:"원문"}}catch(e){}}
+  let d;try{d=describeCircuit(circ)}catch(e){d={items:[],error:"동작 사항을 만들 수 없습니다."}}
+  return{items:d.error?[{text:d.error,level:0}]:d.items,src:"자동"}}
+async function lySeqCanvas(){const sc=3.5,base=await lySvgCanvas(`<rect width="842" height="595" fill="#fff"/>`+lyHeader(762)+lyT(48,96,"3) 제어회로의 시퀀스 회로도(※ 본 도면은 시험을 위해서 임의 구성한 것으로 상용도면과 상이할 수 있습니다.)",10,{a:"start",w:500}),true);   // 시험지처럼 가로 A4
+  const dc=renderDrawing(3,{}),g=base.getContext("2d"),bx=40,by=110,bw=762,bh=460,k=Math.min(bw/dc.width,bh/dc.height)*sc;
+  const w=dc.width*k,hh=dc.height*k;g.drawImage(dc,bx*sc+(bw*sc-w)/2,by*sc+Math.max(0,(bh*sc-hh)/3),w,hh);return base}
+async function lySpecCanvases(){const sc=3.5,{items}=lySetSpec(),pages=[];try{await document.fonts.ready}catch(e){}
+  const head=async first=>lySvgCanvas(`<rect width="595" height="842" fill="#fff"/>`+lyHeader()+(first?lyT(48,96,"4) 제어회로의 동작 사항",10,{a:"start",w:500}):lyT(48,96,"4) 제어회로의 동작 사항 (계속)",10,{a:"start",w:500})));
+  let c=await head(true),g=c.getContext("2d"),y=122;pages.push(c);
+  const fs=9.3,lh=15.2,x0=50,maxW=495;g.font=`400 ${fs*sc}px ${LYF}`;
+  const newPage=async()=>{c=await head(false);g=c.getContext("2d");g.font=`400 ${fs*sc}px ${LYF}`;y=122;pages.push(c)};
+  for(const it of items){const text=String(it.text||"").trim();if(!text)continue;
+    const ind=it.level?16:0,m=text.match(/^(\(\d+\)|[가-하]\)|[①-⑳]|※|·)\s*/),hang=m?g.measureText(m[0]).width/sc:0;
+    // 글자 단위로 줄 나눔(띄어쓰기에서 끊기를 우선)
+    const lines=[];let rest=text,first=true;
+    while(rest.length){const width=maxW-ind-(first?0:hang);let n=rest.length;
+      if(g.measureText(rest).width/sc>width){n=1;while(n<rest.length&&g.measureText(rest.slice(0,n+1)).width/sc<=width)n++;
+        const sp=rest.lastIndexOf(" ",n);if(sp>n*0.6)n=sp+1}
+      lines.push({t:rest.slice(0,n).trimEnd(),x:x0+ind+(first?0:hang)});rest=rest.slice(n).trimStart();first=false}
+    if(y+lines.length*lh>812&&y>122)await newPage();
+    g.fillStyle="#000";for(const L of lines){if(y>812)await newPage();g.fillText(L.t,L.x*sc,y*sc);y+=lh}
+    y+=it.level?2:5}
+  return pages}
+async function lyExportSet(){const base=((name&&!/^(새 도면|불러온 도면|t)$/.test(name)?name.replace(/^[①-⑳]\s*/,"")+" ":"")+"시험지").replace(/[\\/:*?"<>|]+/g,"_").slice(0,60);
+  const hint=(m,e)=>(PN.view==="layout"?lyHint:setHint)(m,e);hint("시험지 한 세트를 만드는 중입니다…");
+  try{let jsPDF;try{jsPDF=await loadJsPdf()}catch(e){throw{code:"pdf_load"}}
+    const pages=[await lyCanvas(1),await lyCanvas(2),await lySeqCanvas(),...await lySpecCanvases()];
+    const doc=new jsPDF({orientation:"portrait",unit:"pt",format:"a4"});
+    pages.forEach((c,i)=>{const land=c.width>c.height;if(i)doc.addPage("a4",land?"landscape":"portrait");doc.addImage(c.toDataURL("image/jpeg",0.95),"JPEG",0,0,land?841.89:595.28,land?595.28:841.89)});
+    doc.setProperties({title:base});const blob=doc.output("blob"),file=base+".pdf";
+    hint("저장 확인 창이 뜨면 '저장'을 눌러 주세요.");await saveFile(file,blob);hint(`'${file}' 파일을 저장했습니다 (${pages.length}쪽: 배관도·제어판·시퀀스도·동작사항).`)}
+  catch(e){const code=e&&e.code;hint(code==="declined"?"저장을 취소했습니다.":code==="pdf_load"?"PDF 도구를 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.":"저장하지 못했습니다. 다시 시도해 주세요.",code!=="declined")}}
 $("vLay").onclick=()=>setView("layout");
+if($("btnSet"))$("btnSet").onclick=()=>{const dd=$("btnSet").closest(".dd");if(dd)dd.classList.remove("open");lyExportSet()};
 lyLoad();lySide();
 try{const v=localStorage.getItem("seqsim.view");if(v==="layout"||v==="panel")setView(v)}catch(e){}
 </script>
